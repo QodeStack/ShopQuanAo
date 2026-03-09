@@ -1,0 +1,20 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ShopQuanAo.Models
+{
+    [Table("Categories")]
+
+    public class Categories
+    {
+        [Key]
+        public int CategoryId { get; set; }
+
+        [StringLength(20)]
+        [Column(TypeName = "nvarchar(20)")]
+        public required string CategoryName { get; set; }
+
+        public List<Product> Products { get; set; }
+
+    }
+}
