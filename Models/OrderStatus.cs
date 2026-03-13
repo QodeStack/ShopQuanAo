@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopQuanAo.Models
 {
-    [Table("OderStatus")]
+    [Table("OrderStatus")]
 
-    public class OderStatus
+    public class OrderStatus
     {
         public int Id { get; set; }
         

@@ -7,8 +7,7 @@ namespace ShopQuanAo.Models
 
     public class Categories
     {
-        [Key]
-        public int CategoryId { get; set; }
+        public int Id { get; set; }
 
         [StringLength(20)]
         [Column(TypeName = "nvarchar(20)")]

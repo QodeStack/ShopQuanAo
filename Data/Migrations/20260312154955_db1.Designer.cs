@@ -9,11 +9,11 @@ using ShopQuanAo.Data;
 
 #nullable disable
 
-namespace ShopQuanAo.Data.Migrations
+namespace ShopQuanAo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260309133555_database1")]
-    partial class database1
+    [Migration("20260312154955_db1")]
+    partial class db1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -170,12 +170,10 @@ namespace ShopQuanAo.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -212,12 +210,10 @@ namespace ShopQuanAo.Data.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -258,47 +254,29 @@ namespace ShopQuanAo.Data.Migrations
 
             modelBuilder.Entity("ShopQuanAo.Models.Categories", b =>
                 {
-                    b.Property<int>("CategoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("CategoryId");
-
-                    b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("ShopQuanAo.Models.OderStatus", b =>
-                {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("StatusName")
+                    b.Property<string>("CategoryName")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("OderStatus");
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.Order", b =>
                 {
-                    b.Property<int>("OrderId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -313,6 +291,9 @@ namespace ShopQuanAo.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
@@ -326,9 +307,6 @@ namespace ShopQuanAo.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("OderStatusId")
-                        .HasColumnType("int");
-
                     b.Property<int>("OrderStatusId")
                         .HasColumnType("int");
 
@@ -340,9 +318,9 @@ namespace ShopQuanAo.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("OrderId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("OderStatusId");
+                    b.HasIndex("OrderStatusId");
 
                     b.ToTable("Order");
                 });
@@ -374,6 +352,24 @@ namespace ShopQuanAo.Data.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("OrderDetail");
+                });
+
+            modelBuilder.Entity("ShopQuanAo.Models.OrderStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("StatusName")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OrderStatus");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.Product", b =>
@@ -410,6 +406,32 @@ namespace ShopQuanAo.Data.Migrations
                     b.ToTable("Product");
                 });
 
+            modelBuilder.Entity("ShopQuanAo.Models.ProductSize", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SizeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SizeId");
+
+                    b.ToTable("ProductSize");
+                });
+
             modelBuilder.Entity("ShopQuanAo.Models.ShoppingCart", b =>
                 {
                     b.Property<int>("Id")
@@ -428,6 +450,23 @@ namespace ShopQuanAo.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ShoppingCart");
+                });
+
+            modelBuilder.Entity("ShopQuanAo.Models.Size", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("SizeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Size");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -502,13 +541,13 @@ namespace ShopQuanAo.Data.Migrations
 
             modelBuilder.Entity("ShopQuanAo.Models.Order", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.OderStatus", "OderStatus")
+                    b.HasOne("ShopQuanAo.Models.OrderStatus", "OrderStatus")
                         .WithMany()
-                        .HasForeignKey("OderStatusId")
+                        .HasForeignKey("OrderStatusId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OderStatus");
+                    b.Navigation("OrderStatus");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.OrderDetail", b =>
@@ -541,6 +580,25 @@ namespace ShopQuanAo.Data.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("ShopQuanAo.Models.ProductSize", b =>
+                {
+                    b.HasOne("ShopQuanAo.Models.Product", "Product")
+                        .WithMany("ProductSizes")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ShopQuanAo.Models.Size", "Size")
+                        .WithMany("ProductSizes")
+                        .HasForeignKey("SizeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Size");
+                });
+
             modelBuilder.Entity("ShopQuanAo.Models.Categories", b =>
                 {
                     b.Navigation("Products");
@@ -556,11 +614,18 @@ namespace ShopQuanAo.Data.Migrations
                     b.Navigation("CartDetail");
 
                     b.Navigation("OrderDetail");
+
+                    b.Navigation("ProductSizes");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.ShoppingCart", b =>
                 {
                     b.Navigation("CartDetails");
+                });
+
+            modelBuilder.Entity("ShopQuanAo.Models.Size", b =>
+                {
+                    b.Navigation("ProductSizes");
                 });
 #pragma warning restore 612, 618
         }

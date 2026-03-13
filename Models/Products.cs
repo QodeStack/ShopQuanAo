@@ -29,6 +29,8 @@ namespace ShopQuanAo.Models
         
         public List<OrderDetail> OrderDetail { get; set; }
         public List<CartDetail> CartDetail { get; set; }
+        public List<ProductSize> ProductSizes { get; set; }
+
 
 
     }
