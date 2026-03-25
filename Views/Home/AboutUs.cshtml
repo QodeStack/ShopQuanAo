@@ -1,2 +1,140 @@
-﻿
-<h1 class="bg-primary text-center p-5">ABoutUs</h1>
+﻿@{
+    ViewData["Title"] = "Về Chúng Tôi";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+    :root {
+        --primary-black: #000000;
+        --pure-white: #ffffff;
+        --soft-gray: #f9f9f9;
+        --border-color: #eeeeee;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--primary-black);
+        background-color: var(--pure-white);
+    }
+
+    /* Phần Banner xanh như trong hình bạn gửi */
+    .about-banner {
+        background-color: #3b5bdb; /* Màu xanh đặc trưng từ hình ảnh */
+        padding: 80px 0;
+        text-align: center;
+        color: var(--pure-white);
+        margin-bottom: 50px;
+    }
+
+    .about-banner h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    /* Nội dung giới thiệu */
+    .about-section {
+        padding: 40px 0 80px;
+    }
+
+    .about-title {
+        border-bottom: 2px solid var(--primary-black);
+        display: inline-block;
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .lead-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+        line-height: 1.8;
+        margin-bottom: 25px;
+    }
+
+    .main-content p {
+        line-height: 1.8;
+        color: #444;
+        margin-bottom: 20px;
+        text-align: justify;
+    }
+
+    /* Card thông tin người sáng lập */
+    .founder-card {
+        border: 1px solid var(--border-color);
+        padding: 30px;
+        background-color: var(--soft-gray);
+        border-left: 5px solid var(--primary-black);
+    }
+
+    /* Responsive xử lý lỗi C# Razor */
+    @@media (max-width: 768px) {
+        .about-banner h1 {
+            font-size: 2rem;
+        }
+        .about-section {
+            padding: 30px 15px;
+        }
+    }
+</style>
+
+<div class="about-banner">
+    <div class="container">
+        <h1>ABOUT US</h1>
+    </div>
+</div>
+
+<div class="container about-section">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 main-content">
+            <h2 class="about-title">Câu chuyện của chúng tôi</h2>
+            
+            <p class="lead-text">
+                Chào mừng bạn đến với <strong>MenShop</strong> – nơi định hình phong cách bản lĩnh cho phái mạnh.
+            </p>
+
+            <p>
+                Được thành lập với niềm đam mê mãnh liệt dành cho thời trang nam giới, MenShop không chỉ bán quần áo, 
+                mà còn mang đến cái nhìn mới về sự lịch lãm và tối giản. Chúng tôi tin rằng mỗi bộ trang phục bạn khoác lên mình 
+                đều là một lời khẳng định về bản thân.
+            </p>
+
+            <div class="founder-card my-5">
+                <h4 class="fw-bold mb-3"><i class="fas fa-user-tie me-2"></i> Người sáng lập</h4>
+                <p class="mb-0">
+                    <strong>Dương Danh Quốc</strong> – Với tầm nhìn mang đến những sản phẩm chất lượng, 
+                    phom dáng hiện đại và phù hợp với vóc dáng người đàn ông Việt, Quốc đã xây dựng MenShop 
+                    trở thành điểm đến tin cậy cho những ai tìm kiếm sự chỉn chu và phong cách.
+                </p>
+            </div>
+
+            <p>
+                Tại đây, bạn có thể tìm thấy mọi thứ từ những bộ suit lịch lãm, áo sơ mi tinh tế cho đến trang phục dạo phố năng động. 
+                Mỗi sản phẩm đều được kiểm duyệt kỹ lưỡng về chất liệu vải và từng đường kim mũi chỉ trước khi trao tận tay khách hàng.
+            </p>
+
+            <h2 class="about-title mt-5">Giá trị cốt lõi</h2>
+            <div class="row text-center mt-4">
+                <div class="col-md-4 mb-4">
+                    <i class="fas fa-gem fa-2x mb-3"></i>
+                    <h5>Chất lượng</h5>
+                    <p class="small text-muted">Cam kết vải cao cấp, bền đẹp theo thời gian.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <i class="fas fa-bolt fa-2x mb-3"></i>
+                    <h5>Tận tâm</h5>
+                    <p class="small text-muted">Luôn lắng nghe và thấu hiểu nhu cầu khách hàng.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <i class="fas fa-shield-alt fa-2x mb-3"></i>
+                    <h5>Uy tín</h5>
+                    <p class="small text-muted">Sự hài lòng của bạn là tôn chỉ hoạt động của Quốc.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
