@@ -81,3 +81,35 @@ body {
             display: none;
         }
 }
+/* Làm cho khung liên hệ sang trọng hơn */
+.contact-container {
+    background: #ffffff;
+    border: none !important; /* Bỏ viền đen cứng */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Đổ bóng nhẹ */
+    border-radius: 8px; /* Bo góc nhẹ */
+    overflow: hidden;
+}
+
+/* Chỉnh lại các ô nhập liệu */
+.form-control {
+    border: 1px solid #e1e1e1 !important;
+    background-color: #fdfdfd;
+    padding: 12px 15px;
+    transition: all 0.3s;
+}
+
+    .form-control:focus {
+        border-color: #000 !important;
+        background-color: #fff;
+        box-shadow: none;
+    }
+
+/* Chỉnh nút bấm */
+.btn-black {
+    background: #000;
+    color: #fff;
+    letter-spacing: 2px;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 15px 30px;
+}
