@@ -1,33 +1,246 @@
-﻿@{
+﻿<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.css" integrity="sha512-wR4oNhLBHf7smjy0K4oqzdWumd+r5/+6QO/vDda76MW5iug4PT7v86FoEkySIJft3XA0Ae6axhIvHrqwm793Nw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.css" integrity="sha512-6lLUdeQ5uheMFbWm3CP271l14RsX1xtx+J5x2yeIDkkiBpeVTNhTqijME7GgRKKi6hCqovwCoBTlRBEC20M8Mg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+@{
     ViewData["Title"] = "Home Page";
 }
+
 <div class="container-fluid p-0">
-<div class="text-center bg-black">
-    <h1 class="display-4">Welcome</h1>
-    <p>Chưa Biết Làm Gì Cả =))</p>
 
+    <!-- ══════════ HERO SLIDER ══════════ -->
+    <section class="hero-wrapper">
+    <div class="hero-slider">
+        <div class="slide">
+            <img src="https://res.cloudinary.com/dqklxt0mz/image/upload/pixverse_i2i_ori_f875e47e-209c-45e1-8ff6-3329b9b0afd9_snvgor.jpg" alt="SS2025 Collection">
+        </div>
+        <div class="slide">
+            <img src="https://res.cloudinary.com/dqklxt0mz/image/upload/v1774837343/pixverse_i2i_ori_b2e5ae3d-9807-4b79-92a9-f7684e5e5f0c_eefilq.jpg" alt="New Arrivals">
+        </div>
+    </div>
+    </section>
 
-    @*  <video class="bg-video " autoplay="" muted="" loop="" playsinline="" preload="metadata">
-        <source src="https://cdn.hstatic.net/files/200001023102/file/skate_la_03.mp4" type="video/mp4">
-        Trình duyệt của bạn không hỗ trợ video HTML5.
-    </video> *@
+    <!-- Hero Text Overlay (absolute over slider, handled via CSS on .hero-slider relative wrapper) -->
+    <div class="hero-overlay">
+        <div class="hero-tag">Bộ sưu tập 2025</div>
+        <h1 class="hero-title">Định nghĩa<br>phong cách<br>của bạn</h1>
+        <a href="#" class="hero-cta">Khám phá ngay <span class="arrow">→</span></a>
+    </div>
+
+    <section class="best-seller-section container my-5">
+
+        <h2 class="text-center best-title mb-4">Best Seller</h2>
+
+        <div class="row g-4">
+
+            <div class="col-md-3 col-6">
+                <div class="product-card">
+                    <img src="@Url.Content("~/Image/aothun.webp")" alt="">
+                </div>
+            </div>
+
+            <div class="col-md-3 col-6">
+                <div class="product-card">
+                    <img src="@Url.Content("~/Image/quanau.webp")" alt="">
+                </div>
+            </div>
+
+            <div class="col-md-3 col-6">
+                <div class="product-card">
+                    <img src="@Url.Content("~/Image/quankaki.webp")" alt="">
+                </div>
+            </div>
+
+            <div class="col-md-3 col-6">
+                <div class="product-card">
+                    <img src="@Url.Content("~/Image/somi.webp")" alt="">
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ══════════ SESSION 3 — USP ══════════ -->
+    <section class="Portfolio">
+        <div class="container">
+            <h1>Phong Cách Riêng </h1>
+            <div class="grid-item">
+
+                <div class="item item-1">
+                    <div class="content">
+                        <img src="@Url.Content("~/Image/setthetheoPC.png")" alt="Portfolio 1" />
+                        <div class="overlay">
+                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/setthetheoPC.png")">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                            <h1>Software Landing</h1>
+                            <h2>By Jhone Doe</h2>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="item item-2">
+                    <div class="content">
+                        <img src="@Url.Content("~/Image/aothunPC.webp")" alt="Portfolio 2" />
+                        <div class="overlay">
+                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/aothunPC.webp")">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                            <h1>Software Landing</h1>
+                            <h2>By Jhone Doe</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="item item-3">
+                    <div class="content">
+                        <img src="@Url.Content("~/Image/jackhoodie.jpg")" alt="Portfolio 3" />
+                        <div class="overlay">
+                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/jackhoodie.jpg")">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                            <h1>Software Landing</h1>
+                            <h2>By Jhone Doe</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="item item-4">
+                    <div class="content">
+                        <img src="@Url.Content("~/Image/poloPC.webp")" alt="Portfolio 4" />
+                        <div class="overlay">
+                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/poloPC.webp")">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                            <h1>Software Landing</h1>
+                            <h2>By Jhone Doe</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="item item-5">
+                    <div class="content">
+                        <img src="@Url.Content("~/Image/sethePC.jpg")" alt="Portfolio 5" />
+                        <div class="overlay">
+                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/sethePC.jgp")">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                            <h1>Software Landing</h1>
+                            <h2>By Jhone Doe</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="item item-6">
+                    <div class="content">
+                        <img src="@Url.Content("~/Image/hthsomi.png")" alt="Portfolio 6" />
+                        <div class="overlay">
+                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/hthsomi.png")">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                            <h1>Software Landing</h1>
+                            <h2>By Jhone Doe</h2>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ SESSION 4 — BESTSELLERS ══════════ -->
+    <section class="session4">
+        <div class="session4-inner">
+            <div class="session4-header">
+                <div>
+                    <p class="section-label">Bán chạy nhất</p>
+                    <h2 class="section-heading">Được yêu thích</h2>
+                </div>
+                <a href="#" class="view-all-link">Xem tất cả</a>
+            </div>
+            <div class="products-grid">
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=400&h=533&fit=crop" alt="Áo sơ mi trắng">
+                        <span class="product-badge">Mới</span>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-sub">Áo sơ mi</div>
+                        <div class="product-name">Slim Fit Oxford White</div>
+                        <div class="product-price">890.000 ₫</div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="https://images.unsplash.com/photo-1598522325074-042db73aa4e6?w=400&h=533&fit=crop" alt="Quần tây đen">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-sub">Quần tây</div>
+                        <div class="product-name">Tapered Wool Trousers</div>
+                        <div class="product-price">1.290.000 ₫</div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&h=533&fit=crop" alt="Blazer xám">
+                        <span class="product-badge">Hot</span>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-sub">Blazer</div>
+                        <div class="product-name">Unstructured Charcoal Blazer</div>
+                        <div class="product-price">2.490.000 ₫</div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=533&fit=crop" alt="Áo polo">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-sub">Áo polo</div>
+                        <div class="product-name">Piqué Polo Classic Black</div>
+                        <div class="product-price">590.000 ₫</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════ SESSION 5 — EDITORIAL BANNER ══════════ -->
+    <section class="session5">
+        <img class="session5-bg" src="https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=1600&h=900&fit=crop" alt="Editorial">
+        <div class="session5-content">
+            <p class="section-label">Lookbook SS 2025</p>
+            <h2 class="section-heading">Mặc đẹp không phải đặc quyền</h2>
+            <a href="#" class="btn-outline-white">Xem lookbook</a>
+        </div>
+    </section>
+
+    <!-- ══════════ SESSION 6 — NEWSLETTER ══════════ -->
+    <section id="session6" class="session6">
+        <div class="session6-inner">
+            <p class="section-label">Cộng đồng</p>
+            <h2 class="section-heading">Luôn dẫn đầu xu hướng</h2>
+            <p>Đăng ký để nhận thông tin về bộ sưu tập mới, ưu đãi độc quyền và những gợi ý phối đồ từ đội ngũ stylist của chúng tôi.</p>
+            <div class="newsletter-form">
+                <input type="email" placeholder="Địa chỉ email của bạn">
+                <button type="submit">Đăng ký</button>
+            </div>
+        </div>
+    </section>
+
 </div>
-    <div class="Session1 p-5 bg-danger container-fluid p-0 ">
-        <h1 class="text-white text-center">Session1</h1>
-    </div>
-    <div class="session2 p-5 bg-success container-fluid p-0 ">
-        <h1 class="text-white text-center">Session2</h1>
-    </div>
-    <div class="session3 p-5 bg-primary container-fluid p-0 ">
-        <h1 class="text-white text-center">Session3</h1>
-    </div>
-    <div class="session4 p-5 bg-warning container-fluid p-0 ">
-        <h1 class="text-white text-center">Session4</h1>
-    </div>
-    <div class="session5 p-5 bg-info container-fluid p-0 ">
-        <h1 class="text-white text-center">Session5</h1>
-    </div>
-    <div id="session6" class="session6 p-5 bg-secondary container-fluid p-0 ">
-        <h1 class="text-white text-center">Session6</h1>
-    </div>
-</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js" integrity="sha512-HGOnQO9+SP1V92SrtZfjqxxtLmVzqZpjFFekvzZVWoiASSQgSr4cw9Kqd2+l8Llp4Gm0G8GIFJ4ddwZilcdb8A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="./js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+<script>
+    Fancybox.bind('[data-fancybox]', {
+       //
+        });
+</script>

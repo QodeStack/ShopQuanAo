@@ -21,7 +21,7 @@ namespace ShopQuanAo.Models
         [Required]
         public double Price { get; set; }
 
-        [Column(TypeName ="varchar(50)")]
+        [Column(TypeName ="varchar(500)")]
         public string? Image { get; set; }
 
         public int CategoryId { get; set; }

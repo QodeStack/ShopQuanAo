@@ -33,6 +33,12 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Home" asp-action="Contact">CONTACT</a>
                         </li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="Index">Manage</a>
+                            </li>
+                        }
                     </ul>
                     
                     <div class="d-flex align-items-center">
