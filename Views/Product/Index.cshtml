@@ -15,22 +15,6 @@
 
     <div class="announce-bar">Miễn phí vận chuyển cho đơn hàng từ 500,000đ &nbsp;·&nbsp; Đổi trả trong 30 ngày</div>
 
-    <header class="site-header">
-        <a class="logo" href="#">MenShop</a>
-        <nav style="display:flex;gap:32px;">
-            <a href="#" style="font-size:13px;color:var(--mid);text-decoration:none;letter-spacing:1px;font-weight:400">Mới về</a>
-            <a href="#" style="font-size:13px;color:var(--charcoal);text-decoration:none;letter-spacing:1px;font-weight:500">Bộ sưu tập</a>
-            <a href="#" style="font-size:13px;color:var(--mid);text-decoration:none;letter-spacing:1px;font-weight:400">Sale</a>
-        </nav>
-        <div class="header-icons">
-            <i class="bi bi-search"></i>
-            <i class="bi bi-person"></i>
-            <i class="bi bi-bag" style="position:relative">
-                <span style="position:absolute;top:-6px;right:-6px;background:var(--accent-deep);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-style:normal;font-family:'DM Sans',sans-serif">2</span>
-            </i>
-        </div>
-    </header>
-
     <button class="mobile-toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('show')">
         <i class="bi bi-list"></i> &nbsp; Danh mục
     </button>
@@ -38,9 +22,8 @@
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-label">Danh mục</div>
-
             <div class="cat-all">
-                <a href="@Url.Action("Product", "Home")"
+                <a href="@Url.Action("Index", "Product")"
                        style="color:inherit;text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:@(ViewBag.CurrentCategoryId == null ? "600" : "400")">
                     Tất cả sản phẩm
                 </a>
@@ -51,7 +34,7 @@
                 bool isActive = ViewBag.CurrentCategoryId != null && (int)ViewBag.CurrentCategoryId == cat.Id;
                 <div class="cat-group">
                     <div class="cat-heading @(isActive ? "cat-heading-active" : "")">
-                        <a href="@Url.Action("Product", "Home", new { categoryId = cat.Id })"
+                        <a href="@Url.Action("Index", "Product", new { categoryId = cat.Id })"
                                style="color:inherit;text-decoration:none;display:block;width:100%;">
                             @cat.CategoryName
                         </a>
@@ -79,7 +62,19 @@
                     </h1>
                     <div class="product-count">@ViewBag.TotalCount sản phẩm</div>
                 </div>
-
+                <div class="header-right">
+                    <div class="search-box" id="sbox">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text"
+                               id="searchInput"
+                               placeholder="Tìm sản phẩm..."
+                               value="@ViewBag.CurrentSearch"
+                               autocomplete="off" />
+                        <button class="search-clear" id="searchClear"
+                                style="display:@(ViewBag.CurrentSearch != null ? "flex" : "none")">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
                 <div class="filter-bar">
                     <div class="filter-item">
                         <button class="filter-btn" onclick="toggleFilter('fSize')">
@@ -115,6 +110,7 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
 
             <div class="active-filters">
@@ -149,14 +145,16 @@
                     {
                         <div class="product-card">
                             <div class="product-image">
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
                                 <img src="@item.Image" alt="@item.ProductName" loading="lazy" />
-                                <div class="product-actions">
-                                    <button class="action-btn" title="Yêu thích"><i class="bi bi-heart"></i></button>
-                                    <button class="action-btn" title="Thêm vào giỏ"><i class="bi bi-bag-plus"></i></button>
-                                </div>
+                                </a>
                             </div>
                             <div class="product-info">
-                                <div class="product-name"><a href="#">@item.ProductName</a></div>
+                                <div class="product-name">
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                        @item.ProductName
+                                    </a>
+                                 </div>
                                 <div class="product-price">@item.Price.ToString("N0")đ</div>
                             </div>
                         </div>
@@ -176,18 +174,6 @@
         </main>
     </div>
 
-    <script>
-            function toggleFilter(id) {
-                document.querySelectorAll('.filter-dropdown').forEach(d => {
-                    if (d.id !== id) d.classList.remove('show');
-                });
-                document.getElementById(id).classList.toggle('show');
-            }
-            document.addEventListener('click', e => {
-                if (!e.target.closest('.filter-item')) {
-                    document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('show'));
-                }
-            });
-    </script>
+<script src="~/js/product.js"></script>
 </body>
 </html>

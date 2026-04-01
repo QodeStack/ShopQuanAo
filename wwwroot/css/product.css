@@ -36,45 +36,6 @@ body {
     font-weight: 300;
 }
 
-.site-header {
-    background: var(--warm-white);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 48px;
-    position: sticky;
-    top: 0;
-    z-index: 200;
-}
-
-.logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--charcoal);
-    text-decoration: none;
-}
-
-.header-icons {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
-
-    .header-icons i {
-        font-size: 19px;
-        color: var(--charcoal);
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-
-        .header-icons i:hover {
-            color: var(--accent-deep);
-        }
-
 .layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -221,6 +182,66 @@ body {
     margin-top: 6px;
     letter-spacing: 0.5px;
 }
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    width: 290px;
+    transition: border-color 0.2s;
+}
+
+    .search-box:focus-within {
+        border-color: var(--accent);
+    }
+
+.search-icon {
+    color: var(--light);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--charcoal);
+    width: 100%;
+    font-weight: 300;
+}
+
+    .search-box input::placeholder {
+        color: var(--light);
+        letter-spacing: 0.3px;
+    }
+
+.search-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--light);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+    .search-clear:hover {
+        color: var(--charcoal);
+    }
 
 .filter-bar {
     display: flex;
@@ -380,25 +401,6 @@ body {
     .product-badge.sale {
         background: var(--accent-deep);
     }
-
-.product-actions {
-    position: absolute;
-    bottom: 16px;
-    right: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    opacity: 0;
-    transform: translateX(8px);
-    transition: all 0.3s ease;
-    z-index: 2;
-}
-
-.product-card:hover .product-actions {
-    opacity: 1;
-    transform: translateX(0);
-}
-
 .action-btn {
     width: 36px;
     height: 36px;
