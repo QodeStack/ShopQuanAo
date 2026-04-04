@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ShopQuanAo.Data;
 using ShopQuanAo.Models;
 using System.Diagnostics;
 
@@ -10,17 +12,7 @@ namespace ShopQuanAo.Controllers
         {
             return View();
         }
-
         public IActionResult AboutUs()
-        {
-            return View();
-        }
-        public IActionResult CartDetail()
-        {
-
-            return View();
-        }
-        public IActionResult Product()
         {
             return View();
         }

@@ -1,0 +1,431 @@
+﻿@using ShopQuanAo.Models
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="~/css/Admin_Products.css" asp-append-version="true" rel="stylesheet" />
+<div class="admin-wrap">
+    <div class="admin-body">
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Tổng quan</div>
+                <a class="sidebar-link" href="@Url.Action("Index","Admin")"><span class="sidebar-icon">▣</span> Dashboard</a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">◈</span> Doanh thu</a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">◎</span> Đơn hàng</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Quản lý</div>
+                <a class="sidebar-link" href="@Url.Action("Users","Admin")"><span class="sidebar-icon">◉</span> Người dùng</a>
+                <a class="sidebar-link active" href="@Url.Action("Products","Admin")"><span class="sidebar-icon">◫</span> Sản phẩm</a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">◧</span> Danh mục</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Hệ thống</div>
+                <a class="sidebar-link" href="@Url.Action("Index","Home")"><span class="sidebar-icon">↗</span> Về cửa hàng</a>
+            </div>
+        </aside>
+
+        <main class="admin-content">
+            <div class="page-title-row">
+                <div>
+                    <div class="page-eyebrow">Quản lý</div>
+                    <div class="page-title">Sản phẩm</div>
+                </div>
+                <div class="top-actions">
+                    <div class="view-toggle">
+                        <button class="view-btn active" id="btnTable" onclick="setView('table')" title="Bảng">☰</button>
+                        <button class="view-btn" id="btnGrid" onclick="setView('grid')" title="Lưới">⊞</button>
+                    </div>
+                    <button class="btn-primary-admin" onclick="openCreateModal()">＋ Thêm sản phẩm</button>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="productSearch" placeholder="Tìm theo tên, thương hiệu..." oninput="filterProducts()">
+                </div>
+                <select class="filter-select" id="catFilter" onchange="filterProducts()">
+                    <option value="">Tất cả danh mục</option>
+                    @if (ViewBag.Categories != null)
+                    {
+                        foreach (var cat in ViewBag.Categories)
+                        {
+                            <option value="@cat.Id">@cat.CategoryName</option>
+                        }
+                    }
+                </select>
+                <select class="filter-select" id="priceFilter" onchange="filterProducts()">
+                    <option value="">Tất cả giá</option>
+                    <option value="low">Dưới 500k</option>
+                    <option value="mid">500k – 1.5M</option>
+                    <option value="high">Trên 1.5M</option>
+                </select>
+            </div>
+
+            <!-- Table View -->
+            <div id="tableView" class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Danh sách sản phẩm</div>
+                    <div class="panel-count" id="productCount">—</div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Thương hiệu</th>
+                            <th>Danh mục</th>
+                            <th>Giá</th>
+                            <th>Số lượng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--gray-500);font-family:var(--mono);font-size:0.75rem;">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+                <div class="pagination-row">
+                    <div class="page-info" id="pageInfo">—</div>
+                    <div class="page-btns" id="pageBtns"></div>
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="gridView" style="display:none">
+                <div id="productsGrid" class="product-grid-view"></div>
+                <div class="pagination-row" style="background:#111;border:var(--border);border-radius:6px;margin-top:1rem;">
+                    <div class="page-info" id="pageInfoGrid">—</div>
+                    <div class="page-btns" id="pageBtnsGrid"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal-overlay" id="productModal">
+    <div class="modal-box">
+        <div class="modal-title" id="modalTitle">THÊM SẢN PHẨM MỚI</div>
+        <form id="productForm" onsubmit="submitProductForm(event)">
+            <input type="hidden" id="modalProductId" value="">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Tên sản phẩm *</label>
+                    <input class="form-control-admin" type="text" id="modalName" placeholder="Slim Fit Oxford White" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thương hiệu *</label>
+                    <input class="form-control-admin" type="text" id="modalBrand" placeholder="MenShop" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Giá (VND) *</label>
+                    <input class="form-control-admin" type="number" id="modalPrice" placeholder="890000" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Danh mục *</label>
+                    <select class="form-control-admin" id="modalCategory">
+                        @if (ViewBag.Categories != null)
+                        {
+                            foreach (var cat in ViewBag.Categories)
+                            {
+                                <option value="@cat.Id">@cat.CategoryName</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL Hình ảnh</label>
+                <input class="form-control-admin" type="text" id="modalImage" placeholder="https://..." oninput="previewImage(this.value)">
+                <img id="imagePreview" class="img-preview" src="" alt="Preview">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal('productModal')">Huỷ</button>
+                <button type="submit" class="btn-submit-admin">Lưu sản phẩm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box" style="width:380px">
+        <div class="modal-title">XÁC NHẬN XÓA</div>
+        <p style="color:var(--gray-300);font-size:0.85rem;margin-bottom:0.5rem;">Bạn sắp xóa sản phẩm:</p>
+        <p id="deleteProductName" style="font-family:var(--mono);color:var(--red);font-size:0.85rem;margin-bottom:1rem;"></p>
+        <p style="color:var(--gray-500);font-size:0.78rem;">Hành động này không thể hoàn tác.</p>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeModal('deleteModal')">Huỷ</button>
+            <button type="button" onclick="confirmDelete()"
+                style="background:var(--red);color:#fff;border:none;border-radius:3px;font-family:var(--mono);font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.65rem 1.4rem;cursor:pointer;">
+                Xóa
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="admin-toast" id="adminToast"></div>
+
+<script>
+    let allProducts = [];
+    let filteredProducts = [];
+    let currentPage = 1;
+    let currentView = 'table';
+    const pageSize = 10;
+    let deleteTargetId = '';
+
+    async function loadProducts() {
+        try {
+            const res = await fetch('/Admin/GetProducts');
+            if (!res.ok) throw new Error();
+            allProducts = await res.json();
+        } catch {
+            // Demo data
+            allProducts = [
+                { id:1, productName:'Slim Fit Oxford White', brandName:'MenShop', price:890000, image:'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=200', categoryId:1, categoryName:'Áo sơ mi', sizes:['S','M','L','XL'] },
+                { id:2, productName:'Tapered Wool Trousers', brandName:'MenShop', price:1290000, image:'https://images.unsplash.com/photo-1598522325074-042db73aa4e6?w=200', categoryId:2, categoryName:'Quần tây', sizes:['M','L'] },
+                { id:3, productName:'Unstructured Blazer', brandName:'MenShop', price:2490000, image:'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=200', categoryId:3, categoryName:'Blazer', sizes:['S','M','L','XL'] },
+                { id:4, productName:'Piqué Polo Classic', brandName:'MenShop', price:590000, image:'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200', categoryId:4, categoryName:'Áo polo', sizes:['S','M','L'] },
+                { id:5, productName:'Linen Casual Shirt', brandName:'MenShop', price:750000, image:'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=200', categoryId:1, categoryName:'Áo sơ mi', sizes:['M','L','XL'] },
+                { id:6, productName:'Chinos Dark Navy', brandName:'MenShop', price:980000, image:'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=200', categoryId:2, categoryName:'Quần tây', sizes:['28','30','32','34'] },
+            ];
+        }
+        filterProducts();
+    }
+
+    function filterProducts() {
+        const q    = document.getElementById('productSearch').value.trim().toLowerCase();
+        const cat  = document.getElementById('catFilter').value;
+        const price = document.getElementById('priceFilter').value;
+
+        filteredProducts = allProducts.filter(p => {
+            const mQ = !q || p.productName.toLowerCase().includes(q) || p.brandName.toLowerCase().includes(q);
+            const mC = !cat || String(p.categoryId) === cat;
+            let mP = true;
+            if (price === 'low')  mP = p.price < 500000;
+            if (price === 'mid')  mP = p.price >= 500000 && p.price <= 1500000;
+            if (price === 'high') mP = p.price > 1500000;
+            return mQ && mC && mP;
+        });
+
+        currentPage = 1;
+        render();
+    }
+
+    function render() {
+        if (currentView === 'table') renderTable();
+        else renderGrid();
+    }
+
+    function setView(v) {
+        currentView = v;
+        document.getElementById('tableView').style.display = v === 'table' ? '' : 'none';
+        document.getElementById('gridView').style.display  = v === 'grid'  ? '' : 'none';
+        document.getElementById('btnTable').classList.toggle('active', v === 'table');
+        document.getElementById('btnGrid').classList.toggle('active', v === 'grid');
+        render();
+    }
+
+    function renderTable() {
+        const start = (currentPage - 1) * pageSize;
+        const page  = filteredProducts.slice(start, start + pageSize);
+        const body  = document.getElementById('productsTableBody');
+        const count = document.getElementById('productCount');
+
+        count.textContent = filteredProducts.length + ' sản phẩm';
+
+        if (page.length === 0) {
+            body.innerHTML = `<tr><td colspan="6" 
+            style="text-align:center;padding:3rem;color:var(--gray-500);font-family:var(--mono);font-size:0.75rem;">Không tìm thấy sản phẩm</td></tr>`;
+        } else {
+            body.innerHTML = page.map(p => `
+            <tr>
+                <td>
+                    <div class="product-cell">
+                        ${p.image ? `<img class="product-thumb" src="${p.image}" alt="${p.productName}" onerror="this.style.display='none'">` : '<div style="width:48px;height:48px;background:#1a1a1a;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">👕</div>'}
+                        <div class="product-info-cell">
+                            <strong>${p.productName}</strong>
+                            <span>ID #${p.id}</span>
+                        </div>
+                    </div>
+                </td>
+                <td style="font-size:0.8rem;">${p.brandName}</td>
+                <td><span class="cat-badge">${p.categoryName || '—'}</span></td>
+                <td class="price-cell">${(p.price/1000).toFixed(0)}k₫</td>
+                    <td>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            ${p.productSizes && p.productSizes.length > 0
+                ? p.productSizes.map(ps => `
+                    <span style="
+                        font-family:var(--mono);
+                        font-size:0.65rem;
+                        background:rgba(255,255,255,0.06);
+                        border:1px solid rgba(255,255,255,0.1);
+                        border-radius:3px;
+                        padding:3px 8px;
+                        color:var(--gray-300);
+                        white-space:nowrap;
+                    ">
+                        ${ps.sizeName}:<span style="color:var(--accent);font-weight:700;margin-left:3px;">${ps.quantity}</span>
+                    </span>`).join('')
+                : '<span style="font-family:var(--mono);font-size:0.7rem;color:var(--gray-500);">—</span>'
+            }
+        </div>
+    </td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-icon" onclick="openEditModal(${JSON.stringify(p).replace(/"/g,'&quot;')})" title="Chỉnh sửa">✎</button>
+                        <button class="btn-icon delete" onclick="openDeleteModal(${p.id},'${p.productName.replace(/'/g,"\\'")}') " title="Xóa">✕</button>
+                    </div>
+                </td>
+            </tr>`).join('');
+        }
+
+        renderPagination('pageInfo','pageBtns');
+    }
+
+    function renderGrid() {
+        const start = (currentPage - 1) * pageSize;
+        const page  = filteredProducts.slice(start, start + pageSize);
+        const grid  = document.getElementById('productsGrid');
+
+        if (page.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-500);font-family:var(--mono);font-size:0.75rem;">Không tìm thấy sản phẩm</div>`;
+        } else {
+            grid.innerHTML = page.map(p => `
+            <div class="product-grid-card">
+                ${p.image
+                    ? `<img class="grid-card-img" src="${p.image}" alt="${p.productName}" onerror="this.src=''">`
+                    : `<div class="grid-card-img-placeholder">👕</div>`}
+                <div class="grid-card-body">
+                    <div class="grid-card-name">${p.productName}</div>
+                    <div class="grid-card-brand">${p.brandName} · ${p.categoryName||''}</div>
+                    <div class="grid-card-price">${(p.price).toLocaleString('vi-VN')}₫</div>
+                    <div class="grid-card-actions">
+                        <button class="grid-btn" onclick="openEditModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">✎ Sửa</button>
+                        <button class="grid-btn del" onclick="openDeleteModal(${p.id},'${p.productName.replace(/'/g,"\\'")}')">✕</button>
+                    </div>
+                </div>
+            </div>`).join('');
+        }
+
+        renderPagination('pageInfoGrid','pageBtnsGrid');
+    }
+
+    function renderPagination(infoId, btnsId) {
+        const total = Math.ceil(filteredProducts.length / pageSize);
+        const start = (currentPage - 1) * pageSize + 1;
+        const end   = Math.min(currentPage * pageSize, filteredProducts.length);
+        document.getElementById(infoId).textContent = filteredProducts.length ? `${start}–${end} / ${filteredProducts.length}` : '0';
+
+        let html = '';
+        for (let i = 1; i <= total; i++) {
+            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+        }
+        document.getElementById(btnsId).innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; render(); }
+
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'THÊM SẢN PHẨM MỚI';
+        document.getElementById('modalProductId').value = '';
+        document.getElementById('modalName').value = '';
+        document.getElementById('modalBrand').value = '';
+        document.getElementById('modalPrice').value = '';
+        document.getElementById('modalImage').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('productModal').classList.add('show');
+    }
+
+    function openEditModal(p) {
+        if (typeof p === 'string') p = JSON.parse(p);
+        document.getElementById('modalTitle').textContent = 'CHỈNH SỬA SẢN PHẨM';
+        document.getElementById('modalProductId').value = p.id;
+        document.getElementById('modalName').value = p.productName;
+        document.getElementById('modalBrand').value = p.brandName;
+        document.getElementById('modalPrice').value = p.price;
+        document.getElementById('modalImage').value = p.image || '';
+        document.getElementById('modalCategory').value = p.categoryId;
+        previewImage(p.image);
+        document.getElementById('productModal').classList.add('show');
+    }
+
+    function openDeleteModal(id, name) {
+        deleteTargetId = id;
+        document.getElementById('deleteProductName').textContent = name;
+        document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    function previewImage(url) {
+        const img = document.getElementById('imagePreview');
+        if (url && url.startsWith('http')) {
+            img.src = url; img.style.display = 'block';
+        } else { img.style.display = 'none'; }
+    }
+
+    async function submitProductForm(e) {
+        e.preventDefault();
+        const id   = document.getElementById('modalProductId').value;
+        const body = {
+            id: id ? parseInt(id) : 0,
+            productName: document.getElementById('modalName').value,
+            brandName:   document.getElementById('modalBrand').value,
+            price:       parseFloat(document.getElementById('modalPrice').value),
+            image:       document.getElementById('modalImage').value,
+            categoryId:  parseInt(document.getElementById('modalCategory').value)
+        };
+
+        const url = id ? '/Admin/EditProduct' : '/Admin/CreateProduct';
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                body: JSON.stringify(body)
+            });
+            const d = await res.json();
+            if (d.success) {
+                showToast(id ? '✓ Đã cập nhật' : '✓ Đã thêm sản phẩm', 'success');
+                closeModal('productModal');
+                loadProducts();
+            } else { showToast('✕ ' + (d.message || 'Lỗi'), 'error'); }
+        } catch { showToast('✕ Lỗi kết nối', 'error'); }
+    }
+
+    async function confirmDelete() {
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+            const res = await fetch('/Admin/DeleteProduct', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                body: JSON.stringify({ id: deleteTargetId })
+            });
+            const d = await res.json();
+            if (d.success) {
+                showToast('✓ Đã xóa sản phẩm', 'success');
+                closeModal('deleteModal');
+                loadProducts();
+            } else { showToast('✕ ' + (d.message || 'Lỗi'), 'error'); }
+        } catch { showToast('✕ Lỗi kết nối', 'error'); }
+    }
+
+    function showToast(msg, type) {
+        const t = document.getElementById('adminToast');
+        t.textContent = msg; t.className = `admin-toast ${type} show`;
+        setTimeout(() => t.className = 'admin-toast', 3000);
+    }
+
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+    });
+
+    loadProducts();
+</script>
+@Html.AntiForgeryToken()

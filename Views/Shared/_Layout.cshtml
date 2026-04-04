@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="vi">
+@await RenderSectionAsync("Styles", required: false)
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+<<<<<<< HEAD
     <header class="sticky-top bg-white border-bottom shadow-sm">
         <nav class="navbar navbar-expand-lg py-3 container">
             <a class="navbar-brand fw-bold fs-2" asp-controller="Home" asp-action="Index" style="letter-spacing: 3px;">MENSHOP</a>
@@ -21,6 +23,42 @@
                 </ul>
                 <div class="d-flex align-items-center gap-3">
                     <partial name="_LoginPartial" />
+=======
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MenShop</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarMenu">
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Product" asp-action="Index">SẢN PHẨM</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger fw-bold" asp-controller="Home" asp-action="Sale">SALE</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="AboutUs">ABOUT US</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Contact">CONTACT</a>
+                        </li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="Index">Manage</a>
+                            </li>
+                        }
+                    </ul>
+                    
+                    <div class="d-flex align-items-center">
+                        <partial name="_LoginPartial" />
+                    </div>
+>>>>>>> 6eb4095322901147e938e0d128ec2a67c651ff7c
                 </div>
             </div>
         </nav>
