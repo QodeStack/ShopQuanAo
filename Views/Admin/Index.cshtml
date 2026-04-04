@@ -2,4 +2,295 @@
 @model ShopQuanAo.Views.Admin.AdminModel
 @{
 } *@
-<h1>Trang Quản Lý</h1>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="~/css/Admin_Index.css" asp-append-version="true" rel="stylesheet" />
+<div class="admin-wrap">
+    <div class="admin-body">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Tổng quan</div>
+                <a class="sidebar-link active" href="@Url.Action("Index","Admin")">
+                    <span class="sidebar-icon">▣</span> Dashboard
+                </a>
+                <a class="sidebar-link" href="#">
+                    <span class="sidebar-icon">◈</span> Doanh thu
+                </a>
+                <a class="sidebar-link" href="#">
+                    <span class="sidebar-icon">◎</span> Đơn hàng
+                </a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Quản lý</div>
+                <a class="sidebar-link" href="@Url.Action("Users","Admin")">
+                    <span class="sidebar-icon">◉</span> Người dùng
+                </a>
+                <a class="sidebar-link" href="@Url.Action("Products","Admin")">
+                    <span class="sidebar-icon">◫</span> Sản phẩm
+                </a>
+                <a class="sidebar-link" href="#">
+                    <span class="sidebar-icon">◧</span> Danh mục
+                </a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Hệ thống</div>
+                <a class="sidebar-link" href="@Url.Action("Index","Home")">
+                    <span class="sidebar-icon">↗</span> Về cửa hàng
+                </a>
+                <a class="sidebar-link" href="/Identity/Account/Manage">
+                    <span class="sidebar-icon">◑</span> Tài khoản
+                </a>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <main class="admin-content">
+            <!-- Page Title -->
+            <div class="page-title-row">
+                <div>
+                    <div class="page-eyebrow">Tổng quan</div>
+                    <div class="page-title">Dashboard</div>
+                </div>
+                <div class="date-badge" id="currentDate"></div>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="stats-grid">
+                <div class="stat-card green">
+                    <div class="stat-label">Doanh thu tháng</div>
+                    <div class="stat-value accent" id="statRevenue">—</div>
+                    <div class="stat-change up">↑ +12.4% so với tháng trước</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-label">Đơn hàng tháng</div>
+                    <div class="stat-value" id="statOrders">—</div>
+                    <div class="stat-change up">↑ +8.1% so với tháng trước</div>
+                </div>
+                <div class="stat-card white">
+                    <div class="stat-label">Người dùng</div>
+                    <div class="stat-value" id="statUsers">—</div>
+                    <div class="stat-change">Tổng tài khoản</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-label">Sản phẩm</div>
+                    <div class="stat-value" id="statProducts">—</div>
+                    <div class="stat-change">Đang bán</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a class="action-card" href="@Url.Action("CreateProduct","Admin")">
+                    <div class="action-icon g">＋</div>
+                    <div class="action-text">
+                        <strong>Thêm sản phẩm</strong>
+                        <span>Tạo sản phẩm mới</span>
+                    </div>
+                </a>
+                <a class="action-card" href="@Url.Action("Users","Admin")">
+                    <div class="action-icon b">◉</div>
+                    <div class="action-text">
+                        <strong>Quản lý Users</strong>
+                        <span>Xem & chỉnh sửa</span>
+                    </div>
+                </a>
+                <a class="action-card" href="#">
+                    <div class="action-icon r">◎</div>
+                    <div class="action-text">
+                        <strong>Xem đơn hàng</strong>
+                        <span>Pending orders</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <!-- Bar Chart -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Doanh thu 6 tháng</div>
+                        <div class="panel-badge">×1.000.000 VND</div>
+                    </div>
+                    <div class="chart-bars" id="revenueChart">
+                        <!-- JS rendered -->
+                    </div>
+                </div>
+
+                <!-- Donut -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Phân bổ danh mục</div>
+                    </div>
+                    <div class="donut-wrap">
+                        <div class="donut-svg-wrap">
+                            <svg width="130" height="130" viewBox="0 0 130 130">
+                                <circle cx="65" cy="65" r="50" fill="none" stroke="#1a1a1a" stroke-width="22"/>
+                                <!-- Áo sơ mi 38% -->
+                                <circle cx="65" cy="65" r="50" fill="none" stroke="#c8ff00" stroke-width="22"
+                                    stroke-dasharray="119.4 195.8" stroke-dashoffset="0" transform="rotate(-90 65 65)"/>
+                                <!-- Quần 27% -->
+                                <circle cx="65" cy="65" r="50" fill="none" stroke="#3b82ff" stroke-width="22"
+                                    stroke-dasharray="84.8 230.4" stroke-dashoffset="-119.4" transform="rotate(-90 65 65)"/>
+                                <!-- Blazer 20% -->
+                                <circle cx="65" cy="65" r="50" fill="none" stroke="#ff3b3b" stroke-width="22"
+                                    stroke-dasharray="62.8 252.4" stroke-dashoffset="-204.2" transform="rotate(-90 65 65)"/>
+                                <!-- Khác 15% -->
+                                <circle cx="65" cy="65" r="50" fill="none" stroke="#6e6e68" stroke-width="22"
+                                    stroke-dasharray="47.1 268.1" stroke-dashoffset="-267" transform="rotate(-90 65 65)"/>
+                                <text x="65" y="60" text-anchor="middle" fill="#f5f5f0" font-size="16" font-family="'Space Mono'" font-weight="700">38%</text>
+                                <text x="65" y="76" text-anchor="middle" fill="#6e6e68" font-size="9" font-family="'Space Mono'">ÁO SƠ MI</text>
+                            </svg>
+                        </div>
+                        <div class="donut-legend">
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background:#c8ff00"></div>
+                                <div class="legend-label">Áo sơ mi</div>
+                                <div class="legend-pct">38%</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background:#3b82ff"></div>
+                                <div class="legend-label">Quần tây</div>
+                                <div class="legend-pct">27%</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background:#ff3b3b"></div>
+                                <div class="legend-label">Blazer</div>
+                                <div class="legend-pct">20%</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background:#6e6e68"></div>
+                                <div class="legend-label">Khác</div>
+                                <div class="legend-pct">15%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="panel orders-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Đơn hàng gần đây</div>
+                    <a href="#" style="font-family:var(--mono);font-size:0.65rem;color:var(--accent);text-decoration:none;letter-spacing:0.1em;">XEM TẤT CẢ →</a>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Sản phẩm</th>
+                            <th>Giá trị</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        @if (ViewBag.RecentOrders != null)
+                        {
+                            foreach (var order in ViewBag.RecentOrders)
+                            {
+                                <tr>
+                                    <td class="order-id">#@order.Id</td>
+                                    <td>@order.Name</td>
+                                    <td>@order.OrderDetails?.Count sản phẩm</td>
+                                    @* <td class="amount-cell">@(order.OrderDetails?.Sum(od => od.UnitPrice * od.Quantity)?.ToString("N0"))₫</td> *@
+                                    <td>
+                                        <span class="status-badge @(order.IsPaid ? "paid" : "pend")">
+                                            @(order.IsPaid ? "✓ Đã thanh toán" : "⏳ Chờ TT")
+                                        </span>
+                                    </td>
+                                    <td>@order.CreateTime.ToString("dd/MM/yyyy")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <!-- Demo rows -->
+                            <tr>
+                                <td class="order-id">#1042</td>
+                                <td>Nguyễn Văn A</td>
+                                <td>3 sản phẩm</td>
+                                <td class="amount-cell">2.890.000₫</td>
+                                <td><span class="status-badge paid">✓ Đã thanh toán</span></td>
+                                <td>03/04/2026</td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#1041</td>
+                                <td>Trần Thị B</td>
+                                <td>1 sản phẩm</td>
+                                <td class="amount-cell">890.000₫</td>
+                                <td><span class="status-badge pend">⏳ Chờ TT</span></td>
+                                <td>03/04/2026</td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#1040</td>
+                                <td>Lê Quốc C</td>
+                                <td>2 sản phẩm</td>
+                                <td class="amount-cell">3.490.000₫</td>
+                                <td><span class="status-badge paid">✓ Đã thanh toán</span></td>
+                                <td>02/04/2026</td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#1039</td>
+                                <td>Phạm Văn D</td>
+                                <td>4 sản phẩm</td>
+                                <td class="amount-cell">5.200.000₫</td>
+                                <td><span class="status-badge cancel">✕ Huỷ</span></td>
+                                <td>01/04/2026</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Date
+    document.getElementById('currentDate').textContent =
+        new Date().toLocaleDateString('vi-VN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    // Fetch stats via AJAX
+    async function loadStats() {
+        try {
+            const res = await fetch('/Admin/GetStats');
+            if (!res.ok) throw new Error();
+            const d = await res.json();
+            document.getElementById('statRevenue').textContent  = (d.revenue / 1e6).toFixed(1) + 'M₫';
+            document.getElementById('statOrders').textContent   = d.orders;
+            document.getElementById('statUsers').textContent    = d.users;
+            document.getElementById('statProducts').textContent = d.products;
+        } catch {
+            document.getElementById('statRevenue').textContent  = '—';
+            document.getElementById('statOrders').textContent   = '—';
+            document.getElementById('statUsers').textContent    = '—';
+            document.getElementById('statProducts').textContent = '—';
+        }
+    }
+    loadStats();
+
+    // Bar Chart (demo data – replace with real API)
+    const months = ['T11','T12','T1','T2','T3','T4'];
+    const values = [42, 58, 35, 71, 63, 89];
+    const max = Math.max(...values);
+    const chart = document.getElementById('revenueChart');
+    chart.innerHTML = months.map((m,i) => {
+        const h = Math.round((values[i] / max) * 130);
+        const isCurrent = i === months.length - 1;
+        return `
+        <div class="chart-bar-wrap">
+            <div class="chart-bar ${isCurrent ? 'main' : 'faded'}" style="height:${h}px">
+                <div class="chart-value-tip">${values[i]}M</div>
+            </div>
+            <div class="chart-label">${m}</div>
+        </div>`;
+    }).join('');
+</script>

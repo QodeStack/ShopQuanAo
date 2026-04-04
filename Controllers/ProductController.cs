@@ -26,6 +26,12 @@ namespace ShopQuanAo.Controllers
                 query = query.Where(p => p.ProductName.Contains(search));
 
             int total = query.Count();
+            int totalPages = (int)Math.Ceiling((double)total / pageSize);
+
+            // Clamp page
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
             var products = query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -35,6 +41,9 @@ namespace ShopQuanAo.Controllers
             ViewBag.CurrentCategoryId = categoryId;
             ViewBag.TotalCount = total;
             ViewBag.CurrentSearch = search;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.PageSize = pageSize;
 
             return View(products);
         }

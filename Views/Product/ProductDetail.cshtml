@@ -73,17 +73,22 @@
             // Gửi form
             const form = document.getElementById('cartForm');
             try {
-                const res = await fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form)
-                });
+                           const res = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            });
 
-                if (res.ok) {
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
                     showToast('Đã thêm vào giỏ hàng thành công', 'success');
                 } else {
-                    const errorText = await res.text();
-                    showToast(errorText || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
+                    showToast(data.message || 'Có lỗi xảy ra', 'error');
                 }
+            } else {
+                const errorText = await res.text();
+                showToast(errorText || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
+            }
             } catch (error) {
                 showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
             }

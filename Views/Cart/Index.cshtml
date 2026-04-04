@@ -49,51 +49,56 @@
                             </tr>
                         </thead>
                         <tbody id="cartTableBody">
-                        @foreach (var item in Model.CartDetails)
-                        {
-                            <tr id="row-@item.Id">
-                                <td data-label="Sản phẩm">
-                                    <div class="product-cell">
-                                        <div class="product-img-wrap">
-                                            @if (!string.IsNullOrEmpty(item.Product?.Image))
-                                            {
-                                                <img src="@item.Product.Image" alt="@item.Product?.ProductName" />
-                                            }
-                                            else
-                                            {
-                                                <img src="/images/placeholder.png" alt="No image" />
-                                            }
-                                        </div>
-                                        <div class="product-info">
-                                            <div class="product-name">@item.Product?.ProductName</div>
-                                            <span class="product-size">@item.Size</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td data-label="Đơn giá" class="price-cell">
-                                    @item.UnitPrice.ToString("N0")₫
-                                </td>
-                                <td data-label="Số lượng">
-                                    <div class="qty-control">
-                                        <button class="qty-btn" onclick="changeQty(@item.Id, -1)">−</button>
-                                        <input class="qty-input" type="number" id="qty-@item.Id"
-                                               value="@item.Quantity" min="1" max="99"
-                                               onchange="setQty(@item.Id, this.value)" />
-                                        <button class="qty-btn" onclick="changeQty(@item.Id, 1)">+</button>
-                                    </div>
-                                </td>
-                                <td data-label="Thành tiền" class="subtotal-cell" id="sub-@item.Id">
-                                    @((item.UnitPrice * item.Quantity).ToString("N0"))₫
-                                </td>
-                                <td>
-                                    <button class="remove-btn" onclick="removeItem(@item.Id)" title="Xóa">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                            </tr>
-                        }
+                            @foreach (var item in Model.CartDetails)
+{
+    
+        var maxQty = item.Product?.ProductSizes?
+            .FirstOrDefault(ps => ps.Size?.SizeName == item.Size)?.Quantity ?? 999;
+    
+    <tr id="row-@item.Id">
+        <td data-label="Sản phẩm">
+            <div class="product-cell">
+                <div class="product-img-wrap">
+                    @if (!string.IsNullOrEmpty(item.Product?.Image))
+                    {
+                        <img src="@item.Product.Image" alt="@item.Product?.ProductName" />
+                    }
+                    else
+                    {
+                        <img src="/images/placeholder.png" alt="No image" />
+                    }
+                </div>
+                <div class="product-info">
+                    <div class="product-name">@item.Product?.ProductName</div>
+                    <span class="product-size">@item.Size</span>
+                </div>
+            </div>
+        </td>
+        <td data-label="Đơn giá" class="price-cell">
+            @item.UnitPrice.ToString("N0")₫
+        </td>
+        <td data-label="Số lượng">
+            <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(@item.Id, -1, @maxQty)">−</button>
+                <input class="qty-input" type="number" id="qty-@item.Id"
+                       value="@item.Quantity" min="1" max="@maxQty"
+                       data-max="@maxQty"
+                       onchange="setQty(@item.Id, this.value, @maxQty)" />
+                <button class="qty-btn" onclick="changeQty(@item.Id, 1, @maxQty)">+</button>
+            </div>
+        </td>
+        <td data-label="Thành tiền" class="subtotal-cell" id="sub-@item.Id">
+            @((item.UnitPrice * item.Quantity).ToString("N0"))₫
+        </td>
+        <td>
+            <button class="remove-btn" onclick="removeItem(@item.Id)" title="Xóa">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </td>
+    </tr>
+}
                         </tbody>
                     </table>
                 </div>
@@ -151,8 +156,9 @@
 
 @section Scripts {
 <script>
-    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value
-        ?? '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] ?? '';
+    function getToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    }
 
     function formatVND(n) {
         return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '₫';
@@ -180,15 +186,25 @@
         if (badge) badge.textContent = cartCount;
     }
 
-    function changeQty(id, delta) {
+    function changeQty(id, delta, maxQty) {
         const input = document.getElementById('qty-' + id);
-        const newVal = Math.max(1, parseInt(input.value || 1) + delta);
+        const currentVal = parseInt(input.value || 1);
+        const newVal = Math.max(1, Math.min(maxQty, currentVal + delta));
+        if (newVal === currentVal) {
+            if (delta > 0) showToast(`Đã đạt số lượng tối đa (${maxQty})`, true);
+            return;
+        }
         input.value = newVal;
         updateQty(id, newVal);
     }
 
-    function setQty(id, val) {
-        const newVal = Math.max(1, parseInt(val) || 1);
+    function setQty(id, val, maxQty) {
+        let newVal = parseInt(val) || 1;
+        if (newVal > maxQty) {
+            newVal = maxQty;
+            showToast(`Chỉ còn ${maxQty} sản phẩm trong kho`, true);
+        }
+        newVal = Math.max(1, newVal);
         document.getElementById('qty-' + id).value = newVal;
         updateQty(id, newVal);
     }
@@ -198,10 +214,14 @@
         row?.classList.add('row-loading');
 
         try {
+            const formData = new FormData();
+            formData.append('cartDetailId', cartDetailId);
+            formData.append('quantity', quantity);
+            formData.append('__RequestVerificationToken', getToken());
+
             const res = await fetch('/Cart/UpdateQuantity', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getToken() },
-                body: JSON.stringify({ cartDetailId, quantity })
+                body: formData
             });
             const data = await res.json();
             if (data.success) {
@@ -212,7 +232,8 @@
             } else {
                 showToast(data.message || 'Lỗi cập nhật', true);
             }
-        } catch {
+        } catch (err) {
+            console.error(err);
             showToast('Không thể kết nối máy chủ', true);
         } finally {
             row?.classList.remove('row-loading');
@@ -224,10 +245,13 @@
         row?.classList.add('row-loading');
 
         try {
+            const formData = new FormData();
+            formData.append('cartDetailId', cartDetailId);
+            formData.append('__RequestVerificationToken', getToken());
+
             const res = await fetch('/Cart/RemoveItem', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getToken() },
-                body: JSON.stringify({ cartDetailId })
+                body: formData
             });
             const data = await res.json();
             if (data.success) {
@@ -244,7 +268,8 @@
                 showToast(data.message || 'Lỗi xóa sản phẩm', true);
                 row?.classList.remove('row-loading');
             }
-        } catch {
+        } catch (err) {
+            console.error(err);
             showToast('Không thể kết nối máy chủ', true);
             row?.classList.remove('row-loading');
         }
@@ -254,19 +279,19 @@
         if (!confirm('Bạn chắc chắn muốn xóa toàn bộ giỏ hàng?')) return;
 
         try {
+            const formData = new FormData();
+            formData.append('__RequestVerificationToken', getToken());
+
             const res = await fetch('/Cart/ClearCart', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getToken() }
+                body: formData
             });
             const data = await res.json();
             if (data.success) location.reload();
-        } catch {
+        } catch (err) {
+            console.error(err);
             showToast('Không thể kết nối máy chủ', true);
         }
-    }
-
-    function getToken() {
-        return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
     }
 </script>
 @Html.AntiForgeryToken()

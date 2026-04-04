@@ -1,98 +1,4 @@
-﻿//using Microsoft.AspNetCore.Authorization;
-//using Microsoft.AspNetCore.Identity;
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.EntityFrameworkCore;
-//using ShopQuanAo.Data;
-//using ShopQuanAo.Models;
-
-//public class CartController : Controller
-//{
-//    private readonly ApplicationDbContext _db;
-//    private readonly UserManager<IdentityUser> _userManager;
-
-//    public CartController(ApplicationDbContext db, UserManager<IdentityUser> userManager)
-//    {
-//        _db = db;
-//        _userManager = userManager;
-//    }
-
-//    public IActionResult Index()
-//    {
-
-//        return View();
-//    }
-
-//    [HttpPost]
-//    [ValidateAntiForgeryToken]
-//    public async Task<IActionResult> AddToCart(int productId, string size, int quantity = 1)
-//    {
-//        // Check authentication first
-//        if (!User.Identity.IsAuthenticated)
-//            return Unauthorized();
-
-//        var userId = _userManager.GetUserId(User);
-//        if (string.IsNullOrEmpty(userId))
-//            return Unauthorized();
-
-//        // Validate input
-//        if (string.IsNullOrWhiteSpace(size))
-//            return BadRequest("Vui lòng chọn kích cỡ");
-
-//        if (quantity <= 0)
-//            return BadRequest("Số lượng phải lớn hơn 0");
-
-//        // Check if product exists and has stock for the given size
-//        var productSize = await _db.ProductSizes
-//            .Include(ps => ps.Product)
-//            .Include(ps => ps.Size)
-//            .FirstOrDefaultAsync(ps => ps.ProductId == productId && ps.Size.SizeName == size);
-
-//        if (productSize == null || productSize.Product == null)
-//            return NotFound("Sản phẩm không tồn tại");
-
-//        if (productSize.Quantity < quantity)
-//            return BadRequest($"Không đủ hàng trong kho. Còn lại: {productSize.Quantity}");
-
-//        // Get or create shopping cart
-//        var cart = await _db.ShoppingCarts
-//            .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
-
-//        if (cart == null)
-//        {
-//            cart = new ShoppingCart { UserId = userId };
-//            _db.ShoppingCarts.Add(cart);
-//            await _db.SaveChangesAsync();
-//        }
-
-//        // Check if item with same product and size already exists
-//        var existing = await _db.CartDetails
-//            .FirstOrDefaultAsync(d => d.ShoppingCartId == cart.Id && d.ProductId == productId && d.Size == size);
-
-//        if (existing != null)
-//        {
-//            // Check if total quantity won't exceed available stock
-//            if (existing.Quantity + quantity > productSize.Quantity)
-//                return BadRequest($"Không đủ hàng trong kho. Còn lại: {productSize.Quantity}, Đã có trong giỏ: {existing.Quantity}");
-
-//            existing.Quantity += quantity;
-//        }
-//        else
-//        {
-//            _db.CartDetails.Add(new CartDetail
-//            {
-//                ShoppingCartId = cart.Id,
-//                ProductId = productId,
-//                Size = size,
-//                Quantity = quantity,
-//                UnitPrice = productSize.Product.Price
-//            });
-//        }
-
-//        await _db.SaveChangesAsync();
-//        return Ok("Thêm vào giỏ hàng thành công");
-//    }
-//}
-
+﻿
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -122,16 +28,12 @@ namespace ShopQuanAo.Controllers
             var cart = await _context.ShoppingCarts
                 .Include(c => c.CartDetails)
                     .ThenInclude(cd => cd.Product)
+                        .ThenInclude(p => p.ProductSizes)
+                            .ThenInclude(ps => ps.Size)
                 .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
 
             if (cart == null)
-            {
-                cart = new ShoppingCart
-                {
-                    UserId = userId,
-                    CartDetails = new List<CartDetail>()
-                };
-            }
+                cart = new ShoppingCart { UserId = userId, CartDetails = new List<CartDetail>() };
 
             return View(cart);
         }
@@ -145,7 +47,15 @@ namespace ShopQuanAo.Controllers
 
             var product = await _context.Products.FindAsync(productId);
             if (product == null)
-                return Json(new { success = false, message = "Sản phẩm không tồn tại." });
+                return BadRequest("Sản phẩm không tồn tại.");
+
+            // Kiểm tra tồn kho theo size
+            var productSize = await _context.ProductSizes
+                .Include(ps => ps.Size)
+                .FirstOrDefaultAsync(ps => ps.ProductId == productId && ps.Size.SizeName == size);
+
+            if (productSize == null)
+                return BadRequest($"Sản phẩm không có size {size}.");
 
             var cart = await _context.ShoppingCarts
                 .Include(c => c.CartDetails)
@@ -161,22 +71,28 @@ namespace ShopQuanAo.Controllers
             var existingDetail = cart.CartDetails?
                 .FirstOrDefault(cd => cd.ProductId == productId && cd.Size == size);
 
-            if (existingDetail != null)
+            int currentQtyInCart = existingDetail?.Quantity ?? 0;
+            int requestedTotal = currentQtyInCart + quantity;
+
+            if (requestedTotal > productSize.Quantity)
             {
-                existingDetail.Quantity += quantity;
+                int available = productSize.Quantity - currentQtyInCart;
+                if (available <= 0)
+                    return BadRequest($"Sản phẩm size {size} đã đủ số lượng trong giỏ hàng (tối đa {productSize.Quantity}).");
+                return BadRequest($"Chỉ còn {available} sản phẩm size {size} có thể thêm vào giỏ.");
             }
+
+            if (existingDetail != null)
+                existingDetail.Quantity += quantity;
             else
-            {
-                var cartDetail = new CartDetail
+                _context.CartDetails.Add(new CartDetail
                 {
                     ShoppingCartId = cart.Id,
                     ProductId = productId,
                     Quantity = quantity,
                     UnitPrice = product.Price,
                     Size = size
-                };
-                _context.CartDetails.Add(cartDetail);
-            }
+                });
 
             await _context.SaveChangesAsync();
 
@@ -187,6 +103,7 @@ namespace ShopQuanAo.Controllers
             return Json(new { success = true, cartCount });
         }
 
+
         // POST: /Cart/UpdateQuantity
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -196,19 +113,27 @@ namespace ShopQuanAo.Controllers
 
             var cartDetail = await _context.CartDetails
                 .Include(cd => cd.ShoppingCart)
+                .Include(cd => cd.Product)
                 .FirstOrDefaultAsync(cd => cd.Id == cartDetailId && cd.ShoppingCart.UserId == userId);
 
             if (cartDetail == null)
                 return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ." });
 
+            // Kiểm tra tồn kho
+            var productSize = await _context.ProductSizes
+                .Include(ps => ps.Size)
+                .FirstOrDefaultAsync(ps => ps.ProductId == cartDetail.ProductId
+                                        && ps.Size.SizeName == cartDetail.Size);
+
+            int maxQty = productSize?.Quantity ?? 0;
+
+            if (quantity > maxQty)
+                return Json(new { success = false, message = $"Chỉ còn {maxQty} sản phẩm trong kho.", maxQty });
+
             if (quantity <= 0)
-            {
                 _context.CartDetails.Remove(cartDetail);
-            }
             else
-            {
                 cartDetail.Quantity = quantity;
-            }
 
             await _context.SaveChangesAsync();
 
@@ -220,9 +145,8 @@ namespace ShopQuanAo.Controllers
             var total = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
             var cartCount = cart?.CartDetails?.Sum(cd => cd.Quantity) ?? 0;
 
-            return Json(new { success = true, subtotal, total, cartCount });
+            return Json(new { success = true, subtotal, total, cartCount, maxQty });
         }
-
         // POST: /Cart/RemoveItem
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -268,18 +192,6 @@ namespace ShopQuanAo.Controllers
             }
 
             return Json(new { success = true });
-        }
-
-        // GET: /Cart/Count (for navbar badge)
-        [HttpGet]
-        public async Task<IActionResult> Count()
-        {
-            var userId = _userManager.GetUserId(User);
-            var count = await _context.CartDetails
-                .Where(cd => cd.ShoppingCart.UserId == userId && !cd.ShoppingCart.IsDeleted)
-                .SumAsync(cd => cd.Quantity);
-
-            return Json(new { count });
         }
     }
 }
