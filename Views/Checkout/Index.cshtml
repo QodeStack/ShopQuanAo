@@ -1,0 +1,182 @@
+﻿@model ShopQuanAo.Models.Order
+@{
+    ViewData["Title"] = "Thanh toán";
+    
+    // Lấy thông tin giỏ hàng và tổng tiền từ ViewBag
+    var cart = ViewBag.Cart as ShopQuanAo.Models.ShoppingCart;
+    var totalAmount = ViewBag.TotalAmount != null ? Convert.ToDouble(ViewBag.TotalAmount) : 0; 
+}
+
+<div class="container mt-4 mb-5">
+    <form asp-action="PlaceOrder" asp-controller="Checkout" method="post">
+        <div class="row">
+            <div class="col-lg-7 pe-lg-4">
+                
+                <div class="card border-0 shadow-sm mb-4 rounded-3">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">Thông tin giao hàng</h5>
+                        
+                        <div class="mb-3">
+                            <input asp-for="Name" class="form-control bg-light" placeholder="Nhập họ và tên" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input asp-for="MobileNumber" class="form-control bg-light" placeholder="Nhập số điện thoại" />
+                                <span class="input-group-text bg-light">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Flag_of_Vietnam.svg" width="24" alt="VN">
+                                </span>
+                            </div>
+                            <span asp-validation-for="MobileNumber" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <input asp-for="Email" class="form-control bg-light" placeholder="Nhập email (không bắt buộc)" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <input type="text" class="form-control bg-light" value="Vietnam" readonly />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <input asp-for="Address" class="form-control bg-light" placeholder="Nhập địa chỉ đầy đủ (Số nhà, tên đường, Phường/Xã, Quận/Huyện...)" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4 rounded-3">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-3">Phương thức vận chuyển</h5>
+                        <div class="border rounded p-3 d-flex align-items-center">
+                            <input class="form-check-input me-3 fs-5 m-0" type="radio" name="ShippingMethod" value="Freeship" id="shipFree" checked>
+                            <label class="form-check-label w-100 d-flex align-items-center mb-0" for="shipFree" style="cursor: pointer;">
+                                <i class="bi bi-truck fs-4 me-2" style="color: #1a2b4c;"></i>
+                                <span class="fw-normal">Freeship đơn hàng</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4 rounded-3">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-3">Hình thức thanh toán</h5>
+                        <div class="border rounded">
+                            <div class="p-3 d-flex align-items-center">
+                                <input class="form-check-input me-3 fs-5 m-0" type="radio" asp-for="PaymentMethod" value="COD" id="payCOD" checked>
+                                <label class="form-check-label w-100 d-flex align-items-center mb-0" for="payCOD" style="cursor: pointer;">
+                                    <span class="badge me-2 py-2 px-2" style="background-color: #1a2b4c; font-size: 0.9rem;">COD</span>
+                                    <span class="fw-normal">Thanh toán khi giao hàng (COD)</span>
+                                </label>
+                            </div>
+                            <div class="p-3 border-top bg-light text-dark" style="font-size: 0.95rem;">
+                                - Khách hàng được kiểm tra hàng trước khi nhận hàng.<br>
+                                - Freeship đơn từ 399K
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm mb-4 rounded-3">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">Giỏ hàng</h5>
+                        
+                        @if (cart != null && cart.CartDetails != null)
+                        {
+                            foreach (var item in cart.CartDetails)
+                            {
+                                <div class="d-flex mb-3 align-items-center">
+                                    <div class="me-3">
+                                        <img src="@(string.IsNullOrEmpty(item.Product.Image) ? "/images/no-image.png" : item.Product.Image)" 
+                                             alt="@item.Product.ProductName" 
+                                             class="rounded" 
+                                             style="width: 70px; height: 90px; object-fit: cover; border: 1px solid #eee;"
+                                             onerror="this.src='/images/no-image.png'">
+                                    </div>
+                                    
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h6 class="mb-1 fw-bold text-uppercase" style="font-size: 0.9rem;">@item.Product.ProductName</h6>
+                                            <a href="#" class="text-muted"><i class="bi bi-trash"></i></a>
+                                        </div>
+                                        <div class="text-muted small mb-2 bg-light d-inline-block px-2 py-1 rounded">
+                                            Size @item.Size
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                            <span class="fw-bold">@item.UnitPrice.ToString("N0")đ</span>
+                                            <span class="badge bg-light text-dark border px-3 py-2">SL: @item.Quantity</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (item != cart.CartDetails.Last())
+                                {
+                                    <hr class="text-muted opacity-25">
+                                }
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4 rounded-3">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-3">Mã khuyến mãi</h5>
+                        <div class="input-group mb-3 border rounded p-1">
+                            <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-ticket-perforated"></i></span>
+                            <input type="text" class="form-control border-0 shadow-none" placeholder="Chọn mã" readonly>
+                            <button class="btn border-0 text-dark" type="button"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control bg-light" placeholder="Nhập mã khuyến mãi">
+                            <button class="btn btn-dark px-4" type="button">Áp dụng</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-4">Tóm tắt đơn hàng</h5>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Tổng tiền hàng</span>
+                            <span class="fw-bold">@totalAmount.ToString("N0")đ</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Phí vận chuyển</span>
+                            <span class="fw-bold">-</span>
+                        </div>
+                        
+                        <hr class="text-muted opacity-25 my-3">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="fw-bold text-dark">Tổng thanh toán</span>
+                            <span class="fw-bold fs-5 text-dark">@totalAmount.ToString("N0")đ</span>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-dark w-100 py-3 fw-bold rounded-3">Đặt hàng</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <style>
+        .form-control:focus, .form-check-input:focus {
+            box-shadow: none;
+            border-color: #1a2b4c;
+        }
+        .form-check-input:checked {
+            background-color: #1a2b4c;
+            border-color: #1a2b4c;
+        }
+    </style>
+}
