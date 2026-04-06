@@ -1,13 +1,30 @@
 /* RESET & CHUNG */
+:root {
+    --black: #0a0a0a;
+    --white: #f7f5f2;
+    --gray-100: #ececec;
+    --gray-300: #c0bebe;
+    --gray-500: #888;
+    --accent: #1a1a1a;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'Barlow', sans-serif;
+}
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background-color: #ffffff;
+    font-family: var(--font-body);
+    background: var(--white);
+    color: var(--black);
+    font-weight: 300;
     overflow-x: hidden;
 }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-/* NAVBAR TRẮNG ĐEN HIỆN ĐẠI */
+/* ----------------HEADER--------------- */
 .navbar {
     background-color: #ffffff !important;
     border-bottom: 1px solid #f1f1f1 !important;
@@ -50,68 +67,16 @@ body {
         width: 50%;
     }
 
-/* ===== HERO SLIDER ===== */
-:root {
-    --black: #0a0a0a;
-    --white: #f7f5f2;
-    --gray-100: #ececec;
-    --gray-300: #c0bebe;
-    --gray-500: #888;
-    --accent: #1a1a1a;
-    --font-display: 'Cormorant Garamond', serif;
-    --font-body: 'Barlow', sans-serif;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: var(--white);
-    color: var(--black);
-    font-family: var(--font-body);
-    font-weight: 300;
-}
-
-/* ───── HERO SLIDER ───── */
-.:root {
-    --black: #0a0a0a;
-    --white: #f7f5f2;
-    --gray-100: #ececec;
-    --gray-300: #c0bebe;
-    --gray-500: #888;
-    --accent: #1a1a1a;
-    --font-display: 'Cormorant Garamond', serif;
-    --font-body: 'Barlow', sans-serif;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: var(--white);
-    color: var(--black);
-    font-family: var(--font-body);
-    font-weight: 300;
-}
-/* wrapper để tạo khoảng cách chuẩn */
+/* ───── SESSION : HERO SLIDER ───── */
 .hero-wrapper {
     padding: 20px; /* khoảng cách 4 phía */
 }
-/* ───── HERO SLIDER ───── */
 .hero-slider {
     position: relative;
     height: 100vh;
     overflow: hidden;
-    margin: 20px; 
-
-    border-radius: 25px; 
-    overflow: hidden; 
+    margin: 20px;
+    border-radius: 25px;
 }
 
     .hero-slider .slide {
@@ -127,7 +92,6 @@ body {
             filter: brightness(.38);
         }
 
-        /* Dark gradient overlay for extra text contrast */
         .hero-slider .slide::after {
             content: '';
             position: absolute;
@@ -193,8 +157,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 0 64px 72px;
-    padding-left: 120px;
+    padding: 0 64px 72px 120px;
     pointer-events: none;
 }
 
@@ -249,65 +212,35 @@ body {
         font-size: 18px;
     }
 
-/* ───── SECTION BASE ───── */
-.section-label {
-    font-family: var(--font-body);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: .28em;
-    text-transform: uppercase;
-    color: var(--gray-500);
-    margin-bottom: 12px;
-}
-
-.section-heading {
-    font-family: var(--font-display);
-    font-weight: 300;
-    line-height: 1.1;
-}
-
-/* ───── SESSION 2 — COLLECTION BANNER ───── */
-/* ===== TITLE ===== */
+/* ───── SESSION 2 — BEST SELLER ───── */
 .best-title {
     font-size: 50px;
     font-weight: 700;
     letter-spacing: 1px;
 }
-
-/* ===== CARD ===== */
 .product-card {
     position: relative;
     overflow: hidden;
     border-radius: 10px;
-    /* 👇 shadow nhẹ */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: 0.3s;
 }
-
-    /* ảnh */
     .product-card img {
         width: 100%;
         height: 420px;
         object-fit: cover;
         transition: transform 0.5s ease;
     }
-/* ===== HOVER EFFECT ===== */
-.product-card:hover img {
-    transform: scale(1.05);
-}
-
-
-/* ===== RESPONSIVE ===== */
+    .product-card:hover img {
+        transform: scale(1.05);
+    }
 @media (max-width: 768px) {
     .product-card img {
         height: 280px;
     }
 }
 
-* {
-    box-sizing: border-box;
-}
-
+/* ───── SESSION 3 — PHONG CÁCH RIÊNG ───── */
 .Portfolio {
     margin-top: 150px;
     padding-bottom: 60px;
@@ -364,7 +297,6 @@ body {
                 border-radius: 8px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                 display: block;
-                
             }
 
             .Portfolio .container .grid-item .overlay {
@@ -400,25 +332,41 @@ body {
             .Portfolio .container .grid-item .overlay h1 {
                 position: absolute;
                 left: 16px;
-                bottom: 48px;
+                bottom: 65px; 
                 color: #fff;
-                font-size: 18px;
+                font-size: 20px;
+                font-weight: bold;
+                margin: 0;
             }
 
             .Portfolio .container .grid-item .item:hover .overlay h1 {
                 animation: bot_to_top 0.8s;
             }
 
-            .Portfolio .container .grid-item .overlay h2 {
+            .Portfolio .container .grid-item .overlay .btn-detail {
                 position: absolute;
                 left: 16px;
-                bottom: 18px;
-                color: rgba(255, 255, 255, 0.8);
-                font-size: 15px;
+                bottom: 20px;
+                color: #fff;
+                font-size: 13px;
+                font-weight: 600;
+                text-transform: uppercase;
+                text-decoration: none;
+                letter-spacing: 1px;
+                padding: 8px 18px;
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                border-radius: 4px;
+                background-color: rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
             }
+                .Portfolio .container .grid-item .overlay .btn-detail:hover {
+                    background-color: #fff;
+                    color: #000;
+                    border-color: #fff;
+                }
 
-            .Portfolio .container .grid-item .item:hover .overlay h2 {
-                animation: bot_to_top 0.8s;
+            .Portfolio .container .grid-item .item:hover .overlay .btn-detail {
+                animation: bot_to_top 0.8s forwards;
             }
 
     .Portfolio .grid-item .content::before {
@@ -458,383 +406,169 @@ body {
         transform: translateX(0px) translateY(0px);
     }
 }
-
-/* ───── SESSION 4 — BESTSELLERS ───── */
-.session4 {
-    background: var(--gray-100);
-    padding: 96px 64px;
+/* ───── SESSION 4 — OUR BLOG ───── */
+.blog-section {
+    background-color: #fff;
 }
-
-.session4-inner {
-    max-width: 1200px;
-    margin: 0 auto;
+.blog-main-title {
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    color: #000;
 }
-
-.session4-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 48px;
+.blog-sub-title {
+    font-size: 14px;
+    color: #666;
+    letter-spacing: 1px;
 }
-
-.session4 .section-heading {
-    font-size: clamp(36px, 3.5vw, 52px);
-    color: var(--black);
-}
-
-.view-all-link {
-    font-family: var(--font-body);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    color: var(--black);
-    text-decoration: none;
-    border-bottom: 1px solid var(--black);
-    padding-bottom: 3px;
-    transition: opacity .2s;
-}
-
-    .view-all-link:hover {
-        opacity: .5;
-        color: var(--black);
-    }
-
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-}
-
-.product-card {
-    background: var(--white);
-    cursor: pointer;
-}
-
-.product-img {
+.blog-img-wrapper {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 3/4;
-    background: #e8e7e5;
+    aspect-ratio: 16 / 9;
 }
-
-    .product-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform .5s ease;
-    }
-
-.product-card:hover .product-img img {
-    transform: scale(1.03);
-}
-
-.product-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    background: var(--black);
-    color: var(--white);
-}
-
-.product-info {
-    padding: 14px 0 20px;
-}
-
-.product-name {
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--black);
-    letter-spacing: .04em;
-    margin-bottom: 4px;
-}
-
-.product-sub {
-    font-size: 12px;
-    color: var(--gray-500);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-}
-
-.product-price {
-    font-family: var(--font-display);
-    font-size: 17px;
-    font-weight: 400;
-    color: var(--black);
-}
-
-/* ───── SESSION 5 — FULL-WIDTH EDITORIAL ───── */
-.session5 {
-    position: relative;
-    height: 80vh;
-    overflow: hidden;
-}
-
-.session5-bg {
+.blog-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: brightness(.55);
+    object-position: top center;
+    transition: transform 0.6s ease;
 }
-
-.session5-content {
+.blog-overlay {
     position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
-
-.session5 .section-label {
-    color: rgba(247,245,242,.6);
+.blog-card:hover .blog-img {
+    transform: scale(1.05);
 }
-
-.session5 .section-heading {
-    font-size: clamp(48px, 6vw, 88px);
-    color: var(--white);
-    max-width: 700px;
-    margin-bottom: 32px;
+.blog-card:hover .blog-overlay {
+    opacity: 1;
 }
-
-.btn-outline-white {
-    display: inline-block;
-    font-family: var(--font-body);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-    color: var(--white);
-    text-decoration: none;
-    border: 1px solid rgba(247,245,242,.6);
-    padding: 14px 36px;
-    transition: background .3s, color .3s, border-color .3s;
+.blog-item-title {
+    font-size: 14px;
+    font-weight: 600;
 }
-
-    .btn-outline-white:hover {
-        background: var(--white);
-        color: var(--black);
-        border-color: var(--white);
+    .blog-item-title a {
+        text-decoration: none;
+        color: #000;
+        transition: color 0.3s;
     }
-
-/* ───── SESSION 6 — NEWSLETTER / FOOTER CTA ───── */
-.session6 {
-    background: var(--black);
-    padding: 96px 64px;
+        .blog-item-title a:hover {
+            color: #ce0000; 
+        }
+@media (max-width: 768px) {
+    .blog-main-title {
+        font-size: 22px;
+    }
+}
+/* ───── SESSION 5 — Service-policy  ───── */
+.service-policy {
+    border-color: #f1f1f1 !important;
 }
 
-.session6-inner {
-    max-width: 680px;
-    margin: 0 auto;
+.policy-icon i {
+    color: #333; /* Màu icon đen như mẫu */
+    width: 45px;
     text-align: center;
 }
 
-.session6 .section-label {
-    color: #444;
+.policy-text h6 {
+    font-size: 15px;
+    margin-bottom: 2px;
+    color: #222;
 }
 
-.session6 .section-heading {
-    font-size: clamp(36px, 4vw, 56px);
-    color: var(--white);
+.policy-text p {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.service-policy .col-md-3:hover .policy-icon i {
+    color: #ce0000;
+    transition: 0.3s;
+}
+/* -----------------------FOOTER---------------------------- */
+.footer-custom {
+    background-color: #f8f9fa; 
+    padding: 50px 0;
+    color: #333;
+    font-size: 0.9rem;
+    border-top: 1px solid #eee;
+}
+
+.footer-title {
+    color: #ce0000; 
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 1.1rem;
     margin-bottom: 20px;
 }
 
-.session6 p {
-    font-size: 14px;
-    line-height: 1.75;
-    color: var(--gray-500);
-    margin-bottom: 40px;
+.footer-subtitle {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
-.newsletter-form {
-    display: flex;
-    gap: 0;
-    border: 1px solid #333;
-    overflow: hidden;
+.footer-text {
+    line-height: 1.6;
+    margin-bottom: 15px;
 }
 
-    .newsletter-form input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        padding: 16px 20px;
-        color: var(--white);
-        font-family: var(--font-body);
-        font-size: 13px;
-        font-weight: 300;
-        letter-spacing: .04em;
-        outline: none;
+.footer-links li {
+    margin-bottom: 8px;
+}
+
+    .footer-links li a {
+        text-decoration: none;
+        color: #333;
+        transition: color 0.3s;
     }
 
-        .newsletter-form input::placeholder {
-            color: #444;
+        .footer-links li a:hover {
+            color: #ce0000;
         }
 
-    .newsletter-form button {
-        background: var(--white);
-        border: none;
-        padding: 16px 28px;
-        font-family: var(--font-body);
-        font-size: 11px;
-        font-weight: 500;
-        letter-spacing: .18em;
-        text-transform: uppercase;
-        color: var(--black);
-        cursor: pointer;
-        transition: opacity .2s;
-        white-space: nowrap;
-    }
-
-        .newsletter-form button:hover {
-            opacity: .75;
-        }
-
-/* ───── RESPONSIVE ───── */
-@@media (max-width: 991px) {
-    .session2 {
-        grid-template-columns: 1fr;
-        padding: 64px 32px;
-    }
-
-    .features-row {
-        grid-template-columns: 1fr;
-    }
-
-    .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .hero-overlay {
-        padding: 0 32px 48px;
-    }
-
-    .session3, .session4, .session4-inner, .session6 {
-        padding-left: 32px;
-        padding-right: 32px;
-    }
+.social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    border: 1px solid #ddd;
+    color: #333;
+    margin-right: 5px;
+    border-radius: 4px;
+    text-decoration: none;
 }
 
-@@media (max-width: 575px) {
-    .session2 .section-heading,
-    .session3 .section-heading {
-        font-size: 36px;
+    .social-icons a:hover {
+        background-color: #ce0000;
+        color: white;
+        border-color: #ce0000;
     }
 
-    .session4-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-
-    .products-grid {
-        gap: 8px;
-    }
-
-    .newsletter-form {
-        flex-direction: column;
-    }
-
-        .newsletter-form button {
-            width: 100%;
-        }
+.subscribe-form .form-control {
+    border-radius: 0;
+    border-color: #ddd;
 }
 
-
-/* ───── RESPONSIVE ───── */
-@@media (max-width: 991px) {
-    .session2 {
-        grid-template-columns: 1fr;
-        padding: 64px 32px;
-    }
-
-    .features-row {
-        grid-template-columns: 1fr;
-    }
-
-    .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .hero-overlay {
-        padding: 0 32px 48px;
-    }
-
-    .session3, .session4, .session4-inner, .session6 {
-        padding-left: 32px;
-        padding-right: 32px;
-    }
+.subscribe-form .btn-danger {
+    background-color: #ce0000;
+    border-color: #ce0000;
+    border-radius: 0;
+    padding: 0 20px;
+    font-weight: bold;
 }
 
-@@media (max-width: 575px) {
-    .session2 .section-heading,
-    .session3 .section-heading {
-        font-size: 36px;
-    }
-
-    .session4-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-
-    .products-grid {
-        gap: 8px;
-    }
-
-    .newsletter-form {
-        flex-direction: column;
-    }
-
-        .newsletter-form button {
-            width: 100%;
-        }
-}
-
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 992px) {
-    .hero-slider img {
-        height: 400px;
-    }
-}
-
-@media (max-width: 768px) {
-    .hero-slider img {
-        height: 260px;
-    }
-
-    .slick-prev,
-    .slick-next {
-        width: 35px;
-        height: 35px;
-    }
-}
-/* FOOTER */
-.footer {
-    background-color: #f8f9fa;
-    border-top: 1px solid #eee;
-    padding: 30px 0;
-    margin-top: 50px;
-    width: 100%;
-}
-
-/* FIX LỖI RESPONSIVE TRÊN C# */
-@media (max-width: 991px) {
-    .navbar-nav {
-        text-align: center;
-        padding: 20px 0;
-    }
-
-        .navbar-nav .nav-link::after {
-            display: none;
-        }
+.payment-methods img, .shipping-methods img {
+    max-height: 40px;
+    margin-top: 5px;
 }

@@ -1,0 +1,415 @@
+﻿/* Identity Layout - Monochrome Editorial */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+    --ink: #0a0a0a;
+    --paper: #fafaf8;
+    --off-white: #f2f0ec;
+    --mid: #6b6860;
+    --border: #e0ddd8;
+    --accent: #c8a96e;
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* ── Identity Page Wrapper ── */
+.identity-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* ── Left Panel ── */
+.identity-panel-left {
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 48px;
+    position: relative;
+    overflow: hidden;
+}
+
+    .identity-panel-left::before {
+        content: '';
+        position: absolute;
+        top: -120px;
+        right: -80px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .identity-panel-left::after {
+        content: '';
+        position: absolute;
+        bottom: -60px;
+        left: -60px;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+.identity-brand {
+    text-align: center;
+    z-index: 1;
+}
+
+.identity-brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    line-height: 1;
+}
+
+.identity-brand-tagline {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 56px;
+}
+
+.identity-divider {
+    width: 40px;
+    height: 1px;
+    background: rgba(255,255,255,0.2);
+    margin: 0 auto 48px;
+}
+
+.identity-quote {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1.35rem;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    line-height: 1.8;
+    max-width: 320px;
+}
+
+.identity-quote-attr {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-style: normal;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    margin-top: 20px;
+}
+
+/* ── Right Panel ── */
+.identity-panel-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 64px;
+    background: var(--paper);
+}
+
+.identity-nav-top {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 48px;
+}
+
+.identity-nav-link {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--mid);
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 6px 0;
+    border-bottom: 1px solid transparent;
+}
+
+    .identity-nav-link:hover {
+        color: var(--ink);
+        border-bottom-color: var(--ink);
+    }
+
+.identity-form-wrap {
+    max-width: 400px;
+    width: 100%;
+}
+
+.identity-form-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 6px;
+    line-height: 1.1;
+}
+
+.identity-form-subtitle {
+    font-size: 13px;
+    color: var(--mid);
+    margin-bottom: 40px;
+    letter-spacing: 0.3px;
+}
+
+/* ── Form Controls ── */
+.identity-form .form-floating {
+    margin-bottom: 18px;
+}
+
+.identity-form .form-control {
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--border);
+    border-radius: 0;
+    padding: 12px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--ink);
+    box-shadow: none !important;
+    transition: border-color 0.2s;
+}
+
+    .identity-form .form-control:focus {
+        border-bottom-color: var(--ink);
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .identity-form .form-control::placeholder {
+        color: transparent;
+    }
+
+.identity-form .form-floating label {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--mid);
+    padding: 12px 0;
+    font-weight: 400;
+}
+
+.identity-form .form-floating > .form-control:not(:placeholder-shown) ~ label,
+.identity-form .form-floating > .form-control:focus ~ label {
+    transform: scale(0.85) translateY(-1.2rem) translateX(0);
+    color: var(--ink);
+}
+
+/* ── Buttons ── */
+.identity-btn-primary {
+    width: 100%;
+    padding: 15px 0;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+    .identity-btn-primary:hover {
+        background: #1a1a1a;
+    }
+
+    .identity-btn-primary:active {
+        transform: scale(0.99);
+    }
+
+/* ── Links ── */
+.identity-links {
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+    .identity-links a {
+        font-size: 12px;
+        color: var(--mid);
+        text-decoration: none;
+        letter-spacing: 0.3px;
+        transition: color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .identity-links a::before {
+            content: '';
+            width: 16px;
+            height: 1px;
+            background: var(--border);
+            flex-shrink: 0;
+            transition: width 0.2s, background 0.2s;
+        }
+
+        .identity-links a:hover {
+            color: var(--ink);
+        }
+
+            .identity-links a:hover::before {
+                width: 22px;
+                background: var(--ink);
+            }
+
+/* ── Checkbox ── */
+.identity-form .form-check {
+    margin: 12px 0;
+}
+
+.identity-form .form-check-label {
+    font-size: 13px;
+    color: var(--mid);
+    font-weight: 300;
+}
+
+.identity-form .form-check-input {
+    border-color: var(--border);
+    border-radius: 0;
+}
+
+    .identity-form .form-check-input:checked {
+        background-color: var(--ink);
+        border-color: var(--ink);
+    }
+
+/* ── Alert / Status Messages ── */
+.identity-form .alert {
+    border-radius: 0;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    padding: 12px 16px;
+}
+
+.identity-form .alert-success {
+    background: #f0f7f0;
+    border-color: #c3dfc3;
+    color: #2d5a2d;
+}
+
+.identity-form .alert-danger {
+    background: #fdf3f3;
+    border-color: #f0c3c3;
+    color: #7a2020;
+}
+
+/* ── Manage Account Layout ── */
+.identity-manage-page {
+    padding: 60px 0;
+    background: var(--paper);
+    min-height: 100vh;
+}
+
+.identity-manage-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+}
+
+.identity-manage-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.identity-manage-subtitle {
+    font-size: 13px;
+    color: var(--mid);
+    margin-top: 6px;
+}
+
+/* ── Nav Pills (Manage) ── */
+.identity-manage-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+    .identity-manage-nav .nav-link {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 12px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--mid);
+        font-weight: 400;
+        padding: 12px 16px;
+        border-radius: 0;
+        border-left: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+        .identity-manage-nav .nav-link:hover {
+            color: var(--ink);
+            background: var(--off-white);
+            border-left-color: var(--border);
+        }
+
+        .identity-manage-nav .nav-link.active {
+            color: var(--ink);
+            background: var(--off-white);
+            border-left-color: var(--ink);
+            font-weight: 500;
+        }
+
+/* ── Manage Content Area ── */
+.identity-manage-content h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .identity-page {
+        grid-template-columns: 1fr;
+    }
+
+    .identity-panel-left {
+        padding: 48px 32px;
+        min-height: 220px;
+    }
+
+    .identity-brand-name {
+        font-size: 2.2rem;
+    }
+
+    .identity-quote {
+        display: none;
+    }
+
+    .identity-panel-right {
+        padding: 40px 28px;
+    }
+
+    .identity-form-wrap {
+        max-width: 100%;
+    }
+}
