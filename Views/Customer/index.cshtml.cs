@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace ShopQuanAo.Views.Product
+namespace ShopQuanAo.Views.CustomerShopping
 {
-    public class CreateModel : PageModel
+    public class indexModel : PageModel
     {
         public void OnGet()
         {

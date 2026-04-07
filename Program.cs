@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
+using ShopQuanAo.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
