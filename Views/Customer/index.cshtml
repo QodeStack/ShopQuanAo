@@ -1,0 +1,193 @@
+﻿@model ShopQuanAo.ViewModels.CustomerOrderViewModel
+@{
+    ViewData["Title"] = "Đơn Mua";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/customerOrder.css" asp-append-version="true" />
+
+<div class="order-page">
+    <div class="container">
+
+        <div class="order-header">
+            <h1 class="order-title">Đơn Mua</h1>
+        </div>
+
+        <!-- Status Tabs -->
+        <div class="order-tabs">
+            @{
+                var tabStatuses = new[] {
+                    new { Key = "", Label = "Tất Cả" },
+                    new { Key = "Chờ xử lý", Label = "Chờ Xử Lý" },
+                    new { Key = "Đang vận chuyển", Label = "Vận Chuyển" },
+                    new { Key = "Đã giao", Label = "Hoàn Thành" },
+                    new { Key = "Đã hủy", Label = "Đã Hủy" },
+                };
+            }
+            @foreach (var tab in tabStatuses)
+            {
+                var isActive = Model.CurrentStatus == tab.Key;
+                <a href="@Url.Action("Index", "Customer", new { status = tab.Key, page = 1 })"
+                       class="order-tab @(isActive ? "active" : "")">
+                    @tab.Label
+                </a>
+            }
+        </div>
+
+        <!-- Orders List -->
+        @if (!Model.Orders.Any())
+        {
+            <div class="order-empty">
+                <div class="order-empty-icon">
+                    <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M25 28h4l2 18h18l3-13H31" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="34" cy="50" r="2" fill="currentColor" />
+                        <circle cx="46" cy="50" r="2" fill="currentColor" />
+                    </svg>
+                </div>
+                <p class="order-empty-text">Chưa có đơn hàng nào</p>
+                <a href="/Product" class="btn-shop-now">Mua Sắm Ngay</a>
+            </div>
+        }
+        else
+        {
+            <div class="order-list">
+                @foreach (var order in Model.Orders)
+                {
+                    <div class="order-card">
+                        <div class="order-card-header">
+                            <div class="order-meta">
+                                <span class="order-id">#DH@order.Id.ToString("D6")</span>
+                                <span class="order-date">@order.CreateTime.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <span class="order-status-badge status-@order.OrderStatus?.StatusName?.Replace(" ", "-").ToLower()">
+                                @order.OrderStatus?.StatusName
+                            </span>
+                        </div>
+
+                        <div class="order-items">
+                            @foreach (var detail in order.OrderDetails.Take(3))
+                            {
+                                <div class="order-item">
+                                    <div class="order-item-img">
+                                        @if (!string.IsNullOrEmpty(detail.Product?.Image))
+                                        {
+                                            <img src="@detail.Product.Image" alt="@detail.Product.ProductName" />
+                                        }
+                                        else
+                                        {
+                                            <div class="order-item-img-placeholder">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                                    <path d="M21 15l-5-5L5 21" />
+                                                </svg>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="order-item-info">
+                                        <div class="order-item-name">@detail.Product?.ProductName</div>
+                                        <div class="order-item-sub">
+                                            <span>Số lượng: @detail.Quantity</span>
+                                            <span class="order-item-price">@detail.UnitPrice.ToString("N0")₫</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (order.OrderDetails.Count > 3)
+                            {
+                                <div class="order-items-more">+@(order.OrderDetails.Count - 3) sản phẩm khác</div>
+                            }
+                        </div>
+
+                        <div class="order-card-footer">
+                            <div class="order-payment">
+                                <span class="order-payment-method">
+                                    @if (order.PaymentMethod == "COD")
+                                    {
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                                            <line x1="2" y1="10" x2="22" y2="10" />
+                                        </svg>
+                                        @:Thanh toán khi nhận hàng
+                                    }
+                                    else
+                                    {
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                                            <line x1="2" y1="10" x2="22" y2="10" />
+                                        </svg>
+                                        @order.PaymentMethod
+                                    }
+                                </span>
+                                @if (order.IsPaid)
+                                {
+                                    <span class="paid-badge">Đã thanh toán</span>
+                                }
+                            </div>
+                            <div class="order-total-area">
+                                <span class="order-total-label">Thành tiền:</span>
+                                <span class="order-total-amount">
+                                    @order.OrderDetails.Sum(d => d.UnitPrice * d.Quantity).ToString("N0")₫
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="order-actions">
+                            <a href="@Url.Action("Detail", "Customer", new { id = order.Id })" class="btn-order-detail">
+                                Xem Chi Tiết
+                            </a>
+                            @if (order.OrderStatus?.StatusName == "Chờ xử lý")
+                            {
+                                <form method="post" action="@Url.Action("Cancel", "Customer")" style="display:inline"
+                                      onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="orderId" value="@order.Id" />
+                                    <button type="submit" class="btn-order-cancel">Hủy Đơn</button>
+                                </form>
+                            }
+                            @if (order.OrderStatus?.StatusName == "Đã giao")
+                            {
+                                <a href="@Url.Action("Index", "Product")" class="btn-order-rebuy">Mua Lại</a>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="order-pagination">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="@Url.Action("Index", "Customer", new { status = Model.CurrentStatus, page = Model.CurrentPage - 1 })"
+                               class="page-arrow">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6" />
+                            </svg>
+                        </a>
+                    }
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a href="@Url.Action("Index", "Customer", new { status = Model.CurrentStatus, page = i })"
+                           class="page-num @(i == Model.CurrentPage ? "active" : "")">@i</a>
+                    }
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a href="@Url.Action("Index", "Customer", new { status = Model.CurrentStatus, page = Model.CurrentPage + 1 })"
+                               class="page-arrow">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6" />
+                            </svg>
+                        </a>
+                    }
+                </div>
+            }
+        }
+
+    </div>
+</div>

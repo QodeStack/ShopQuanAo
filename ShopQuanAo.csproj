@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\images\**" />
+    <Content Remove="Areas\images\**" />
+    <EmbeddedResource Remove="Areas\images\**" />
+    <None Remove="Areas\images\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="wwwroot\Image\aothun.webp" />
     <None Include="wwwroot\Image\quankaki.webp" />
     <None Include="wwwroot\Image\quanau.webp" />
@@ -22,10 +29,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Areas\images\products\" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,9 @@
-﻿@{
-    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout !=  null)
+﻿<link href="~/css/personalPage.css" asp-append-version="true" rel="stylesheet"/>
+@using ShopQuanAo.Areas.Identity.Pages.Account.Manage
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> LayoutUserManager
+@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
     {
         Layout = parentLayout.ToString();
     }
@@ -7,21 +11,113 @@
     {
         Layout = "/Areas/Identity/Pages/_Layout.cshtml";
     }
+
+    var currentUser = await LayoutUserManager.GetUserAsync(User);
+    var displayName = currentUser?.UserName ?? User.Identity?.Name ?? "User";
+    var initial = displayName.Length > 0 ? displayName[0].ToString().ToUpper() : "U";
+
+    string TabClass(string page)
+    {
+        var activePage = ViewContext.ViewData["ActivePage"] as string
+            ?? System.IO.Path.GetFileNameWithoutExtension(ViewContext.ActionDescriptor.DisplayName);
+        return string.Equals(activePage, page, StringComparison.OrdinalIgnoreCase) ? "tab-active" : "";
+    }
 }
 
-<h1>Manage your account</h1>
+<div class="acc-wrap">
+<div class="acc-inner">
 
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div class="row">
-        <div class="col-md-3">
-            <partial name="_ManageNav" />
+    
+    <aside class="acc-sidebar">
+
+        <div class="acc-user-block">
+            <div class="acc-avatar">@initial</div>
+            <div>
+                <div class="acc-uname">@displayName</div>
+                <a class="acc-edit"
+                   asp-area="Identity" asp-page="/Account/Manage/Index">
+                    <svg width="11" height="11" viewBox="0 0 16 16"
+                         fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M11.5 2.5l2 2-8 8H3.5v-2l8-8z"/>
+                    </svg>
+                    Sửa Hồ Sơ
+                </a>
+            </div>
         </div>
-        <div class="col-md-9">
+
+        <div class="acc-nav-group">
+            <div class="acc-nav-head">
+                <svg width="17" height="17" viewBox="0 0 20 20" fill="#444">
+                    <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-6 8a6 6 0 1112 0H4z"/>
+                </svg>
+                Tài Khoản Của Tôi
+            </div>
+            <div class="acc-nav-links">
+                <a asp-area="Identity" asp-page="/Account/Manage/Index"
+                   class="@ManageNavPages.IndexNavClass(ViewContext)">Hồ Sơ</a>
+                <a asp-area="Identity" asp-page="/Account/Manage/Email"
+                   class="@ManageNavPages.EmailNavClass(ViewContext)">Email</a>
+                <a asp-area="Identity" asp-page="/Account/Manage/ChangePassword"
+                   class="@ManageNavPages.ChangePasswordNavClass(ViewContext)">Đổi Mật Khẩu</a>
+                <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication"
+                   class="@ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">Xác Thực 2 Lớp</a>
+            </div>
+        </div>
+
+        <div class="acc-sep"></div>
+        <div class="acc-nav-group">
+    <div class="acc-nav-head">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+            <path d="M3 6h18"></path>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        Mua Sắm Của Tôi 
+    </div>
+    <div class="acc-nav-links">
+         <a asp-controller="Customer" asp-action="Index">Đơn Mua</a>
+    </div>
+</div>
+        <div class="acc-nav-group">
+            <div class="acc-nav-head">
+                <svg width="17" height="17" viewBox="0 0 20 20"
+                     fill="none" stroke="#444" stroke-width="1.5">
+                    <rect x="2" y="3" width="16" height="14" rx="1"/>
+                    <path d="M6 7h8M6 10h6M6 13h4"/>
+                </svg>
+                Dữ Liệu &amp; Khác
+            </div>
+            <div class="acc-nav-links">
+                <a asp-area="Identity" asp-page="/Account/Manage/PersonalData"
+                   class="@ManageNavPages.PersonalDataNavClass(ViewContext)">Dữ Liệu Cá Nhân</a>
+            </div>
+        </div>
+
+    </aside>
+
+    
+    <main class="acc-main">
+
+        <div class="acc-tabs">
+            <a class="acc-tab @TabClass("Index")"
+               asp-area="Identity" asp-page="/Account/Manage/Index">Tất Cả</a>
+            <a class="acc-tab @TabClass("Email")"
+               asp-area="Identity" asp-page="/Account/Manage/Email">Email</a>
+            <a class="acc-tab @TabClass("ChangePassword")"
+               asp-area="Identity" asp-page="/Account/Manage/ChangePassword">Mật Khẩu</a>
+            <a class="acc-tab @TabClass("TwoFactorAuthentication")"
+               asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication">Bảo Mật 2FA</a>
+            <a class="acc-tab @TabClass("PersonalData")"
+               asp-area="Identity" asp-page="/Account/Manage/PersonalData">Dữ Liệu</a>
+        </div>
+
+        <div class="acc-body">
             @RenderBody()
         </div>
-    </div>
+
+    </main>
+
+</div>
 </div>
 
 @section Scripts {
