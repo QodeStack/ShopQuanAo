@@ -149,7 +149,8 @@ namespace ShopQuanAo.Controllers
                 .Include(p => p.Category)
                 .Include(p => p.ProductSizes)
                     .ThenInclude(ps => ps.Size)
-                .Select(p => new {
+                .Select(p => new
+                {
                     id = p.Id,
                     productName = p.ProductName,
                     brandName = p.BrandName,
@@ -157,7 +158,8 @@ namespace ShopQuanAo.Controllers
                     image = p.Image,
                     categoryId = p.CategoryId,
                     categoryName = p.Category.CategoryName,
-                    productSizes = p.ProductSizes.Select(ps => new {
+                    productSizes = p.ProductSizes.Select(ps => new
+                    {
                         sizeName = ps.Size.SizeName,
                         quantity = ps.Quantity
                     }).ToList()
@@ -216,12 +218,108 @@ namespace ShopQuanAo.Controllers
             await _context.SaveChangesAsync();
             return Json(new { success = true });
         }
+        // ═══════════════════════════════════════════════════════════════
+        // THÊM VÀO AdminController.cs — các action quản lý đơn hàng
+        // ═══════════════════════════════════════════════════════════════
+
+        // 1. Thêm action View
+        public IActionResult Orders() => View();
+
+        // 2. Thêm GetOrders API
+        [HttpGet]
+        public async Task<IActionResult> GetOrders()
+        {
+            var orders = await _context.Orders
+                .Include(o => o.OrderStatus)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                .OrderByDescending(o => o.CreateTime)
+                .Where(o => !o.IsDeleted)
+                .Select(o => new
+                {
+                    id = o.Id,
+                    name = o.Name,
+                    email = o.Email,
+                    mobileNumber = o.MobileNumber,
+                    address = o.Address,
+                    paymentMethod = o.PaymentMethod,
+                    isPaid = o.IsPaid,
+                    createTime = o.CreateTime,
+                    statusName = o.OrderStatus.StatusName,
+                    orderStatusId = o.OrderStatusId,
+                    orderDetails = o.OrderDetails.Select(d => new
+                    {
+                        d.Id,
+                        d.Quantity,
+                        d.UnitPrice,
+                        productName = d.Product.ProductName,
+                        productImage = d.Product.Image
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Json(orders);
+        }
+
+        // 3. Thêm UpdateOrderStatus API
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderStatusDto dto)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderStatus)
+                .FirstOrDefaultAsync(o => o.Id == dto.OrderId);
+
+            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng." });
+
+            var currentStatus = order.OrderStatus?.StatusName;
+
+            // Luồng: Chờ xác nhận -> Chờ xử lý -> Đang xử lý -> Đang vận chuyển -> Đã hoàn thành (User làm)
+            string? nextStatusName = dto.Action switch
+            {
+                // 1. Admin xác nhận đơn
+                "confirm" when currentStatus == "Chờ xác nhận" => "Đang xử lý",
+
+                // 2. Admin chuyển sang giao hàng
+                "ship" when currentStatus == "Đang xử lý" => "Đang giao hàng",
+
+                // 3. Hủy
+                "cancel" when currentStatus == "Chờ xác nhận" => "Đã hủy",
+
+                _ => null
+            };
+
+            if (nextStatusName == null)
+                return Json(new { success = false, message = $"Hành động '{dto.Action}' không hợp lệ cho trạng thái hiện tại '{currentStatus}'." });
+
+            var nextStatus = await _context.OrderStatuses
+                .FirstOrDefaultAsync(s => s.StatusName == nextStatusName);
+
+            if (nextStatus == null)
+                return Json(new { success = false, message = $"Lỗi hệ thống: Trạng thái '{nextStatusName}' chưa được khởi tạo trong Database." });
+
+            order.OrderStatusId = nextStatus.Id;
+
+            // Nếu bạn muốn lưu vết đơn vị vận chuyển
+            // if (!string.IsNullOrEmpty(dto.ShippingProvider)) { order.Note = "ĐVVC: " + dto.ShippingProvider; }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, newStatus = nextStatusName });
+        }
     }
 
-    // ── DTOs ───────────────────────────────────────────────────
-    public class CreateUserDto { public string Email { get; set; } public string Password { get; set; } public string Role { get; set; } }
+        // ── DTOs 
+        public class CreateUserDto { public string Email { get; set; } public string Password { get; set; } public string Role { get; set; } }
     public class EditUserDto { public string Id { get; set; } public string Role { get; set; } }
     public class DeleteDto { public string Id { get; set; } }
     public class DeleteIntDto { public int Id { get; set; } }
     public class ProductDto { public int Id { get; set; } public string ProductName { get; set; } public string BrandName { get; set; } public double Price { get; set; } public string Image { get; set; } public int CategoryId { get; set; } }
+
+    public class UpdateOrderStatusDto
+    {
+        public int OrderId { get; set; }
+        public string Action { get; set; }    // "confirm" | "ship" | "cancel"
+        public string? ShippingProvider { get; set; }
+    }
 }

@@ -17,12 +17,13 @@
         <div class="order-tabs">
             @{
                 var tabStatuses = new[] {
-                    new { Key = "", Label = "Tất Cả" },
-                    new { Key = "Chờ xử lý", Label = "Chờ Xử Lý" },
-                    new { Key = "Đang vận chuyển", Label = "Vận Chuyển" },
-                    new { Key = "Đã giao", Label = "Hoàn Thành" },
-                    new { Key = "Đã hủy", Label = "Đã Hủy" },
-                };
+    new { Key = "", Label = "Tất cả" },
+    new { Key = "Chờ xác nhận", Label = "Chờ xác nhận" },
+    new { Key = "Đang xử lý", Label = "Chờ xử lý" },
+    new { Key = "Đang giao hàng", Label = "Đang giao" },
+    new { Key = "Đã hoàn thành", Label = "Hoàn thành" },
+    new { Key = "Đã hủy", Label = "Đã hủy" },
+};
             }
             @foreach (var tab in tabStatuses)
             {
@@ -58,7 +59,7 @@
                     <div class="order-card">
                         <div class="order-card-header">
                             <div class="order-meta">
-                                <span class="order-id">#DH@order.Id.ToString("D6")</span>
+                                <span class="order-id">#DH@(order.Id.ToString("D6"))</span>
                                 <span class="order-date">@order.CreateTime.ToString("dd/MM/yyyy HH:mm")</span>
                             </div>
                             <span class="order-status-badge status-@order.OrderStatus?.StatusName?.Replace(" ", "-").ToLower()">
@@ -135,10 +136,11 @@
                         </div>
 
                         <div class="order-actions">
-                            <a href="@Url.Action("Detail", "Customer", new { id = order.Id })" class="btn-order-detail">
-                                Xem Chi Tiết
-                            </a>
-                            @if (order.OrderStatus?.StatusName == "Chờ xử lý")
+                            @{
+                                var statusName = order.OrderStatus?.StatusName?.Trim();
+                            }
+
+                            @if (statusName == "Chờ xác nhận")
                             {
                                 <form method="post" action="@Url.Action("Cancel", "Customer")" style="display:inline"
                                       onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
@@ -147,7 +149,16 @@
                                     <button type="submit" class="btn-order-cancel">Hủy Đơn</button>
                                 </form>
                             }
-                            @if (order.OrderStatus?.StatusName == "Đã giao")
+                            else if (statusName == "Đang giao hàng")
+                            {
+                                <form method="post" action="@Url.Action("ConfirmReceived", "Customer")"
+                                      onsubmit="return confirm('Xác nhận bạn đã nhận được hàng?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="orderId" value="@order.Id" />
+                                    <button type="submit" class="btn-order-rebuy">✓ Đã nhận hàng</button>
+                                </form>
+                            }
+                            else if (statusName == "Đã hoàn thành")
                             {
                                 <a href="@Url.Action("Index", "Product")" class="btn-order-rebuy">Mua Lại</a>
                             }

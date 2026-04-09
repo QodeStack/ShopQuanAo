@@ -80,7 +80,7 @@ namespace ShopQuanAo.Controllers
 
             if (order == null) return NotFound();
 
-            if (order.OrderStatus?.StatusName == "Chờ xử lý")
+            if (order.OrderStatus?.StatusName == "Chờ xác nhận")
             {
                 var cancelStatus = await _context.OrderStatuses
                     .FirstOrDefaultAsync(s => s.StatusName == "Đã hủy");
@@ -90,6 +90,45 @@ namespace ShopQuanAo.Controllers
                     await _context.SaveChangesAsync();
                     TempData["Message"] = "Đã hủy đơn hàng thành công.";
                 }
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+        // ═══════════════════════════════════════════════════════════════
+        // THÊM VÀO CustomerController.cs — action xác nhận đã nhận hàng
+        // ═══════════════════════════════════════════════════════════════
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmReceived(int orderId)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            // 1. Tìm đơn hàng
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null) return NotFound();
+
+            // 2. Tìm ID của trạng thái "Đã hoàn thành"
+            var completedStatus = await _context.OrderStatuses
+                .FirstOrDefaultAsync(s => s.StatusName == "Đã hoàn thành");
+
+            if (completedStatus != null)
+            {
+                // 3. Cập nhật ID
+                order.OrderStatusId = completedStatus.Id;
+
+                // QUAN TRỌNG: Gán null cho đối tượng liên kết để tránh EF dùng lại dữ liệu cũ trong Cache
+                order.OrderStatus = null;
+
+                order.IsPaid = true;
+
+                // 4. Đánh dấu thực thể đã thay đổi và lưu
+                _context.Entry(order).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                TempData["Message"] = "Cảm ơn bạn đã mua hàng!";
             }
 
             return RedirectToAction(nameof(Index));

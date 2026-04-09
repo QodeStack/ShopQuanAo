@@ -9,7 +9,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+@* <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"> *@
 <link href="~/css/Admin_Index.css" asp-append-version="true" rel="stylesheet" />
 <div class="admin-wrap">
     <div class="admin-body">
@@ -23,7 +23,7 @@
                 <a class="sidebar-link" href="#">
                     <span class="sidebar-icon">◈</span> Doanh thu
                 </a>
-                <a class="sidebar-link" href="#">
+                <a class="sidebar-link" href="@Url.Action("Orders", "Admin")">
                     <span class="sidebar-icon">◎</span> Đơn hàng
                 </a>
             </div>

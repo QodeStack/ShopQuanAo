@@ -161,7 +161,6 @@
     color: var(--muted);
 }
 
-/* Status Badges */
 .order-status-badge {
     font-size: 0.72rem;
     font-weight: 600;
@@ -171,29 +170,24 @@
     border-radius: 20px;
 }
 
-.status-chờ-xử-lý {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.status-đang-vận-chuyển {
-    background: #cfe2ff;
-    color: #0a58ca;
-}
-
-.status-đã-giao {
-    background: #d1e7dd;
-    color: #0a6640;
-}
-
 .status-đã-hủy {
-    background: #f8d7da;
-    color: #842029;
+    background-color: #fff1f0;
+    color: #ff4d4f;
+    border: 1px solid #ffa39e;
 }
 
-.status-hoàn-thành {
-    background: #d1e7dd;
-    color: #0a6640;
+.status-đã-hoàn-thành {
+    background-color: #f6ffed;
+    color: #52c41a;
+    border: 1px solid #b7eb8f;
+}
+
+.status-chờ-xác-nhận,
+.status-đang-xử-lý,
+.status-đang-giao-hàng {
+    background-color: #fffbe6;
+    color: #faad14;
+    border: 1px solid #ffe58f;
 }
 
 /* Items */

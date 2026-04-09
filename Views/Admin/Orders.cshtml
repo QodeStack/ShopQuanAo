@@ -1,0 +1,580 @@
+﻿@{
+    ViewData["Title"] = "Quản lý Đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@* <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"> *@
+<link href="~/css/Admin_Orders.css" asp-append-version="true" rel="stylesheet" />
+
+<div class="admin-wrap">
+    <div class="admin-body">
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Tổng quan</div>
+                <a class="sidebar-link" href="@Url.Action("Index", "Admin")"><span class="sidebar-icon">▣</span> Dashboard</a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">◈</span> Doanh thu</a>
+                <a class="sidebar-link active" href="@Url.Action("Orders", "Admin")"><span class="sidebar-icon">◎</span> Đơn hàng</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Quản lý</div>
+                <a class="sidebar-link" href="@Url.Action("Users", "Admin")"><span class="sidebar-icon">◉</span> Người dùng</a>
+                <a class="sidebar-link" href="@Url.Action("Products", "Admin")"><span class="sidebar-icon">◫</span> Sản phẩm</a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">◧</span> Danh mục</a>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Hệ thống</div>
+                <a class="sidebar-link" href="@Url.Action("Index", "Home")"><span class="sidebar-icon">↗</span> Về cửa hàng</a>
+                <a class="sidebar-link" href="/Identity/Account/Manage"><span class="sidebar-icon">◑</span> Tài khoản</a>
+            </div>
+        </aside>
+
+        <main class="admin-content">
+            <div class="page-title-row">
+                <div>
+                    <div class="page-eyebrow">Quản lý</div>
+                    <div class="page-title">Đơn Hàng</div>
+                </div>
+                <div class="date-badge" id="currentDate"></div>
+            </div>
+
+            <!-- Pipeline Stats -->
+            <div class="pipeline-stats" id="pipelineStats">
+                <div class="pipe-card" data-filter="" onclick="filterOrders('')">
+                    <div class="pipe-count" id="pipeAll">—</div>
+                    <div class="pipe-label">Tất cả</div>
+                    <div class="pipe-bar all"></div>
+                </div>
+                <div class="pipe-card" data-filter="Chờ xử lý" onclick="filterOrders('Chờ xử lý')">
+                    <div class="pipe-count" id="pipePending">—</div>
+                    <div class="pipe-label">Chờ xử lý</div>
+                    <div class="pipe-bar pending"></div>
+                </div>
+                <div class="pipe-card" data-filter="Đang xử lý" onclick="filterOrders('Đang xử lý')">
+                    <div class="pipe-count" id="pipeProcessing">—</div>
+                    <div class="pipe-label">Đang xử lý</div>
+                    <div class="pipe-bar processing"></div>
+                </div>
+                <div class="pipe-card" data-filter="Đang vận chuyển" onclick="filterOrders('Đang vận chuyển')">
+                    <div class="pipe-count" id="pipeShipping">—</div>
+                    <div class="pipe-label">Đang vận chuyển</div>
+                    <div class="pipe-bar shipping"></div>
+                </div>
+                <div class="pipe-card" data-filter="Đã giao" onclick="filterOrders('Đã giao')">
+                    <div class="pipe-count" id="pipeDelivered">—</div>
+                    <div class="pipe-label">Đã giao</div>
+                    <div class="pipe-bar delivered"></div>
+                </div>
+                <div class="pipe-card" data-filter="Đã hủy" onclick="filterOrders('Đã hủy')">
+                    <div class="pipe-count" id="pipeCancelled">—</div>
+                    <div class="pipe-label">Đã hủy</div>
+                    <div class="pipe-bar cancelled"></div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="orderSearch" placeholder="Tìm theo tên, email, mã đơn..." oninput="applyFilters()">
+                </div>
+                <select class="filter-select" id="paymentFilter" onchange="applyFilters()">
+                    <option value="">Tất cả TT</option>
+                    <option value="paid">Đã thanh toán</option>
+                    <option value="unpaid">Chưa thanh toán</option>
+                </select>
+                <select class="filter-select" id="methodFilter" onchange="applyFilters()">
+                    <option value="">Tất cả PT</option>
+                    <option value="COD">COD</option>
+                    <option value="MoMo">MoMo</option>
+                </select>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="panel orders-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Danh sách đơn hàng</div>
+                    <div class="panel-count" id="orderCount">—</div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Sản phẩm</th>
+                            <th>Tổng tiền</th>
+                            <th>Thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày đặt</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="8" class="loading-cell">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+                <div class="pagination-row">
+                    <div class="page-info" id="pageInfo">—</div>
+                    <div class="page-btns" id="pageBtns"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="orderDetailModal">
+    <div class="modal-box modal-large">
+        <div class="modal-header-row">
+            <div>
+                <div class="modal-eyebrow">Chi tiết đơn hàng</div>
+                <div class="modal-title" id="detailOrderId">—</div>
+            </div>
+            <button class="modal-close-btn" onclick="closeModal('orderDetailModal')">✕</button>
+        </div>
+
+        <!-- Status Timeline -->
+        <div class="status-timeline" id="statusTimeline"></div>
+
+        <div class="detail-grid">
+            <!-- Customer Info -->
+            <div class="detail-section">
+                <div class="detail-section-title">Thông tin khách hàng</div>
+                <div class="detail-row"><span>Tên:</span><strong id="dName">—</strong></div>
+                <div class="detail-row"><span>Email:</span><strong id="dEmail">—</strong></div>
+                <div class="detail-row"><span>SĐT:</span><strong id="dPhone">—</strong></div>
+                <div class="detail-row"><span>Địa chỉ:</span><strong id="dAddress">—</strong></div>
+            </div>
+            <!-- Order Info -->
+            <div class="detail-section">
+                <div class="detail-section-title">Thông tin đơn hàng</div>
+                <div class="detail-row"><span>PT Thanh toán:</span><strong id="dPayMethod">—</strong></div>
+                <div class="detail-row"><span>Trạng thái TT:</span><strong id="dIsPaid">—</strong></div>
+                <div class="detail-row"><span>Ngày đặt:</span><strong id="dCreateTime">—</strong></div>
+                <div class="detail-row"><span>Trạng thái:</span><strong id="dStatus">—</strong></div>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="detail-section" style="margin-top:1rem">
+            <div class="detail-section-title">Sản phẩm</div>
+            <div id="dItems" class="detail-items"></div>
+            <div class="detail-total-row">
+                <span>Tổng cộng</span>
+                <strong id="dTotal" class="detail-total-amount">—</strong>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="modal-actions" id="modalActions"></div>
+    </div>
+</div>
+
+<!-- Shipping Modal -->
+<div class="modal-overlay" id="shippingModal">
+    <div class="modal-box" style="width:420px">
+        <div class="modal-header-row">
+            <div>
+                <div class="modal-eyebrow">Phương thức vận chuyển</div>
+                <div class="modal-title">Chọn đơn vị giao hàng</div>
+            </div>
+            <button class="modal-close-btn" onclick="closeModal('shippingModal')">✕</button>
+        </div>
+        <input type="hidden" id="shippingOrderId">
+        <div class="shipping-options">
+            <label class="shipping-option">
+                <input type="radio" name="shippingProvider" value="GHN" checked>
+                <div class="shipping-option-body">
+                    <div class="shipping-name">GHN - Giao Hàng Nhanh</div>
+                    <div class="shipping-desc">Giao trong 1-2 ngày làm việc</div>
+                </div>
+                <div class="shipping-check">✓</div>
+            </label>
+            <label class="shipping-option">
+                <input type="radio" name="shippingProvider" value="GHTK">
+                <div class="shipping-option-body">
+                    <div class="shipping-name">GHTK - Giao Hàng Tiết Kiệm</div>
+                    <div class="shipping-desc">Giao trong 2-3 ngày làm việc</div>
+                </div>
+                <div class="shipping-check">✓</div>
+            </label>
+            <label class="shipping-option">
+                <input type="radio" name="shippingProvider" value="ViettelPost">
+                <div class="shipping-option-body">
+                    <div class="shipping-name">Viettel Post</div>
+                    <div class="shipping-desc">Giao trong 2-4 ngày làm việc</div>
+                </div>
+                <div class="shipping-check">✓</div>
+            </label>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('shippingModal')">Huỷ</button>
+            <button class="btn-submit-admin" onclick="confirmShipping()">Xác nhận vận chuyển</button>
+        </div>
+    </div>
+</div>
+
+<div class="admin-toast" id="adminToast"></div>
+
+<script>
+    let allOrders = [];
+    let filteredOrders = [];
+    let currentPage = 1;
+    let currentFilter = '';
+    const pageSize = 10;
+
+    const STATUS_FLOW = {
+        'Chờ xác nhận': { next: 'Đang xử lý', action: 'confirm', label: '✓ Xác nhận đơn', cls: 'btn-confirm' },
+        'Đang xử lý':   { next: 'Đang giao hàng', action: 'ship', label: '🚚 Giao hàng', cls: 'btn-ship' },
+        'Đang giao hàng': { next: null },
+        'Đã hoàn thành': { next: null },
+        'Đã hủy': { next: null }
+    };
+
+        const STATUS_STEPS = ['Chờ xác nhận','Đang xử lý','Đang giao hàng','Đã hoàn thành'];
+    function handleAction(id, action) {
+    if (action === 'confirm') {
+        confirmOrder(id);
+    } else if (action === 'cancel') {
+        cancelOrderInline(id);
+    } else if (action === 'ship') {
+        openShippingModal(id);
+    }
+}
+    async function loadOrders() {
+        try {
+            const res = await fetch('/Admin/GetOrders');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            allOrders = await res.json();
+            // Debug: log first order to see exact field names
+            if (allOrders.length > 0) {
+                console.log('[DEBUG] Sample order:', JSON.stringify(allOrders[0], null, 2));
+                console.log('[DEBUG] statusName value:', JSON.stringify(allOrders[0].statusName));
+                console.log('[DEBUG] Total orders:', allOrders.length);
+            } else {
+                console.log('[DEBUG] No orders returned from API');
+            }
+        } catch(err) {
+            console.error('[DEBUG] loadOrders error:', err);
+            showToast('✕ Không thể tải dữ liệu đơn hàng', 'error');
+            allOrders = [];
+        }
+        updatePipelineStats();
+        applyFilters();
+    }
+
+    function updatePipelineStats() {
+        const counts = { 'Chờ xử lý':0, 'Đang xử lý':0, 'Đang vận chuyển':0, 'Đã giao':0, 'Đã hủy':0 };
+        allOrders.forEach(o => { if (counts[o.statusName] !== undefined) counts[o.statusName]++; });
+
+        document.getElementById('pipeAll').textContent = allOrders.length;
+        document.getElementById('pipePending').textContent = counts['Chờ xử lý'];
+        document.getElementById('pipeProcessing').textContent = counts['Đang xử lý'];
+        document.getElementById('pipeShipping').textContent = counts['Đang vận chuyển'];
+        document.getElementById('pipeDelivered').textContent = counts['Đã giao'];
+        document.getElementById('pipeCancelled').textContent = counts['Đã hủy'];
+    }
+
+    function filterOrders(status) {
+        currentFilter = status;
+        document.querySelectorAll('.pipe-card').forEach(c => {
+            c.classList.toggle('active', c.dataset.filter === status);
+        });
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const q       = document.getElementById('orderSearch').value.trim().toLowerCase();
+        const payment = document.getElementById('paymentFilter').value;
+        const method  = document.getElementById('methodFilter').value;
+
+        filteredOrders = allOrders.filter(o => {
+            const mStatus  = !currentFilter || o.statusName === currentFilter;
+            const mQ       = !q || o.name.toLowerCase().includes(q)
+                              || o.email.toLowerCase().includes(q)
+                              || String(o.id).includes(q);
+            const mPayment = !payment || (payment === 'paid' ? o.isPaid : !o.isPaid);
+            const mMethod  = !method || o.paymentMethod === method;
+            return mStatus && mQ && mPayment && mMethod;
+        });
+
+        currentPage = 1;
+        renderTable();
+    }
+
+    function renderTable() {
+        const start = (currentPage - 1) * pageSize;
+        const page  = filteredOrders.slice(start, start + pageSize);
+        const body  = document.getElementById('ordersTableBody');
+
+        document.getElementById('orderCount').textContent = filteredOrders.length + ' đơn';
+
+        if (page.length === 0) {
+            body.innerHTML = `<tr><td colspan="8" class="loading-cell" style="color:var(--gray-500)">Không có đơn hàng nào</td></tr>`;
+        } else {
+            body.innerHTML = page.map(o => {
+                const statusInfo = getStatusDisplay(o.statusName);
+                const totalAmt = (o.orderDetails || []).reduce((s, d) => s + d.unitPrice * d.quantity, 0);
+                return `
+                <tr class="order-row" onclick="openOrderDetail(${o.id})">
+                    <td class="order-id-cell">#${String(o.id).padStart(6,'0')}</td>
+                    <td>
+                        <div class="customer-cell">
+                            <div class="cust-name">${o.name || '—'}</div>
+                            <div class="cust-email">${o.email || '—'}</div>
+                        </div>
+                    </td>
+                    <td class="items-count">${(o.orderDetails||[]).length} sp</td>
+                    <td class="amount-cell">${totalAmt.toLocaleString('vi-VN')}₫</td>
+                    <td>${o.isPaid
+                        ? '<span class="pay-badge paid">✓ Đã TT</span>'
+                        : '<span class="pay-badge unpaid">⏳ Chờ TT</span>'}</td>
+                    <td>
+                        <span class="status-pill ${statusInfo.cls}">${statusInfo.label}</span>
+                        <div style="font-family:var(--mono);font-size:0.55rem;color:var(--gray-500);margin-top:2px;">${o.statusName||'null'}</div>
+                    </td>
+                    <td class="date-cell">${formatDate(o.createTime)}</td>
+                    <td onclick="event.stopPropagation()">
+                        <div class="action-btns">
+                            ${getActionBtn(o)}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        renderPagination();
+    }
+
+    function getStatusDisplay(status) {
+    const map = {
+        'Chờ xác nhận':   { cls: 'status-pending',   label: '⏳ Chờ xác nhận' },
+        'Đang xử lý':     { cls: 'status-processing', label: '⚙ Đang xử lý' },
+        'Đang giao hàng': { cls: 'status-shipping',   label: '🚚 Đang giao hàng' },
+        'Đã hoàn thành':  { cls: 'status-delivered',  label: '✓ Hoàn thành' },
+        'Đã hủy':         { cls: 'status-cancelled',  label: '✕ Đã hủy' },
+    };
+        return map[status] || { cls: '', label: status };
+    }
+
+        function getActionBtn(o) {
+        const status = (o.statusName || '').trim();
+        const flow = STATUS_FLOW[status];
+
+        if (flow && flow.action) {
+            let buttons = `<button class="action-btn ${flow.cls}" onclick="event.stopPropagation(); handleAction(${o.id}, '${flow.action}')">${flow.label}</button>`;
+        
+            // Cho phép hủy nếu đơn chưa được xử lý sâu
+            if (status === 'Chờ xác nhận' || status === 'Chờ xử lý') {
+                buttons += `<button class="action-btn btn-cancel-sm" onclick="event.stopPropagation(); handleAction(${o.id}, 'cancel')">✕ Hủy</button>`;
+            }
+            return buttons;
+        }
+
+        return `<span class="status-label-only">${status}</span>`;
+    }
+
+    function renderPagination() {
+        const total = Math.ceil(filteredOrders.length / pageSize);
+        const start = (currentPage - 1) * pageSize + 1;
+        const end   = Math.min(currentPage * pageSize, filteredOrders.length);
+        document.getElementById('pageInfo').textContent =
+            filteredOrders.length ? `${start}–${end} / ${filteredOrders.length}` : '0';
+
+        let html = '';
+        for (let i = 1; i <= total; i++) {
+            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+        }
+        document.getElementById('pageBtns').innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; renderTable(); }
+
+    // ── Order Detail Modal ──────────────────────────────────
+    function openOrderDetail(id) {
+        const o = allOrders.find(x => x.id === id);
+        if (!o) return;
+
+        document.getElementById('detailOrderId').textContent = `#${String(id).padStart(6,'0')}`;
+        document.getElementById('dName').textContent     = o.name;
+        document.getElementById('dEmail').textContent    = o.email;
+        document.getElementById('dPhone').textContent    = o.mobileNumber;
+        document.getElementById('dAddress').textContent  = o.address;
+        document.getElementById('dPayMethod').textContent= o.paymentMethod;
+        document.getElementById('dIsPaid').innerHTML     = o.isPaid
+            ? '<span style="color:#27ae60">✓ Đã thanh toán</span>'
+            : '<span style="color:#e67e22">⏳ Chưa thanh toán</span>';
+        document.getElementById('dCreateTime').textContent = formatDate(o.createTime);
+        document.getElementById('dStatus').innerHTML     = `<span class="status-pill ${getStatusDisplay(o.statusName).cls}">${getStatusDisplay(o.statusName).label}</span>`;
+
+        // Timeline
+        renderTimeline(o.statusName);
+
+        // Items
+        const total = (o.orderDetails||[]).reduce((s,d)=> s + d.unitPrice*d.quantity, 0);
+        document.getElementById('dItems').innerHTML = (o.orderDetails||[]).map(d => `
+            <div class="detail-item-row">
+                ${d.productImage ? `<img src="${d.productImage}" class="detail-item-img" onerror="this.style.display='none'">` : '<div class="detail-item-img-placeholder">👕</div>'}
+                <div class="detail-item-info">
+                    <div class="detail-item-name">${d.productName || 'Sản phẩm'}</div>
+                    <div class="detail-item-meta">x${d.quantity} · ${d.unitPrice.toLocaleString('vi-VN')}₫/sp</div>
+                </div>
+                <div class="detail-item-subtotal">${(d.unitPrice*d.quantity).toLocaleString('vi-VN')}₫</div>
+            </div>`).join('');
+        document.getElementById('dTotal').textContent = total.toLocaleString('vi-VN') + '₫';
+
+        // Action buttons
+        renderModalActions(o);
+
+        document.getElementById('orderDetailModal').classList.add('show');
+    }
+
+    function renderTimeline(currentStatus) {
+        const cancelIdx = STATUS_STEPS.indexOf(currentStatus);
+        const isCancelled = currentStatus === 'Đã hủy';
+
+        document.getElementById('statusTimeline').innerHTML = STATUS_STEPS.map((step, i) => {
+            let cls = 'timeline-step';
+            if (isCancelled) {
+                cls += i === 0 ? ' done' : ' inactive';
+            } else {
+                const curr = STATUS_STEPS.indexOf(currentStatus);
+                if (i < curr) cls += ' done';
+                else if (i === curr) cls += ' active';
+                else cls += ' inactive';
+            }
+            return `
+            <div class="${cls}">
+                <div class="timeline-dot"></div>
+                <div class="timeline-label">${step}</div>
+                ${i < STATUS_STEPS.length-1 ? '<div class="timeline-line"></div>' : ''}
+            </div>`;
+        }).join('') + (isCancelled ? `
+            <div class="timeline-step cancelled-step">
+                <div class="timeline-dot cancelled"></div>
+                <div class="timeline-label" style="color:#c0392b">Đã hủy</div>
+            </div>` : '');
+    }
+
+    function renderModalActions(o) {
+        const flow = STATUS_FLOW[o.statusName];
+        let html = '';
+
+        if (o.statusName === 'Chờ xử lý') {
+            html += `<button class="modal-action-btn btn-confirm" onclick="confirmOrder(${o.id}, true)">✓ Xác nhận đơn hàng</button>`;
+            html += `<button class="modal-action-btn btn-cancel-order" onclick="cancelOrder(${o.id})">✕ Hủy đơn</button>`;
+        } else if (o.statusName === 'Đang xử lý') {
+            html += `<button class="modal-action-btn btn-ship" onclick="openShippingModal(${o.id}, null, true)">🚚 Chọn vận chuyển</button>`;
+        }
+
+        document.getElementById('modalActions').innerHTML = html;
+    }
+    // ── Actions ────────────────────────────────────────────
+    async function confirmOrder(id, fromModal = false) {
+        if (!confirm('Xác nhận đơn hàng #' + String(id).padStart(6,'0') + '?')) return;
+        await updateOrderStatus(id, 'confirm');
+        if (fromModal) closeModal('orderDetailModal');
+    }
+
+    async function cancelOrderInline(id) {
+        if (!confirm('Huỷ đơn hàng #' + String(id).padStart(6,'0') + '?')) return;
+        await updateOrderStatus(id, 'cancel');
+    }
+
+    function openShippingModal(id, e, fromModal = false) {
+        if (e) e.stopPropagation();
+        document.getElementById('shippingOrderId').value = id;
+        if (fromModal) closeModal('orderDetailModal');
+        document.getElementById('shippingModal').classList.add('show');
+    }
+
+    async function confirmShipping() {
+        const id = document.getElementById('shippingOrderId').value;
+        const provider = document.querySelector('input[name="shippingProvider"]:checked')?.value || 'GHN';
+        await updateOrderStatus(id, 'ship', provider);
+        closeModal('shippingModal');
+    }
+
+    async function cancelOrder(id) {
+        if (!confirm('Huỷ đơn hàng #' + String(id).padStart(6,'0') + '?')) return;
+        await updateOrderStatus(id, 'cancel');
+        closeModal('orderDetailModal');
+    }
+
+        async function updateOrderStatus(id, action, provider = null) {
+        try {
+            // Lấy token từ input ẩn do @Html.AntiForgeryToken() tạo ra
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            const body = {
+                orderId: parseInt(id),
+                action: action,
+                shippingProvider: provider
+            };
+
+            const res = await fetch('/Admin/UpdateOrderStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Quan trọng: Tên header này phải khớp với cấu hình của hệ thống
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify(body)
+            });
+
+            // Nếu res.status = 400 hoặc 415, có nghĩa là server từ chối cấu trúc dữ liệu
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error("Lỗi hệ thống:", errorText);
+                showToast('✕ Lỗi yêu cầu (HTTP ' + res.status + ')', 'error');
+                return;
+            }
+
+            const d = await res.json();
+            if (d.success) {
+                showToast('✓ Cập nhật thành công', 'success');
+                await loadOrders(); // Tải lại danh sách
+            } else {
+                showToast('✕ ' + d.message, 'error'); // Thông báo lỗi từ switch case (Hành động không hợp lệ)
+            }
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            showToast('✕ Lỗi kết nối', 'error');
+        }
+    }
+
+    // ── Helpers ────────────────────────────────────────────
+    function formatDate(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        return d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' })
+             + ' ' + d.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    function showToast(msg, type) {
+        const t = document.getElementById('adminToast');
+        t.textContent = msg;
+        t.className = `admin-toast ${type} show`;
+        setTimeout(() => t.className = 'admin-toast', 3000);
+    }
+
+    // Shipping options visual toggle
+    document.addEventListener('change', e => {
+        if (e.target.name === 'shippingProvider') {
+            document.querySelectorAll('.shipping-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.querySelector('input').checked);
+            });
+        }
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+    });
+
+    document.getElementById('currentDate').textContent =
+        new Date().toLocaleDateString('vi-VN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    loadOrders();
+</script>
+@Html.AntiForgeryToken()
