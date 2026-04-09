@@ -1,9 +1,9 @@
-﻿@{
+﻿@model ShopQuanAo.Models.Contacts
+@{
     ViewData["Title"] = "Liên Hệ";
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
 <link rel="stylesheet" href="~/css/contact.css" asp-append-version="true" />
 
 <header class="page-header">
@@ -14,59 +14,83 @@
 
 <main class="contact-container">
     <div class="container">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
         <div class="row g-0 shadow-sm">
             
             <div class="col-md-7 border border-dark p-4 p-lg-5 bg-white">
                 <h2 class="fw-bold text-uppercase mb-4">Gửi tin nhắn</h2>
-                <form action="#" method="post">
+                
+                <form asp-controller="Home" asp-action="SendContact" method="post">
+                    @Html.AntiForgeryToken()
+                    
                     <div class="row">
                         <div class="col-sm-6 mb-3">
-                            <label class="small fw-bold text-uppercase">Họ tên *</label>
-                            <input type="text" class="form-control" required>
-                        </div>
-                        <div class="col-sm-6 mb-3">
-                            <label class="small fw-bold text-uppercase">Email *</label>
-                            <input type="email" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="small fw-bold text-uppercase">Số điện thoại</label>
-                        <input type="tel" class="form-control">
-                    </div>
-                    <div class="mb-4">
-                        <label class="small fw-bold text-uppercase">Nội dung</label>
-                        <textarea class="form-control" rows="4" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-black">Gửi yêu cầu</button>
-                </form>
-            </div>
+                            <label asp-for="FullName" class="small fw-bold text-uppercase">Họ tên *</label>
+                            <input asp-for="FullName" type="text" class="form-control" placeholder="Nhập họ tên..." required>
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label asp-for="Email" class="small fw-bold text-uppercase">Email *</label>
+                                <input asp-for="Email" type="email" class="form-control" placeholder="example@gmail.com" required>
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                            </div>
 
-            <div class="col-md-5">
-                <div class="contact-info-block border border-dark border-start-0">
-                    <h3 class="text-uppercase fw-bold mb-4">Thông tin</h3>
+                            <div class="mb-3">
+                                <label asp-for="Phone" class="small fw-bold text-uppercase">Số điện thoại</label>
+                                <input asp-for="Phone" type="tel" class="form-control" placeholder="09xx xxx xxx">
+                                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label asp-for="Message" class="small fw-bold text-uppercase">Nội dung</label>
+                                    <textarea asp-for="Message" class="form-control" rows="4" placeholder="Bạn cần chúng tôi giúp gì?" required></textarea>
+                                    <span asp-validation-for="Message" class="text-danger small"></span>
+                                </div>
+
+                                <button type="submit" class="btn btn-black w-100 py-2">Gửi yêu cầu</button>
+                            </form>
+                        </div>
+
+                        <div class="col-md-5">
+                            <div class="contact-info-block border border-dark border-start-0 h-100">
+                                <h3 class="text-uppercase fw-bold mb-4">Thông tin</h3>
                     
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
-                        <div class="info-text"><strong>Địa chỉ</strong> 123 Đường ABC, Quận 1, TP.HCM</div>
-                    </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                    <div class="info-text"><strong>Địa chỉ</strong> 123 Đường ABC, Quận 1, TP.HCM</div>
+                                </div>
 
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-phone-alt"></i></div>
-                        <div class="info-text"><strong>Hotline</strong> 0901 234 567</div>
-                    </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-phone-alt"></i></div>
+                                    <div class="info-text"><strong>Hotline</strong> 0901 234 567</div>
+                                </div>
 
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-envelope"></i></div>
-                        <div class="info-text"><strong>Email</strong> support@menshop.vn</div>
-                    </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-envelope"></i></div>
+                                    <div class="info-text"><strong>Email</strong> support@menshop.vn</div>
+                                </div>
 
-                    <div class="map-wrapper">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.424167419767!2d106.699479315334!3d10.7756586620993!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4730628e7d%3A0x70fe93bc6603a68e!2zR29vZ2xlIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1650000000000!5m2!1svi!2s" 
-                                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                                <div class="map-wrapper mt-4">
+                                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.424302324419!2d106.7017555147489!3d10.775658692322135!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f4682049e3d%3A0x66f68e0d440785f7!2zMTIzIMSQxrDhu51uZyBBQkMsIFF14bqtbiAxLCBUUC5IQ00!5e0!3m2!1svi!2s!4v1650000000000!5m2!1svi!2s"
+                                            width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-            </div>
+            </main>
 
-        </div>
-    </div>
-</main>
+            @section Scripts {
+                @{
+                    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+                }
+            }

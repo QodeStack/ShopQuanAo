@@ -1,80 +1,113 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
 using ShopQuanAo.Models;
 
 namespace ShopQuanAo.Controllers
 {
-    public class ProductController : Controller
-    {
-        private readonly ApplicationDbContext _context;
+	public class ProductController : Controller
+	{
+		private readonly ApplicationDbContext _context;
 
-        public ProductController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+		public ProductController(ApplicationDbContext context)
+		{
+			_context = context;
+		}
 
-        public IActionResult Index(int? categoryId, string? search, int page = 1)
-        {
-            int pageSize = 9;
+		public async Task<IActionResult> Index(int? categoryId, string? search, int page = 1)
+		{
+			int pageSize = 9;
 
-            var query = _context.Products.AsQueryable();
+			// 1. Lấy toàn bộ query kèm theo Category
+			var query = _context.Products.Include(p => p.Category).AsQueryable();
 
-            if (categoryId.HasValue)
-                query = query.Where(p => p.CategoryId == categoryId);
+			if (categoryId.HasValue)
+				query = query.Where(p => p.CategoryId == categoryId);
 
-            if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(p => p.ProductName.Contains(search));
+			if (!string.IsNullOrWhiteSpace(search))
+				query = query.Where(p => p.ProductName.Contains(search));
 
-            int total = query.Count();
-            int totalPages = (int)Math.Ceiling((double)total / pageSize);
+			// 2. LOGIC QUAN TRỌNG: Gom nhóm theo ProductName để mỗi mẫu chỉ xuất hiện 1 lần
+			// Ta lấy ID của sản phẩm đầu tiên trong mỗi nhóm để đại diện
+			var groupedQuery = query
+				.GroupBy(p => p.ProductName)
+				.Select(g => g.First());
 
-            // Clamp page
-            if (page < 1) page = 1;
-            if (page > totalPages && totalPages > 0) page = totalPages;
+			int total = await groupedQuery.CountAsync();
+			int totalPages = (int)Math.Ceiling((double)total / pageSize);
 
-            var products = query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+			if (page < 1) page = 1;
+			if (page > totalPages && totalPages > 0) page = totalPages;
 
-            ViewBag.Categories = _context.Categories.ToList();
-            ViewBag.CurrentCategoryId = categoryId;
-            ViewBag.TotalCount = total;
-            ViewBag.CurrentSearch = search;
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.PageSize = pageSize;
+			// 3. Thực hiện phân trang trên danh sách đã gom nhóm
+			var products = await groupedQuery
+				.Skip((page - 1) * pageSize)
+				.Take(pageSize)
+				.ToListAsync();
 
-            return View(products);
-        }
+			ViewBag.Categories = await _context.Categories.ToListAsync();
+			ViewBag.CurrentCategoryId = categoryId;
+			ViewBag.TotalCount = total;
+			ViewBag.CurrentSearch = search;
+			ViewBag.CurrentPage = page;
+			ViewBag.TotalPages = totalPages;
+			ViewBag.PageSize = pageSize;
 
-        // Endpoint riêng cho AJAX search
-        [HttpGet]
-        public IActionResult SearchProducts(string? keyword, int? categoryId)
-        {
-            var query = _context.Products.AsQueryable();
+			return View(products);
+		}
 
-            if (categoryId.HasValue)
-                query = query.Where(p => p.CategoryId == categoryId);
+		[HttpGet]
+		public async Task<IActionResult> SearchProducts(string? keyword, int? categoryId)
+		{
+			var query = _context.Products.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(keyword))
-                query = query.Where(p => p.ProductName.Contains(keyword));
+			if (categoryId.HasValue)
+				query = query.Where(p => p.CategoryId == categoryId);
 
-            var result = query.Select(p => new {
-                p.Id,
-                p.ProductName,
-                p.Price,
-                p.Image
-            }).ToList();
+			if (!string.IsNullOrWhiteSpace(keyword))
+				query = query.Where(p => p.ProductName.Contains(keyword));
 
-            return Json(result);
-        }
+			// Gom nhóm cả trong kết quả tìm kiếm AJAX
+			var result = await query
+				.GroupBy(p => p.ProductName)
+				.Select(g => new {
+					id = g.First().Id,
+					productName = g.Key,
+					price = g.First().Price,
+					image = g.First().Image
+				})
+				.ToListAsync();
 
-        public IActionResult ProductDetail(int id)
-        {
-            var product = _context.Products.FirstOrDefault(p => p.Id == id);
-            if (product == null) return NotFound();
-            return View(product);
-        }
-    }
+			return Json(result);
+		}
+
+		public async Task<IActionResult> ProductDetail(int id)
+		{
+			// 1. Tìm sản phẩm đang click vào
+			var product = await _context.Products
+				.Include(p => p.Category)
+				.FirstOrDefaultAsync(p => p.Id == id);
+
+			if (product == null) return NotFound();
+
+			// 2. Lấy tất cả các size hiện có của CÙNG MỘT TÊN sản phẩm này
+			// Điều này giúp khách hàng chọn size ngay trong trang chi tiết
+			var allVariants = await _context.Products
+				.Where(p => p.ProductName == product.ProductName)
+				.Include(p => p.ProductSizes)
+					.ThenInclude(ps => ps.Size)
+				.SelectMany(p => p.ProductSizes)
+				.Select(ps => new {
+					SizeName = ps.Size.SizeName,
+					Quantity = ps.Quantity,
+					// Lưu lại ID của Product cụ thể để khi bấm "Mua" sẽ biết là mua Size nào
+					ProductId = ps.ProductId
+				})
+				.ToListAsync();
+
+			ViewBag.AvailableSizes = allVariants;
+
+			return View(product);
+		}
+	}
 }
