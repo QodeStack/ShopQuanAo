@@ -176,7 +176,7 @@ namespace ShopQuanAo.Controllers
 			}
 		}
 
-		// ── Users API (Đã thêm logic gửi OTP) ───────────────────────
+		// ── Users API ───────────────────────────────────────────
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{
@@ -236,23 +236,6 @@ namespace ShopQuanAo.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> VerifyOTP(string email, string otpInput)
-		{
-			var user = await _userManager.FindByEmailAsync(email);
-			if (user == null) return Json(new { success = false, message = "Người dùng không tồn tại." });
-
-			if (user.OTPCode == otpInput && user.OTPExpiry > DateTime.Now)
-			{
-				user.EmailConfirmed = true;
-				user.OTPCode = null;
-				await _userManager.UpdateAsync(user);
-				return Json(new { success = true, message = "Xác thực thành công!" });
-			}
-
-			return Json(new { success = false, message = "Mã OTP sai hoặc đã hết hạn." });
-		}
-
-		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> EditUser([FromBody] EditUserDto dto)
 		{
@@ -271,15 +254,39 @@ namespace ShopQuanAo.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> DeleteUser([FromBody] DeleteDto dto)
 		{
-			var currentUser = await _userManager.GetUserAsync(User);
-			if (currentUser?.Id == dto.Id)
-				return Json(new { success = false, message = "Không thể xóa tài khoản đang đăng nhập." });
+			try
+			{
+				// Tránh Admin tự xóa chính mình
+				var currentUser = await _userManager.GetUserAsync(User);
+				if (currentUser?.Id == dto.Id)
+					return Json(new { success = false, message = "Bạn không thể tự xóa tài khoản của chính mình." });
 
-			var user = await _userManager.FindByIdAsync(dto.Id);
-			if (user == null) return Json(new { success = false, message = "Không tìm thấy người dùng." });
+				var user = await _userManager.FindByIdAsync(dto.Id);
+				if (user == null) return Json(new { success = false, message = "Không tìm thấy người dùng." });
 
-			var result = await _userManager.DeleteAsync(user);
-			return Json(result.Succeeded ? new { success = true } : new { success = false, message = "Lỗi khi xóa." });
+				// Dọn dẹp giỏ hàng để tránh lỗi khóa ngoại (Foreign Key)
+				var carts = _context.ShoppingCarts.Where(c => c.UserId == dto.Id);
+				if (carts.Any())
+				{
+					_context.ShoppingCarts.RemoveRange(carts);
+					await _context.SaveChangesAsync();
+				}
+
+				// Thực hiện xóa User
+				var result = await _userManager.DeleteAsync(user);
+				if (result.Succeeded)
+				{
+					return Json(new { success = true, message = "Xóa người dùng thành công!" });
+				}
+				else
+				{
+					return Json(new { success = false, message = "Lỗi khi xóa tài khoản." });
+				}
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+			}
 		}
 
 		// ── Products API ──────────────────────────────────────────
@@ -455,7 +462,7 @@ namespace ShopQuanAo.Controllers
 		}
 	}
 
-	// ── DTOs (Data Transfer Objects) ──
+	// ── DTOs ──
 	public class CreateUserDto { public string Email { get; set; } = ""; public string Password { get; set; } = ""; public string? Role { get; set; } }
 	public class EditUserDto { public string Id { get; set; } = ""; public string? Role { get; set; } }
 	public class DeleteDto { public string Id { get; set; } = ""; }

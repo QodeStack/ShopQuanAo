@@ -1,25 +1,16 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-#nullable disable
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using ShopQuanAo.Const;
-using ShopQuanAo.Models; // Quan trọng: Để nhận diện ApplicationUser
+using ShopQuanAo.Models;
 using MimeKit;
 using MailKit.Net.Smtp;
 
@@ -49,30 +40,34 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 		[BindProperty]
 		public InputModel Input { get; set; }
 
+		// SỬA: Thêm dấu ? để hệ thống không bắt buộc nhập lúc bấm Đăng ký bước 1
+		[BindProperty]
+		public string? EmailPending { get; set; }
+
+		// SỬA: Thêm dấu ? để hệ thống không bắt buộc nhập lúc bấm Đăng ký bước 1
+		[BindProperty]
+		public string? OtpInput { get; set; }
+
 		public string ReturnUrl { get; set; }
 
 		public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
 		public class InputModel
 		{
-			[Required]
-			[EmailAddress]
-			[Display(Name = "Email")]
+			[Required(ErrorMessage = "Vui lòng nhập Email.")]
+			[EmailAddress(ErrorMessage = "Email không đúng định dạng.")]
 			public string Email { get; set; }
 
-			[Required]
+			[Required(ErrorMessage = "Vui lòng nhập mật khẩu.")]
 			[StringLength(100, ErrorMessage = "Mật khẩu phải từ {2} đến {1} ký tự.", MinimumLength = 6)]
 			[DataType(DataType.Password)]
-			[Display(Name = "Password")]
 			public string Password { get; set; }
 
 			[DataType(DataType.Password)]
-			[Display(Name = "Confirm password")]
 			[Compare("Password", ErrorMessage = "Mật khẩu xác nhận không khớp.")]
 			public string ConfirmPassword { get; set; }
 		}
 
-		// --- Hàm hỗ trợ gửi OTP bằng Mail của Quốc ---
 		private async Task SendEmailOTP(string email, string otp)
 		{
 			var message = new MimeMessage();
@@ -104,39 +99,42 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 		{
 			returnUrl ??= Url.Content("~/");
 			ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+			// SỬA: Xóa các lỗi validation của OTP và EmailPending khi đang ở bước Đăng ký ban đầu
+			ModelState.Remove("OtpInput");
+			ModelState.Remove("EmailPending");
+
 			if (ModelState.IsValid)
 			{
 				var user = CreateUser();
-
 				await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
 				await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-
-				// SINH MÃ OTP VÀ LƯU VÀO CỘT MỚI
-				string otpCode = new Random().Next(100000, 999999).ToString();
-				user.OTPCode = otpCode;
-				user.OTPExpiry = DateTime.Now.AddMinutes(5);
-				user.EmailConfirmed = false; // Bắt buộc phải xác nhận OTP mới được tính là xong
 
 				var result = await _userManager.CreateAsync(user, Input.Password);
 
 				if (result.Succeeded)
 				{
-					await _userManager.AddToRoleAsync(user, "User");
-					_logger.LogInformation("User created a new account.");
+					string otpCode = new Random().Next(100000, 999999).ToString();
+					user.OTPCode = otpCode;
+					user.OTPExpiry = DateTime.Now.AddMinutes(5);
+					user.EmailConfirmed = false;
 
-					// GỬI MAIL OTP CHO KHÁCH
+					await _userManager.UpdateAsync(user);
+					await _userManager.AddToRoleAsync(user, "User");
+
 					try
 					{
 						await SendEmailOTP(Input.Email, otpCode);
+						EmailPending = Input.Email;
+						ViewData["ShowOTP"] = true;
+						return Page();
 					}
 					catch (Exception ex)
 					{
-						_logger.LogError($"Lỗi gửi mail: {ex.Message}");
+						ModelState.AddModelError(string.Empty, "Lỗi gửi mail: " + ex.Message);
 					}
-
-					// CHUYỂN HƯỚNG SANG TRANG XÁC NHẬN (Của Identity mặc định)
-					return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
 				}
+
 				foreach (var error in result.Errors)
 				{
 					ModelState.AddModelError(string.Empty, error.Description);
@@ -146,21 +144,44 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 			return Page();
 		}
 
-		private ApplicationUser CreateUser()
+		public async Task<IActionResult> OnPostVerifyOTPAsync(string returnUrl = null)
 		{
-			try
+			returnUrl ??= Url.Content("~/");
+
+			if (string.IsNullOrEmpty(EmailPending))
 			{
-				return Activator.CreateInstance<ApplicationUser>();
+				ModelState.AddModelError(string.Empty, "Phiên làm việc đã hết hạn, vui lòng đăng ký lại.");
+				ViewData["ShowOTP"] = false;
+				return Page();
 			}
-			catch
+
+			var user = await _userManager.FindByEmailAsync(EmailPending);
+
+			if (user != null && user.OTPCode == OtpInput && user.OTPExpiry > DateTime.Now)
 			{
-				throw new InvalidOperationException($"Không thể tạo instance của '{nameof(ApplicationUser)}'.");
+				user.EmailConfirmed = true;
+				user.OTPCode = null;
+				user.OTPExpiry = null;
+
+				var result = await _userManager.UpdateAsync(user);
+				if (result.Succeeded)
+				{
+					TempData["StatusMessage"] = "Chúc mừng! Bạn đã đăng ký thành công tài khoản MenShop. Hãy đăng nhập ngay.";
+					return RedirectToPage("Login");
+				}
 			}
+
+			ModelState.AddModelError(string.Empty, "Mã OTP không chính xác hoặc đã hết hạn.");
+			ViewData["ShowOTP"] = true;
+			return Page();
 		}
 
-		private IUserEmailStore<ApplicationUser> GetEmailStore()
+		private ApplicationUser CreateUser()
 		{
-			return (IUserEmailStore<ApplicationUser>)_userStore;
+			try { return Activator.CreateInstance<ApplicationUser>(); }
+			catch { throw new InvalidOperationException($"Không thể tạo instance của '{nameof(ApplicationUser)}'."); }
 		}
+
+		private IUserEmailStore<ApplicationUser> GetEmailStore() => (IUserEmailStore<ApplicationUser>)_userStore;
 	}
 }

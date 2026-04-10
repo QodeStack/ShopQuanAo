@@ -24,7 +24,46 @@
 
                 <div class="collapse navbar-collapse" id="navbarMenu">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Index">SẢN PHẨM</a></li>
+                        
+                           
+                            <li class="nav-item dropdown-mega">
+                                <a class="nav-link" asp-controller="Product" asp-action="Index">
+                                    SẢN PHẨM <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
+                                </a>
+                                <div class="mega-menu-wrapper">
+                                    <div class="container py-4">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <h6 class="fw-bold text-uppercase mb-3 text-dark border-bottom pb-2">ÁO MENSHOP</h6>
+                                                <ul class="list-unstyled mega-links">
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="AoThun">Áo thun</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="AoSoMi">Áo sơ mi</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="AoPolo">Áo Polo</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="Hoodie">Hoodie / Cardigan</a></li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <h6 class="fw-bold text-uppercase mb-3 text-dark border-bottom pb-2">QUẦN MENSHOP</h6>
+                                                <ul class="list-unstyled mega-links">
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="QuanShort">Quần Short</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="QuanJean">Quần Jean</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="QuanTay">Quần Tây / Kaki</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="QuanJogger">Quần Jogger</a></li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <h6 class="fw-bold text-uppercase mb-3 text-dark border-bottom pb-2">GỢI Ý LÊN ĐỒ</h6>
+                                                <ul class="list-unstyled mega-links">
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="SetCongSo">Set đồ công sở</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="SetTheThao">Set đồ thể thao</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="SetMuaDong">Set mùa đông</a></li>
+                                                    <li><a asp-controller="Product" asp-action="Index" asp-route-category="SetMuaHe">Set mùa hè</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
                         <li class="nav-item"><a class="nav-link text-danger fw-bold" asp-controller="Home" asp-action="Sale">SALE</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="AboutUs">ABOUT US</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">CONTACT</a></li>

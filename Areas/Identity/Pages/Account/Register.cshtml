@@ -9,43 +9,84 @@
         <div class="row justify-content-center align-items-center" style="min-height: 85vh; padding: 40px 0;">
             <div class="col-md-6 col-lg-5">
                 <div class="register-box shadow-sm border p-4 p-md-5 bg-white">
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold text-uppercase" style="letter-spacing: 3px;">Tạo Tài Khoản</h2>
-                        <p class="text-muted small">Trở thành thành viên của MenShop để nhận ưu đãi</p>
-                    </div>
-
-                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
-                        
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Email" class="form-control rounded-0 border-dark" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                            <label asp-for="Input.Email" class="text-uppercase small fw-bold">Địa chỉ Email *</label>
-                            <span asp-validation-for="Input.Email" class="text-danger small"></span>
-                        </div>
-                        
-                        <div class="form-floating mb-3">
-                            <input asp-for="Input.Password" class="form-control rounded-0 border-dark" autocomplete="new-password" aria-required="true" placeholder="password" />
-                            <label asp-for="Input.Password" class="text-uppercase small fw-bold">Mật khẩu *</label>
-                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    
+                    @if (ViewData["ShowOTP"] != null && (bool)ViewData["ShowOTP"])
+                    {
+                        @* --- GIAO DIỆN XÁC THỰC OTP --- *@
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 3px;">Xác Thực OTP</h2>
+                            <p class="text-muted small">Vui lòng nhập mã 6 số đã được gửi đến email:</p>
+                            <p class="fw-bold text-dark">@Model.EmailPending</p>
                         </div>
 
-                        <div class="form-floating mb-4">
-                            <input asp-for="Input.ConfirmPassword" class="form-control rounded-0 border-dark" autocomplete="new-password" aria-required="true" placeholder="password" />
-                            <label asp-for="Input.ConfirmPassword" class="text-uppercase small fw-bold">Xác nhận mật khẩu *</label>
-                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                        <form asp-page-handler="VerifyOTP" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                            <input type="hidden" asp-for="EmailPending" />
+
+                            @* Ở form OTP này thì để "All" là chính xác *@
+                            <div asp-validation-summary="All" class="alert alert-danger rounded-0 small mb-3" role="alert"></div>
+                            
+                            <div class="form-group mb-4">
+                                <input asp-for="OtpInput" class="form-control rounded-0 border-dark text-center fw-bold"
+                                       style="letter-spacing: 15px; font-size: 24px; height: 60px;"
+                                       placeholder="000000" maxlength="6" required autofocus />
+                                <span asp-validation-for="OtpInput" class="text-danger small"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-dark w-100 rounded-0 py-3 fw-bold text-uppercase mb-3">
+                                Xác nhận đăng ký
+                            </button>
+                            
+                            <div class="text-center mt-3">
+                                <a asp-page="./Register" class="small text-muted text-decoration-none border-bottom">Quay lại trang đăng ký</a>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        @* --- GIAO DIỆN ĐĂNG KÝ BAN ĐẦU --- *@
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 3px;">Tạo Tài Khoản</h2>
+                            <p class="text-muted small">Trở thành thành viên của MenShop để nhận ưu đãi</p>
                         </div>
 
-                        <button id="registerSubmit" type="submit" class="btn btn-dark w-100 rounded-0 py-3 fw-bold text-uppercase mb-3" style="letter-spacing: 2px;">
-                            Đăng ký thành viên
-                        </button>
+                        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                            @* SỬA LẠI: Dùng ModelOnly để không bị hiện lỗi "OtpInput is required" ở bước này *@
+                            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
+                            
+                            <div class="form-floating mb-3">
+                                <input asp-for="Input.Email" class="form-control rounded-0 border-dark" autocomplete="username" aria-required="true" />
+                                <label asp-for="Input.Email" class="text-uppercase small fw-bold">Địa chỉ Email *</label>
+                                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                            </div>
+                            
+                            <div class="form-floating mb-3">
+                                <input asp-for="Input.Password" class="form-control rounded-0 border-dark" autocomplete="new-password" aria-required="true" />
+                                <label asp-for="Input.Password" class="text-uppercase small fw-bold">Mật khẩu *</label>
+                                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                            </div>
 
-                        <div class="text-center mt-4 pt-3 border-top">
-                            <p class="small text-muted mb-1">Bạn đã có tài khoản?</p>
-                            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="fw-bold text-dark text-decoration-none text-uppercase small border-bottom border-dark">Đăng nhập tại đây</a>
-                        </div>
-                    </form>
+                            <div class="form-floating mb-4">
+                                <input asp-for="Input.ConfirmPassword" class="form-control rounded-0 border-dark" autocomplete="new-password" aria-required="true" />
+                                <label asp-for="Input.ConfirmPassword" class="text-uppercase small fw-bold">Xác nhận mật khẩu *</label>
+                                <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                            </div>
+
+                            <button id="registerSubmit" type="submit" class="btn btn-dark w-100 rounded-0 py-3 fw-bold text-uppercase mb-3">
+                                Đăng ký thành viên
+                            </button>
+
+                            <div class="text-center mt-4 pt-3 border-top">
+                                <p class="small text-muted mb-1">Bạn đã có tài khoản?</p>
+                                <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="fw-bold text-dark text-decoration-none text-uppercase small border-bottom border-dark">Đăng nhập tại đây</a>
+                            </div>
+                        </form>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

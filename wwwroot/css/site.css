@@ -9,6 +9,7 @@
     --font-display: 'Cormorant Garamond', serif;
     --font-body: 'Barlow', sans-serif;
 }
+
 body {
     margin: 0;
     padding: 0;
@@ -18,6 +19,7 @@ body {
     font-weight: 300;
     overflow-x: hidden;
 }
+
 * {
     margin: 0;
     padding: 0;
@@ -30,6 +32,7 @@ body {
     border-bottom: 1px solid #f1f1f1 !important;
     padding: 15px 0;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: relative;
 }
 
 .navbar-brand {
@@ -67,10 +70,57 @@ body {
         width: 50%;
     }
 
+/* --- PHẦN MEGA MENU ĐÃ TÍCH HỢP --- */
+.dropdown-mega {
+    position: static !important; /* Bắt buộc để menu rộng 100% màn hình */
+}
+
+.mega-menu-wrapper {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: #ffffff;
+    z-index: 9999;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.3s ease-in-out;
+    border-top: 1px solid #f1f1f1;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.dropdown-mega:hover .mega-menu-wrapper {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.mega-links li {
+    margin-bottom: 8px;
+    text-align: left;
+    list-style: none;
+}
+
+    .mega-links li a {
+        color: #666 !important;
+        text-decoration: none;
+        font-size: 14px;
+        transition: 0.3s;
+        display: block;
+    }
+
+        .mega-links li a:hover {
+            color: #000 !important;
+            padding-left: 5px;
+        }
+
 /* ───── SESSION : HERO SLIDER ───── */
 .hero-wrapper {
-    padding: 20px; /* khoảng cách 4 phía */
+    padding: 20px;
 }
+
 .hero-slider {
     position: relative;
     height: 100vh;
@@ -109,7 +159,6 @@ body {
         border-radius: 50%;
         background: rgba(10,10,10,.25);
         backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
         transition: background .3s, border-color .3s, transform .3s;
         top: 50%;
         transform: translateY(-50%);
@@ -130,7 +179,6 @@ body {
         right: 20px;
     }
 
-        /* Hide default slick font arrows */
         .hero-slider .slick-prev:before,
         .hero-slider .slick-next:before {
             content: '';
@@ -218,6 +266,7 @@ body {
     font-weight: 700;
     letter-spacing: 1px;
 }
+
 .product-card {
     position: relative;
     overflow: hidden;
@@ -225,15 +274,18 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: 0.3s;
 }
+
     .product-card img {
         width: 100%;
         height: 420px;
         object-fit: cover;
         transition: transform 0.5s ease;
     }
+
     .product-card:hover img {
         transform: scale(1.05);
     }
+
 @media (max-width: 768px) {
     .product-card img {
         height: 280px;
@@ -332,7 +384,7 @@ body {
             .Portfolio .container .grid-item .overlay h1 {
                 position: absolute;
                 left: 16px;
-                bottom: 65px; 
+                bottom: 65px;
                 color: #fff;
                 font-size: 20px;
                 font-weight: bold;
@@ -359,6 +411,7 @@ body {
                 background-color: rgba(0, 0, 0, 0.2);
                 transition: all 0.3s ease;
             }
+
                 .Portfolio .container .grid-item .overlay .btn-detail:hover {
                     background-color: #fff;
                     color: #000;
@@ -406,10 +459,12 @@ body {
         transform: translateX(0px) translateY(0px);
     }
 }
+
 /* ───── SESSION 4 — OUR BLOG ───── */
 .blog-section {
     background-color: #fff;
 }
+
 .blog-main-title {
     font-size: 28px;
     font-weight: bold;
@@ -417,16 +472,19 @@ body {
     margin-bottom: 5px;
     color: #000;
 }
+
 .blog-sub-title {
     font-size: 14px;
     color: #666;
     letter-spacing: 1px;
 }
+
 .blog-img-wrapper {
     position: relative;
     overflow: hidden;
     aspect-ratio: 16 / 9;
 }
+
 .blog-img {
     width: 100%;
     height: 100%;
@@ -434,6 +492,7 @@ body {
     object-position: top center;
     transition: transform 0.6s ease;
 }
+
 .blog-overlay {
     position: absolute;
     top: 0;
@@ -444,36 +503,43 @@ body {
     opacity: 0;
     transition: opacity 0.3s ease;
 }
+
 .blog-card:hover .blog-img {
     transform: scale(1.05);
 }
+
 .blog-card:hover .blog-overlay {
     opacity: 1;
 }
+
 .blog-item-title {
     font-size: 14px;
     font-weight: 600;
 }
+
     .blog-item-title a {
         text-decoration: none;
         color: #000;
         transition: color 0.3s;
     }
+
         .blog-item-title a:hover {
-            color: #ce0000; 
+            color: #ce0000;
         }
+
 @media (max-width: 768px) {
     .blog-main-title {
         font-size: 22px;
     }
 }
-/* ───── SESSION 5 — Service-policy  ───── */
+
+/* ───── SESSION 5 — Service-policy ───── */
 .service-policy {
     border-color: #f1f1f1 !important;
 }
 
 .policy-icon i {
-    color: #333; /* Màu icon đen như mẫu */
+    color: #333;
     width: 45px;
     text-align: center;
 }
@@ -494,9 +560,10 @@ body {
     color: #ce0000;
     transition: 0.3s;
 }
+
 /* -----------------------FOOTER---------------------------- */
 .footer-custom {
-    background-color: #f8f9fa; 
+    background-color: #f8f9fa;
     padding: 50px 0;
     color: #333;
     font-size: 0.9rem;
@@ -504,7 +571,7 @@ body {
 }
 
 .footer-title {
-    color: #ce0000; 
+    color: #ce0000;
     font-weight: bold;
     text-transform: uppercase;
     font-size: 1.1rem;
@@ -572,16 +639,16 @@ body {
     max-height: 40px;
     margin-top: 5px;
 }
-/* Làm cho khung liên hệ sang trọng hơn */
+
+/* KHUNG LIÊN HỆ */
 .contact-container {
     background: #ffffff;
-    border: none !important; /* Bỏ viền đen cứng */
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Đổ bóng nhẹ */
-    border-radius: 8px; /* Bo góc nhẹ */
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border-radius: 8px;
     overflow: hidden;
 }
 
-/* Chỉnh lại các ô nhập liệu */
 .form-control {
     border: 1px solid #e1e1e1 !important;
     background-color: #fdfdfd;
@@ -595,7 +662,6 @@ body {
         box-shadow: none;
     }
 
-/* Chỉnh nút bấm */
 .btn-black {
     background: #000;
     color: #fff;
