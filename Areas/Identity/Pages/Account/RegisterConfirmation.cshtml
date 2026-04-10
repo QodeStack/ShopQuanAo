@@ -1,23 +1,51 @@
 ﻿@page
 @model RegisterConfirmationModel
 @{
-    ViewData["Title"] = "Register confirmation";
+    ViewData["Title"] = "Xác thực tài khoản - MenShop";
 }
 
-<h1>@ViewData["Title"]</h1>
-@{
-    if (@Model.DisplayConfirmAccountLink)
-    {
-<p>
-    This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-    Normally this would be emailed: <a id="confirm-link" href="@Model.EmailConfirmationUrl">Click here to confirm your account</a>
-</p>
-    }
-    else
-    {
-<p>
-        Please check your email to confirm your account.
-</p>
-    }
-}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>XÁC THỰC ĐĂNG KÝ</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-center">
+                        Mã OTP đã được gửi đến email: <br />
+                        <strong>@Model.Email</strong>
+                    </p>
+                    <hr />
 
+                    <form method="post">
+                        <div asp-validation-summary="All" class="text-danger small"></div>
+                        
+                        <input type="hidden" name="email" value="@Model.Email" />
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Nhập mã xác thực (6 số):</label>
+                            <input asp-for="OtpInput" class="form-control text-center shadow-sm"
+                                   placeholder="000000"
+                                   maxlength="6"
+                                   style="font-size: 28px; font-weight: bold; letter-spacing: 10px; color: #2c3e50;"
+                                   required />
+                            <span class="text-muted small d-block mt-2 text-center">Mã có hiệu lực trong 5 phút.</span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">Xác nhận tài khoản</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center bg-light">
+                    <p class="mb-0 small">Bạn không nhận được mã? <a href="#" class="text-decoration-none">Gửi lại mã</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
