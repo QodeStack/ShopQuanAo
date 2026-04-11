@@ -19,6 +19,7 @@ namespace ShopQuanAo.Controllers
             _userManager = userManager;
         }
 
+        // Giao diện cbi thanh toán : xong 
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
@@ -39,13 +40,12 @@ namespace ShopQuanAo.Controllers
             return View(new Order());
         }
 
+        // Quy trình thanh toán : xong 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceOrder(Order order)
         {
             var userId = _userManager.GetUserId(User);
-
-            // Bổ sung .ThenInclude để lấy được Data của Product khi load lại View
             var cart = await _context.ShoppingCarts
                 .Include(c => c.CartDetails)
                     .ThenInclude(cd => cd.Product)
@@ -55,21 +55,15 @@ namespace ShopQuanAo.Controllers
             {
                 return RedirectToAction("Index", "Cart");
             }
-
-            // Xóa các lỗi validate không cần thiết của object Order
             ModelState.Remove("UserId");
             ModelState.Remove("OrderStatus");
             ModelState.Remove("OrderDetails");
-
-            // Nếu form nhập thiếu (họ tên, sđt, địa chỉ...), load lại trang Checkout
             if (!ModelState.IsValid)
             {
-                ViewBag.Cart = cart; // Lúc này cart đã có đủ Product để View không bị lỗi Null
+                ViewBag.Cart = cart; 
                 ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
                 return View("Index", order);
             }
-
-            // Set các thông tin mặc định cho đơn hàng
             order.UserId = userId;
             order.CreateTime = DateTime.Now;
             order.IsDeleted = false;
@@ -91,9 +85,21 @@ namespace ShopQuanAo.Controllers
                     OrderId = order.Id,
                     ProductId = item.ProductId,
                     Quantity = item.Quantity,
-                    UnitPrice = (double)item.UnitPrice
+                    UnitPrice = (double)item.UnitPrice,
+                    Size = item.Size
                 };
                 _context.OrderDetails.Add(orderDetail);
+                var productSize = await _context.ProductSizes
+                    .Include(ps => ps.Size)
+                    .FirstOrDefaultAsync(ps => ps.ProductId == item.ProductId
+                                            && ps.Size.SizeName == item.Size);
+
+                if (productSize != null)
+                {
+                    productSize.Quantity -= item.Quantity;
+                    if (productSize.Quantity < 0)
+                        productSize.Quantity = 0;
+                }
             }
 
             _context.CartDetails.RemoveRange(cart.CartDetails);

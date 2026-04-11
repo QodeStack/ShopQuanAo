@@ -3,35 +3,38 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShopQuanAo.Models
 {
-    [Table("Product")]
-    public class Product
-    {
-        public int Id { get; set; }
+	[Table("Product")]
+	public class Product
+	{
+		[Key]
+		public int Id { get; set; }
 
-        [StringLength(50)]
-        [Column(TypeName = "nvarchar(50)")]            
-        
-        public required string ProductName { get; set; }
+		[Required]
+		[StringLength(50)]
+		[Column(TypeName = "nvarchar(50)")]
+		public required string ProductName { get; set; }
 
-        [StringLength(50)]
-        [Column(TypeName = "nvarchar(50)")]
+		[Required]
+		[StringLength(50)]
+		[Column(TypeName = "nvarchar(50)")]
+		public required string BrandName { get; set; }
 
-        public required string BrandName { get; set; }
+		[Required]
+		public double Price { get; set; }
 
-        [Required]
-        public double Price { get; set; }
+		[Column(TypeName = "varchar(500)")]
+		public string? Image { get; set; }
 
-        [Column(TypeName ="varchar(500)")]
-        public string? Image { get; set; }
+		// Khóa ngoại Category
+		public int CategoryId { get; set; }
+		[ForeignKey("CategoryId")]
+		public Categories Category { get; set; }
 
-        public int CategoryId { get; set; }
-        public Categories Category { get; set; }
-        
-        public List<OrderDetail> OrderDetail { get; set; }
-        public List<CartDetail> CartDetail { get; set; }
-        public List<ProductSize> ProductSizes { get; set; }
+		// Navigation Properties (Nên dùng ICollection và khởi tạo sẵn)
+		public virtual ICollection<OrderDetail> OrderDetail { get; set; } = new List<OrderDetail>();
+		public virtual ICollection<CartDetail> CartDetail { get; set; } = new List<CartDetail>();
 
-
-
-    }
+		// Liên kết 1 - Nhiều với bảng ProductSize (Để gom size)
+		public virtual ICollection<ProductSize> ProductSizes { get; set; } = new List<ProductSize>();
+	}
 }

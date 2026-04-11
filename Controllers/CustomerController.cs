@@ -19,6 +19,7 @@ namespace ShopQuanAo.Controllers
             _userManager = userManager;
         }
 
+        // giao diên chính : xong 
         public async Task<IActionResult> Index(string status = "", int page = 1)
         {
             const int pageSize = 5;
@@ -56,19 +57,7 @@ namespace ShopQuanAo.Controllers
             return View(vm);
         }
 
-        public async Task<IActionResult> Detail(int id)
-        {
-            var userId = _userManager.GetUserId(User);
-            var order = await _context.Orders
-                .Include(o => o.OrderStatus)
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Product)
-                .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId && !o.IsDeleted);
-
-            if (order == null) return NotFound();
-            return View(order);
-        }
-
+        // Hủy đơn : xong 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int orderId)
@@ -76,6 +65,7 @@ namespace ShopQuanAo.Controllers
             var userId = _userManager.GetUserId(User);
             var order = await _context.Orders
                 .Include(o => o.OrderStatus)
+                .Include(o => o.OrderDetails) 
                 .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
 
             if (order == null) return NotFound();
@@ -84,9 +74,21 @@ namespace ShopQuanAo.Controllers
             {
                 var cancelStatus = await _context.OrderStatuses
                     .FirstOrDefaultAsync(s => s.StatusName == "Đã hủy");
+
                 if (cancelStatus != null)
                 {
                     order.OrderStatusId = cancelStatus.Id;
+                    foreach (var detail in order.OrderDetails)
+                    {
+                        var productSize = await _context.ProductSizes
+                            .Include(ps => ps.Size)
+                            .FirstOrDefaultAsync(ps => ps.ProductId == detail.ProductId
+                                                    && ps.Size.SizeName == detail.Size);
+
+                        if (productSize != null)
+                            productSize.Quantity += detail.Quantity;
+                    }
+
                     await _context.SaveChangesAsync();
                     TempData["Message"] = "Đã hủy đơn hàng thành công.";
                 }
@@ -94,40 +96,27 @@ namespace ShopQuanAo.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-        // ═══════════════════════════════════════════════════════════════
-        // THÊM VÀO CustomerController.cs — action xác nhận đã nhận hàng
-        // ═══════════════════════════════════════════════════════════════
 
+        // Xác nhận đã nhận hàng : xong 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmReceived(int orderId)
         {
             var userId = _userManager.GetUserId(User);
-
-            // 1. Tìm đơn hàng
             var order = await _context.Orders
                 .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
 
             if (order == null) return NotFound();
-
-            // 2. Tìm ID của trạng thái "Đã hoàn thành"
             var completedStatus = await _context.OrderStatuses
                 .FirstOrDefaultAsync(s => s.StatusName == "Đã hoàn thành");
 
             if (completedStatus != null)
             {
-                // 3. Cập nhật ID
                 order.OrderStatusId = completedStatus.Id;
-
-                // QUAN TRỌNG: Gán null cho đối tượng liên kết để tránh EF dùng lại dữ liệu cũ trong Cache
                 order.OrderStatus = null;
-
                 order.IsPaid = true;
-
-                // 4. Đánh dấu thực thể đã thay đổi và lưu
                 _context.Entry(order).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-
                 TempData["Message"] = "Cảm ơn bạn đã mua hàng!";
             }
 

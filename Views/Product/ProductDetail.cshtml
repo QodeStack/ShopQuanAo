@@ -1,5 +1,4 @@
 ﻿@model ShopQuanAo.Models.Product
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -9,9 +8,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/productDetail.css" asp-append-version="true" />
+    
+    <style>
+            /* Thêm style nhỏ để làm mờ các nút size hết hàng */
+            .size-btn:disabled, .size-btn.disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+                text-decoration: line-through;
+                pointer-events: none;
+                background-color: #f5f5f5;
+                color: #999;
+                border-color: #eee;
+            }
+    </style>
 </head>
 <body>
-    <!-- Thông báo TempData -->
     <div class="toast-msg" id="toast"></div>
     <div class="detail-layout">
         <div class="detail-image">
@@ -26,22 +37,53 @@
             <hr class="divider" />
 
             <div class="option-label">Kích cỡ</div>
+            
             <div class="size-list">
-                <button type="button" class="size-btn" data-size="S">S</button>
-                <button type="button" class="size-btn active" data-size="M">M</button>
-                <button type="button" class="size-btn" data-size="L">L</button>
-                <button type="button" class="size-btn" data-size="XL">XL</button>
+                @{
+                    bool isFirstAvailable = true;
+                    string defaultSize = "";
+
+                    if (ViewBag.AvailableSizes != null)
+                    {
+                        foreach (dynamic sizeItem in ViewBag.AvailableSizes)
+                        {
+                            bool isOutOfStock = sizeItem.Quantity <= 0;
+                            string activeClass = "";
+
+                            // Đặt size đầu tiên còn hàng làm mặc định
+                            if (isFirstAvailable && !isOutOfStock)
+                            {
+                                activeClass = "active";
+                                defaultSize = sizeItem.SizeName;
+                                isFirstAvailable = false;
+                            }
+
+                            <button type="button"
+                                    class="size-btn @activeClass @(isOutOfStock ? "disabled" : "")"
+                                    data-size="@sizeItem.SizeName"
+                                @(isOutOfStock ? "disabled" : "")>
+                                @sizeItem.SizeName
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        <span style="color:red; font-size: 14px;">Chưa có dữ liệu kích cỡ</span>
+                    }
+                }
             </div>
-            <!-- Form POST -->
+
             <form id="cartForm" method="post" asp-controller="Cart" asp-action="AddToCart">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="productId" value="@Model.Id" />
                 <input type="hidden" name="quantity" value="1" />
-                <input type="hidden" name="size" id="selectedSize" value="M" />
+                <input type="hidden" name="size" id="selectedSize" value="@defaultSize" />
+                
                 <button type="button" class="btn-add-cart" id="btnAddCart">
                     <i class="bi bi-bag"></i> &nbsp; Thêm vào giỏ hàng
                 </button>
             </form>
+            
             <button class="btn-wishlist">
                 <i class="bi bi-heart"></i> Yêu thích
             </button>
@@ -49,61 +91,74 @@
     </div>
 
     <script>
-        const isLoggedIn = @Json.Serialize(User.Identity.IsAuthenticated);
+            const isLoggedIn = @Json.Serialize(User.Identity.IsAuthenticated);
 
-        // Chọn size
-        document.querySelectorAll('.size-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById('selectedSize').value = btn .dataset.size;
-            });
-        });
-
-        // Click thêm vào giỏ
-        document.getElementById('btnAddCart').addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            // Nếu chưa đăng nhập
-            if (!isLoggedIn) {
-                showToast('Vui Lòng Đăng Nhập', 'error');
-                return;
-            }
-
-            // Gửi form
-            const form = document.getElementById('cartForm');
-            try {
-                           const res = await fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form)
+            // Chọn size
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Xóa active tất cả các nút
+                    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                
+                    // Set active cho nút được click
+                    btn.classList.add('active');
+                
+                    // Cập nhật dữ liệu vào form ẩn
+                    document.getElementById('selectedSize').value = btn.dataset.size;
+                });
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Đã thêm vào giỏ hàng thành công', 'success');
-                } else {
-                    showToast(data.message || 'Có lỗi xảy ra', 'error');
+            // Click thêm vào giỏ
+            document.getElementById('btnAddCart').addEventListener('click', async (e) => {
+                e.preventDefault();
+
+                // Kiểm tra xem đã có size nào được chọn chưa (trường hợp tất cả đều hết hàng)
+                const selectedSizeValue = document.getElementById('selectedSize').value;
+                if (!selectedSizeValue) {
+                    showToast('Vui lòng chọn kích cỡ hoặc sản phẩm đã hết hàng.', 'error');
+                    return;
                 }
-            } else {
-                const errorText = await res.text();
-                showToast(errorText || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
-            }
-            } catch (error) {
-                showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
-            }
-        });
 
-        // Hiện toast
-        function showToast(msg, type) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.className = 'toast-msg ' + type + ' show';
-            clearTimeout(toast._timer);
-            toast._timer = setTimeout(() => {
-                toast.className = 'toast-msg';
-            }, 3000);
-        }
+                // Nếu chưa đăng nhập
+                if (!isLoggedIn) {
+                    showToast('Vui Lòng Đăng Nhập', 'error');
+                    // Redirect tới trang login nếu muốn: window.location.href = '/Identity/Account/Login';
+                    return;
+                }
+
+                // Gửi form bằng AJAX
+                const form = document.getElementById('cartForm');
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast('Đã thêm vào giỏ hàng thành công', 'success');
+                        } else {
+                            showToast(data.message || 'Có lỗi xảy ra', 'error');
+                        }
+                    } else {
+                        const errorText = await res.text();
+                        showToast(errorText || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
+                    }
+                } catch (error) {
+                    showToast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+                }
+            });
+
+            // Hiện toast
+            function showToast(msg, type) {
+                const toast = document.getElementById('toast');
+                toast.textContent = msg;
+                toast.className = 'toast-msg ' + type + ' show';
+                clearTimeout(toast._timer);
+                toast._timer = setTimeout(() => {
+                    toast.className = 'toast-msg';
+                }, 3000);
+            }
     </script>
 </body>
 </html>

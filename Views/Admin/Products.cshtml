@@ -143,6 +143,12 @@
                 <input class="form-control-admin" type="text" id="modalImage" placeholder="https://..." oninput="previewImage(this.value)">
                 <img id="imagePreview" class="img-preview" src="" alt="Preview">
             </div>
+            <div class="form-group">
+                <label class="form-label">Kích cỡ & số lượng</label>
+                <div id="sizeArea" class="size-area" aria-label="Kích cỡ"></div>
+                <div id="sizeError" class="size-error" style="display:none;margin-top:6px;font-size:0.85rem;color:var(--red)"></div>
+                <div style="margin-top:6px;font-size:0.8rem;color:var(--gray-500)">Nhấn vào kích cỡ để bật/tắt và nhập số lượng (số lượng 0 sẽ bị bỏ qua khi lưu).</div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal('productModal')">Huỷ</button>
                 <button type="submit" class="btn-submit-admin">Lưu sản phẩm</button>
@@ -177,6 +183,7 @@
     let currentView = 'table';
     const pageSize = 10;
     let deleteTargetId = '';
+    const DEFAULT_SIZES = ['S','M','L','XL'];
 
     async function loadProducts() {
         try {
@@ -339,6 +346,8 @@
         document.getElementById('modalPrice').value = '';
         document.getElementById('modalImage').value = '';
         document.getElementById('imagePreview').style.display = 'none';
+        // show only size buttons; inputs appear when user clicks a size
+        renderSizeArea();
         document.getElementById('productModal').classList.add('show');
     }
 
@@ -352,6 +361,22 @@
         document.getElementById('modalImage').value = p.image || '';
         document.getElementById('modalCategory').value = p.categoryId;
         previewImage(p.image);
+        renderSizeArea();
+        // product.productSizes is array of { id, sizeName, quantity }
+        if (p.productSizes && p.productSizes.length) {
+            // for each existing size, make the button active and render its qty input
+            p.productSizes.forEach(ps => {
+                const name = ps.sizeName || ps.size || '';
+                if (!name) return;
+                // create input row
+                const wrap = document.getElementById('selectedSizes');
+                const row = document.createElement('div'); row.className = 'size-row'; row.dataset.size = name;
+                row.innerHTML = `<div class="size-name">${name}</div><input class="size-qty" type="number" min="0" value="${ps.quantity}"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove(); refreshSizeButtonsState();">Xóa</button>`;
+                wrap.appendChild(row);
+                // mark corresponding button active
+                document.querySelectorAll('#sizeButtons .size-btn').forEach(b => { if (b.textContent === name) b.classList.add('active'); });
+            });
+        }
         document.getElementById('productModal').classList.add('show');
     }
 
@@ -370,6 +395,57 @@
         } else { img.style.display = 'none'; }
     }
 
+    // --- Size selector helpers ---
+    function renderSizeArea() {
+        const area = document.getElementById('sizeArea');
+        area.innerHTML = `
+            <div id="sizeButtons" style="display:flex;gap:8px;margin-bottom:12px;"></div>
+            <div id="selectedSizes" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        `;
+        const wrap = document.getElementById('sizeButtons');
+        DEFAULT_SIZES.forEach(s => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'size-btn';
+            btn.textContent = s;
+            btn.onclick = () => toggleSizeSelection(s);
+            wrap.appendChild(btn);
+        });
+    }
+
+    function renderSelectedSizes(items) {
+        const wrap = document.getElementById('selectedSizes');
+        wrap.innerHTML = '';
+        (items || []).forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'size-row';
+            row.dataset.size = it.sizeName || it.size || '';
+            row.innerHTML = `<div class="size-name">${row.dataset.size}</div><input class="size-qty" type="number" min="0" value="${it.quantity ?? 0}"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove()">Xóa</button>`;
+            wrap.appendChild(row);
+        });
+        refreshSizeButtonsState();
+    }
+
+    function toggleSizeSelection(sizeName) {
+        const wrap = document.getElementById('selectedSizes');
+        const exists = Array.from(wrap.querySelectorAll('.size-row')).some(r => r.dataset.size === sizeName);
+        if (exists) {
+            wrap.querySelectorAll('.size-row').forEach(r => { if (r.dataset.size === sizeName) r.remove(); });
+        } else {
+            const row = document.createElement('div');
+            row.className = 'size-row';
+            row.dataset.size = sizeName;
+            row.innerHTML = `<div class="size-name">${sizeName}</div><input class="size-qty" type="number" min="0" value="0"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove()">Xóa</button>`;
+            wrap.appendChild(row);
+        }
+        refreshSizeButtonsState();
+    }
+
+    function refreshSizeButtonsState() {
+        const selected = Array.from(document.querySelectorAll('#selectedSizes .size-row')).map(r => r.dataset.size);
+        document.querySelectorAll('#sizeButtons .size-btn').forEach(b => b.classList.toggle('active', selected.includes(b.textContent)));
+    }
+
     async function submitProductForm(e) {
         e.preventDefault();
         const id   = document.getElementById('modalProductId').value;
@@ -385,6 +461,20 @@
         const url = id ? '/Admin/EditProduct' : '/Admin/CreateProduct';
         try {
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+            // collect sizes (only include quantity > 0)
+            const sizes = [];
+            document.querySelectorAll('#selectedSizes .size-row').forEach(r => {
+                const sizeName = (r.dataset.size || r.querySelector('.size-name')?.textContent || '').trim();
+                const qty = parseInt(r.querySelector('.size-qty')?.value || '0');
+                if (!isNaN(qty) && qty > 0 && sizeName) sizes.push({ sizeName, quantity: qty });
+            });
+            // require at least one size with qty > 0 when creating
+            if (!id && sizes.length === 0) {
+                showToast('✕ Vui lòng nhập ít nhất một kích cỡ với số lượng lớn hơn 0.', 'error');
+                return;
+            }
+            if (sizes.length) body.Sizes = sizes;
+
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },

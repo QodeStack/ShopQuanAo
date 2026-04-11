@@ -713,7 +713,32 @@
         border-color: rgba(255,59,59,0.3);
     }
 
-@@media (max-width: 900px) {
+/* Size selector styles */
+.size-area { border: var(--border); padding: 12px; border-radius: 8px; background: #0d0d0d; margin-top: 6px; }
+.size-btn {
+    background: transparent;
+    border: var(--border);
+    color: var(--gray-300);
+    padding: 0.45rem 0.8rem;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+.size-btn:hover { background: rgba(255,255,255,0.03); color: var(--white); }
+.size-btn.active { background: rgba(200,255,0,0.12); color: var(--accent); border-color: rgba(200,255,0,0.12); }
+
+.size-row {
+    display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04);
+}
+.size-name { font-family: var(--mono); font-size:0.78rem; color:var(--gray-300); min-width:44px; }
+.size-qty { width:96px; padding:8px 10px; border-radius:8px; border:var(--border); background:#0d0d0d; color:var(--white); font-family:var(--mono); }
+.size-remove-btn { padding:6px 10px; border-radius:6px; font-size:0.78rem; }
+.size-error { font-family:var(--mono); }
+
+@media (max-width: 900px) {
     .admin-body {
         grid-template-columns: 1fr;
     }

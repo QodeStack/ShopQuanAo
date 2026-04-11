@@ -24,6 +24,8 @@ namespace ShopQuanAo.Models
 
         [Required]
         public double UnitPrice { get; set; }
-       
+
+        [StringLength(10)]
+        public string Size { get; set; } = "";
     }
 }
