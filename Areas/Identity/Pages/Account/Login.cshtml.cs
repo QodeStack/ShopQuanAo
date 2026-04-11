@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
+ using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -20,7 +20,7 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 {
 	public class LoginModel : PageModel
 	{
-		// SỬA: Thay IdentityUser bằng ApplicationUser
+		// SỬA: Thay ApplicationUser bằng ApplicationUser
 		private readonly SignInManager<ApplicationUser> _signInManager;
 		private readonly ILogger<LoginModel> _logger;
 		private readonly UserManager<ApplicationUser> _userManager;

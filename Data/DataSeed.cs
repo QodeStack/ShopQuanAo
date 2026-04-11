@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿ using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
 using ShopQuanAo.Const;
 using ShopQuanAo.Models; // Thêm namespace chứa ApplicationUser
 
@@ -8,7 +8,7 @@ namespace ShopQuanAo.Data
 	{
 		public static async Task KhoiTaoDuLieuMacDinh(IServiceProvider dichVu)
 		{
-			// SỬA TẠI ĐÂY: Thay IdentityUser bằng ApplicationUser
+			// SỬA TẠI ĐÂY: Thay ApplicationUser bằng ApplicationUser
 			var QuanLyNguoiDung = dichVu.GetRequiredService<UserManager<ApplicationUser>>();
 			var QuanLyVaiTro = dichVu.GetRequiredService<RoleManager<IdentityRole>>();
 

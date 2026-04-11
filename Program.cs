@@ -15,26 +15,21 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // 2. Cấu hình Identity với ApplicationUser
+// Chỉnh RequireConfirmedAccount = false để dễ test đồ án Quốc nhé
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
-	// Yêu cầu xác thực tài khoản (OTP) mới được đăng nhập
-	options.SignIn.RequireConfirmedAccount = true;
+	options.SignIn.RequireConfirmedAccount = false; // Chỉnh thành false ở đây
 
-	// Cấu hình mật khẩu linh hoạt cho môi trường học tập
 	options.Password.RequireDigit = false;
 	options.Password.RequiredLength = 6;
 	options.Password.RequireNonAlphanumeric = false;
 	options.Password.RequireUppercase = false;
 	options.Password.RequireLowercase = false;
-
-	// Cấu hình khóa tài khoản nếu nhập sai nhiều lần (tùy chọn)
-	options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-	options.Lockout.MaxFailedAccessAttempts = 5;
 })
 	.AddEntityFrameworkStores<ApplicationDbContext>()
 	.AddDefaultUI()
 	.AddDefaultTokenProviders();
 
-// 3. Cấu hình Cookie (Quan trọng để điều hướng khi chưa xác thực)
+// 3. Cấu hình Cookie
 builder.Services.ConfigureApplicationCookie(options => {
 	options.LoginPath = $"/Identity/Account/Login";
 	options.LogoutPath = $"/Identity/Account/Logout";
@@ -45,12 +40,20 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// 4. Khởi tạo dữ liệu mẫu (Admin, Roles...)
+// 4. Khởi tạo dữ liệu mẫu
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
-	// Đảm bảo file DataSeed đã được sửa UserManager<ApplicationUser>
-	await DataSeed.KhoiTaoDuLieuMacDinh(services);
+	try
+	{
+		await DataSeed.KhoiTaoDuLieuMacDinh(services);
+	}
+	catch (Exception ex)
+	{
+		// Tránh app bị sập nếu DataSeed có lỗi
+		var logger = services.GetRequiredService<ILogger<Program>>();
+		logger.LogError(ex, "Lỗi khi khởi tạo dữ liệu mẫu.");
+	}
 }
 
 // Cấu hình Pipeline
@@ -67,7 +70,7 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseAuthentication(); // Luôn đứng trước Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

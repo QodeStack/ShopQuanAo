@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using MailKit.Net.Smtp;
 using ShopQuanAo.Data;
-using ShopQuanAo.Models;
+using ShopQuanAo.Models; // Đảm bảo ApplicationUser nằm trong này
 
 namespace ShopQuanAo.Controllers
 {
@@ -256,7 +256,6 @@ namespace ShopQuanAo.Controllers
 		{
 			try
 			{
-				// Tránh Admin tự xóa chính mình
 				var currentUser = await _userManager.GetUserAsync(User);
 				if (currentUser?.Id == dto.Id)
 					return Json(new { success = false, message = "Bạn không thể tự xóa tài khoản của chính mình." });
@@ -264,7 +263,6 @@ namespace ShopQuanAo.Controllers
 				var user = await _userManager.FindByIdAsync(dto.Id);
 				if (user == null) return Json(new { success = false, message = "Không tìm thấy người dùng." });
 
-				// Dọn dẹp giỏ hàng để tránh lỗi khóa ngoại (Foreign Key)
 				var carts = _context.ShoppingCarts.Where(c => c.UserId == dto.Id);
 				if (carts.Any())
 				{
@@ -272,7 +270,6 @@ namespace ShopQuanAo.Controllers
 					await _context.SaveChangesAsync();
 				}
 
-				// Thực hiện xóa User
 				var result = await _userManager.DeleteAsync(user);
 				if (result.Succeeded)
 				{
@@ -462,7 +459,7 @@ namespace ShopQuanAo.Controllers
 		}
 	}
 
-	// ── DTOs ──
+	// ── DTOs (Đặt bên trong namespace để tránh lỗi Build) ──
 	public class CreateUserDto { public string Email { get; set; } = ""; public string Password { get; set; } = ""; public string? Role { get; set; } }
 	public class EditUserDto { public string Id { get; set; } = ""; public string? Role { get; set; } }
 	public class DeleteDto { public string Id { get; set; } = ""; }

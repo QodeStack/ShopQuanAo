@@ -5,7 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+ using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -15,7 +15,7 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 {
 	public class LogoutModel : PageModel
 	{
-		// SỬA: Thay IdentityUser bằng ApplicationUser
+		// SỬA: Thay ApplicationUser bằng ApplicationUser
 		private readonly SignInManager<ApplicationUser> _signInManager;
 		private readonly ILogger<LogoutModel> _logger;
 

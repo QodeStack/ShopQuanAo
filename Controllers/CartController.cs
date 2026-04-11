@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+ using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
@@ -11,7 +11,7 @@ namespace ShopQuanAo.Controllers
 	public class CartController : Controller
 	{
 		private readonly ApplicationDbContext _context;
-		// SỬA TẠI ĐÂY: Thay IdentityUser bằng ApplicationUser
+		// SỬA TẠI ĐÂY: Thay ApplicationUser bằng ApplicationUser
 		private readonly UserManager<ApplicationUser> _userManager;
 
 		public CartController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)

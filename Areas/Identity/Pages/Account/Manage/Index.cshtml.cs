@@ -6,16 +6,15 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+ using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ShopQuanAo.Models; // THÊM DÒNG NÀY ĐỂ NHẬN DIỆN ApplicationUser
+using ShopQuanAo.Models; // Đảm bảo đúng namespace chứa ApplicationUser
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 {
 	public class IndexModel : PageModel
 	{
-		// SỬA: Thay đổi IdentityUser thành ApplicationUser
 		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly SignInManager<ApplicationUser> _signInManager;
 
@@ -27,8 +26,14 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 			_signInManager = signInManager;
 		}
 
+		/// <summary>
+		/// Tên đăng nhập của người dùng
+		/// </summary>
 		public string Username { get; set; }
 
+		/// <summary>
+		/// Thông báo trạng thái sau khi thực hiện hành động
+		/// </summary>
 		[TempData]
 		public string StatusMessage { get; set; }
 
@@ -37,12 +42,13 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 
 		public class InputModel
 		{
-			[Phone]
+			[Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
 			[Display(Name = "Số điện thoại")]
 			public string PhoneNumber { get; set; }
+
+			// Bạn có thể thêm các trường như HoTen, DiaChi ở đây nếu ApplicationUser có các thuộc tính này
 		}
 
-		// SỬA: Tham số truyền vào phải là ApplicationUser
 		private async Task LoadAsync(ApplicationUser user)
 		{
 			var userName = await _userManager.GetUserNameAsync(user);
@@ -94,7 +100,7 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 			}
 
 			await _signInManager.RefreshSignInAsync(user);
-			StatusMessage = "Hồ sơ của bạn đã được cập nhật";
+			StatusMessage = "Hồ sơ của bạn đã được cập nhật thành công";
 			return RedirectToPage();
 		}
 	}

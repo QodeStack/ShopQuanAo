@@ -8,17 +8,18 @@
     {
         <li class="nav-item">
             <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
-                <i class="bi bi-cart"></i> Giỏ hàng
+                <i class="bi bi-cart"></i> GIỎ HÀNG
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
-                Chào, @(User.Identity?.Name ?? "Thành viên")!
+            @* SỬA: Sử dụng UserManager<ApplicationUser> để lấy UserName thay vì User.Identity.Name *@
+            <a class="nav-link text-dark fw-bold" asp-area="Identity" asp-page="/Account/Manage/Index" title="Quản lý tài khoản">
+                CHÀO, @(UserManager.GetUserName(User)?.ToUpper() ?? "THÀNH VIÊN")!
             </a>
         </li>
         <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="nav-link btn btn-link text-dark">Đăng xuất</button>
+                <button type="submit" class="nav-link btn btn-link text-dark border-0">ĐĂNG XUẤT</button>
             </form>
         </li>
     }
@@ -26,14 +27,14 @@
     {
         <li class="nav-item">
             <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
-                <i class="bi bi-cart"></i> Giỏ hàng
+                <i class="bi bi-cart"></i> GIỎ HÀNG
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">ĐĂNG KÝ</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">ĐĂNG NHẬP</a>
         </li>
     }
 </ul>
