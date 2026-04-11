@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+ using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
@@ -11,9 +11,9 @@ namespace ShopQuanAo.Controllers
     public class CustomerController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CustomerController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public CustomerController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;

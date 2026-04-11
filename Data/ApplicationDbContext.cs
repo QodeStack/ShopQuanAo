@@ -4,7 +4,8 @@ using ShopQuanAo.Models;
 
 namespace ShopQuanAo.Data
 {
-	public class ApplicationDbContext : IdentityDbContext
+	// Sửa IdentityDbContext thành IdentityDbContext<ApplicationUser> để hỗ trợ thêm cột OTP
+	public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 	{
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
 			: base(options)
@@ -20,8 +21,12 @@ namespace ShopQuanAo.Data
 		public DbSet<ShoppingCart> ShoppingCarts { get; set; }
 		public DbSet<Size> Sizes { get; set; }
 		public DbSet<ProductSize> ProductSizes { get; set; }
-
-		// Thêm dòng này để sửa lỗi gạch đỏ trong AdminController
 		public DbSet<Contacts> Contacts { get; set; }
+
+		protected override void OnModelCreating(ModelBuilder builder)
+		{
+			base.OnModelCreating(builder);
+			// Bạn có thể thêm các cấu hình Fluent API ở đây nếu cần
+		}
 	}
 }

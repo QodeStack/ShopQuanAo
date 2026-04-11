@@ -1,1 +1,8 @@
-﻿@using ShopQuanAo.Areas.Identity.Pages.Account.Manage
+﻿@using Microsoft.AspNetCore.Identity
+@using ShopQuanAo.Areas.Identity
+@using ShopQuanAo.Areas.Identity.Pages
+@using ShopQuanAo.Models
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@* Bổ sung thêm dòng này nếu các trang Manage vẫn báo lỗi không tìm thấy ApplicationUser *@
+@using ShopQuanAo.Models

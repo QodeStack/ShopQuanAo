@@ -7,24 +7,26 @@
 @* <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"> *@
 <link href="~/css/Admin_Users.css" asp-append-version="true" rel="stylesheet"/>
 
+@Html.AntiForgeryToken()
+
 <div class="admin-wrap">
     <div class="admin-body">
         <aside class="admin-sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-label">Tổng quan</div>
-                <a class="sidebar-link" href="@Url.Action("Index","Admin")"><span class="sidebar-icon">▣</span> Dashboard</a>
+                <a class="sidebar-link" href="@Url.Action("Index", "Admin")"><span class="sidebar-icon">▣</span> Dashboard</a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">◈</span> Doanh thu</a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">◎</span> Đơn hàng</a>
             </div>
             <div class="sidebar-section">
                 <div class="sidebar-label">Quản lý</div>
-                <a class="sidebar-link active" href="@Url.Action("Users","Admin")"><span class="sidebar-icon">◉</span> Người dùng</a>
-                <a class="sidebar-link" href="@Url.Action("Products","Admin")"><span class="sidebar-icon">◫</span> Sản phẩm</a>
+                <a class="sidebar-link active" href="@Url.Action("Users", "Admin")"><span class="sidebar-icon">◉</span> Người dùng</a>
+                <a class="sidebar-link" href="@Url.Action("Products", "Admin")"><span class="sidebar-icon">◫</span> Sản phẩm</a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">◧</span> Danh mục</a>
             </div>
             <div class="sidebar-section">
                 <div class="sidebar-label">Hệ thống</div>
-                <a class="sidebar-link" href="@Url.Action("Index","Home")"><span class="sidebar-icon">↗</span> Về cửa hàng</a>
+                <a class="sidebar-link" href="@Url.Action("Index", "Home")"><span class="sidebar-icon">↗</span> Về cửa hàng</a>
             </div>
         </aside>
 
@@ -37,7 +39,6 @@
                 <button class="btn-primary-admin" onclick="openCreateModal()">＋ Thêm người dùng</button>
             </div>
 
-            <!-- Toolbar -->
             <div class="toolbar">
                 <div class="search-input-wrap">
                     <span class="search-icon">🔍</span>
@@ -55,7 +56,6 @@
                 </select>
             </div>
 
-            <!-- Table -->
             <div class="panel">
                 <div class="panel-header">
                     <div class="panel-title">Danh sách người dùng</div>
@@ -72,7 +72,7 @@
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <tr><td colspan="5" style="text-align:center;padding:3rem;color:var(--gray-500);font-family:var(--mono);font-size:0.75rem;">Đang tải...</td></tr>
+                        <tr><td colspan="5" style="text-align:center;padding:3rem;color:var(--gray-500);font-family:var(--mono);font-size:0.75rem;">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
                 <div class="pagination-row">
@@ -84,7 +84,6 @@
     </div>
 </div>
 
-<!-- Create/Edit User Modal -->
 <div class="modal-overlay" id="userModal">
     <div class="modal-box">
         <div class="modal-title" id="modalTitle">TẠO NGƯỜI DÙNG MỚI</div>
@@ -113,19 +112,15 @@
     </div>
 </div>
 
-<!-- Delete Confirm Modal -->
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box" style="width:380px">
         <div class="modal-title">XÁC NHẬN XÓA</div>
         <p style="color:var(--gray-300);font-size:0.85rem;margin-bottom:0.5rem;">Bạn sắp xóa tài khoản:</p>
-        <p id="deleteUserEmail" style="font-family:var(--mono);color:var(--red);font-size:0.85rem;margin-bottom:1rem;"></p>
-        <p style="color:var(--gray-500);font-size:0.78rem;">Hành động này không thể hoàn tác.</p>
+        <p id="deleteUserEmail" style="font-family:var(--mono);color:#ff3b3b;font-size:0.85rem;margin-bottom:1rem;"></p>
+        <p style="color:var(--gray-500);font-size:0.78rem;">Hành động này không thể hoàn tác và sẽ dọn dẹp các dữ liệu liên quan.</p>
         <div class="modal-footer">
             <button type="button" class="btn-cancel" onclick="closeModal('deleteModal')">Huỷ</button>
-            <button type="button" onclick="confirmDelete()"
-                style="background:var(--red);color:#fff;border:none;border-radius:3px;font-family:var(--mono);font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.65rem 1.4rem;cursor:pointer;">
-                Xóa
-            </button>
+            <button type="button" onclick="confirmDelete()" style="background:#ff3b3b;color:#fff;border:none;border-radius:3px;font-family:var(--mono);font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.65rem 1.4rem;cursor:pointer;">Xóa</button>
         </div>
     </div>
 </div>
@@ -138,33 +133,32 @@
     let currentPage = 1;
     const pageSize = 10;
     let deleteTargetId = '';
-
     const avatarColors = ['#c8ff00','#3b82ff','#ff3b3b','#ffb400','#8b5cf6','#06b6d4'];
+
+    // Lấy Token Antiforgery chuẩn từ ASP.NET Core
+    function getRequestToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]').value;
+    }
 
     async function loadUsers() {
         try {
             const res = await fetch('/Admin/GetUsers');
             if (!res.ok) throw new Error();
             allUsers = await res.json();
-        } catch {
-            // Demo data fallback
-            allUsers = [
-                { id:'1', email:'admin@gmail.com', emailConfirmed:true, twoFactorEnabled:false, roles:['Admin'] },
-                { id:'2', email:'user1@gmail.com', emailConfirmed:true, twoFactorEnabled:false, roles:['User'] },
-                { id:'3', email:'user2@gmail.com', emailConfirmed:false, twoFactorEnabled:false, roles:['User'] },
-                { id:'4', email:'user3@gmail.com', emailConfirmed:true, twoFactorEnabled:true, roles:['User'] },
-            ];
+            filterUsers();
+        } catch (err) {
+            console.error("Lỗi tải người dùng:", err);
+            showToast("✕ Không thể kết nối server", "error");
         }
-        filterUsers();
     }
 
     function filterUsers() {
-        const q   = document.getElementById('userSearch').value.trim().toLowerCase();
+        const q = document.getElementById('userSearch').value.trim().toLowerCase();
         const role = document.getElementById('roleFilter').value;
         const conf = document.getElementById('confirmFilter').value;
 
         filteredUsers = allUsers.filter(u => {
-            const matchQ    = !q || u.email.toLowerCase().includes(q);
+            const matchQ = !q || u.email.toLowerCase().includes(q) || (u.userName && u.userName.toLowerCase().includes(q));
             const matchRole = !role || u.roles.includes(role);
             const matchConf = !conf || (conf === 'confirmed' ? u.emailConfirmed : !u.emailConfirmed);
             return matchQ && matchRole && matchConf;
@@ -176,8 +170,8 @@
 
     function renderTable() {
         const start = (currentPage - 1) * pageSize;
-        const page  = filteredUsers.slice(start, start + pageSize);
-        const body  = document.getElementById('usersTableBody');
+        const page = filteredUsers.slice(start, start + pageSize);
+        const body = document.getElementById('usersTableBody');
         const count = document.getElementById('userCount');
 
         count.textContent = filteredUsers.length + ' người dùng';
@@ -195,14 +189,14 @@
                         <div class="user-cell">
                             <div class="user-ava" style="background:${color}">${initials}</div>
                             <div>
-                                <div class="user-name">${u.userName || u.email}</div>
+                                <div class="user-name">${u.userName || u.email.split('@@')[0]}</div>
                                 <div class="user-email">${u.email}</div>
                             </div>
                         </div>
                     </td>
                     <td><span class="role-badge ${isAdmin ? 'admin' : 'user'}">${isAdmin ? '★ Admin' : '◉ User'}</span></td>
                     <td><span class="confirm-badge ${u.emailConfirmed ? 'yes' : 'no'}">${u.emailConfirmed ? '✓ Đã xác nhận' : '✕ Chưa XN'}</span></td>
-                    <td style="font-family:var(--mono);font-size:0.72rem;color:${u.twoFactorEnabled ? 'var(--accent)' : 'var(--gray-500)'}">
+                    <td style="font-family:var(--mono);font-size:0.72rem;color:${u.twoFactorEnabled ? '#c8ff00' : '#666'}">
                         ${u.twoFactorEnabled ? '✓ Bật' : '— Tắt'}
                     </td>
                     <td>
@@ -214,16 +208,16 @@
                 </tr>`;
             }).join('');
         }
-
         renderPagination();
     }
 
+    // Các hàm Pagination giữ nguyên của bạn
     function renderPagination() {
         const total = Math.ceil(filteredUsers.length / pageSize);
-        const info  = document.getElementById('pageInfo');
-        const btns  = document.getElementById('pageBtns');
-        const start = (currentPage - 1) * pageSize + 1;
-        const end   = Math.min(currentPage * pageSize, filteredUsers.length);
+        const info = document.getElementById('pageInfo');
+        const btns = document.getElementById('pageBtns');
+        const start = filteredUsers.length ? (currentPage - 1) * pageSize + 1 : 0;
+        const end = Math.min(currentPage * pageSize, filteredUsers.length);
         info.textContent = filteredUsers.length ? `${start}–${end} / ${filteredUsers.length}` : '0 kết quả';
 
         let html = '';
@@ -235,6 +229,7 @@
 
     function goPage(p) { currentPage = p; renderTable(); }
 
+    // --- MODAL LOGIC ---
     function openCreateModal() {
         document.getElementById('modalTitle').textContent = 'TẠO NGƯỜI DÙNG MỚI';
         document.getElementById('modalUserId').value = '';
@@ -246,10 +241,10 @@
     }
 
     function openEditModal(id, email, role) {
-        document.getElementById('modalTitle').textContent = 'CHỈNH SỬA NGƯỜI DÙNG';
+        document.getElementById('modalTitle').textContent = 'CHỈNH SỬA VAI TRÒ';
         document.getElementById('modalUserId').value = id;
         document.getElementById('modalEmail').value = email;
-        document.getElementById('modalPassword').value = '';
+        document.getElementById('modalEmail').disabled = true; // Không cho sửa email khi edit
         document.getElementById('modalRole').value = role || 'User';
         document.getElementById('passwordGroup').style.display = 'none';
         document.getElementById('userModal').classList.add('show');
@@ -261,67 +256,70 @@
         document.getElementById('deleteModal').classList.add('show');
     }
 
-    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('show');
+        document.getElementById('modalEmail').disabled = false;
+    }
 
+    // --- API SUBMIT ---
     async function submitUserForm(e) {
         e.preventDefault();
-        const id    = document.getElementById('modalUserId').value;
+        const id = document.getElementById('modalUserId').value;
         const email = document.getElementById('modalEmail').value;
-        const pass  = document.getElementById('modalPassword').value;
-        const role  = document.getElementById('modalRole').value;
+        const pass = document.getElementById('modalPassword').value;
+        const role = document.getElementById('modalRole').value;
 
-        const url    = id ? '/Admin/EditUser' : '/Admin/CreateUser';
-        const body   = id ? { id, role } : { email, password: pass, role };
+        const url = id ? '/Admin/EditUser' : '/Admin/CreateUser';
+        const body = id ? { id, role } : { email, password: pass, role };
 
         try {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? getAntiForgeryToken();
             const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getRequestToken()
+                },
                 body: JSON.stringify(body)
             });
             const d = await res.json();
             if (d.success) {
-                showToast(id ? '✓ Đã cập nhật' : '✓ Đã tạo người dùng', 'success');
+                showToast(id ? '✓ Cập nhật thành công' : '✓ Đã gửi mã OTP tới khách', 'success');
                 closeModal('userModal');
                 loadUsers();
-            } else { showToast('✕ ' + (d.message || 'Lỗi'), 'error'); }
-        } catch { showToast('✕ Lỗi kết nối', 'error'); }
+            } else {
+                showToast('✕ ' + (d.message || 'Lỗi xử lý'), 'error');
+            }
+        } catch { showToast('✕ Lỗi kết nối server', 'error'); }
     }
 
     async function confirmDelete() {
         try {
-            const token = getAntiForgeryToken();
             const res = await fetch('/Admin/DeleteUser', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getRequestToken()
+                },
                 body: JSON.stringify({ id: deleteTargetId })
             });
             const d = await res.json();
             if (d.success) {
-                showToast('✓ Đã xóa người dùng', 'success');
+                showToast('✓ Đã xóa tài khoản', 'success');
                 closeModal('deleteModal');
                 loadUsers();
-            } else { showToast('✕ ' + (d.message || 'Lỗi'), 'error'); }
-        } catch { showToast('✕ Lỗi kết nối', 'error'); }
-    }
-
-    function getAntiForgeryToken() {
-        const m = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-        return m ? decodeURIComponent(m[1]) : '';
+            } else {
+                showToast('✕ ' + (d.message || 'Lỗi khi xóa'), 'error');
+            }
+        } catch { showToast('✕ Lỗi kết nối server', 'error'); }
     }
 
     function showToast(msg, type) {
         const t = document.getElementById('adminToast');
-        t.textContent = msg; t.className = `admin-toast ${type} show`;
-        setTimeout(() => t.className = 'admin-toast', 3000);
+        t.textContent = msg;
+        t.className = `admin-toast ${type} show`;
+        setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // Close modal on backdrop click
-    document.querySelectorAll('.modal-overlay').forEach(m => {
-        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
-    });
-
+    // Load dữ liệu lần đầu
     loadUsers();
 </script>
-@Html.AntiForgeryToken()

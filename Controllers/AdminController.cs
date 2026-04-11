@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using MailKit.Net.Smtp;
 using ShopQuanAo.Data;
-using ShopQuanAo.Models;
+using ShopQuanAo.Models; // Đảm bảo ApplicationUser nằm trong này
 
 namespace ShopQuanAo.Controllers
 {
@@ -14,12 +14,40 @@ namespace ShopQuanAo.Controllers
 	public class AdminController : Controller
 	{
 		private readonly ApplicationDbContext _context;
-		private readonly UserManager<IdentityUser> _userManager;
+		private readonly UserManager<ApplicationUser> _userManager;
 
-		public AdminController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+		public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
 		{
 			_context = context;
 			_userManager = userManager;
+		}
+
+		// ── Hàm hỗ trợ OTP ──────────────────────────────────────
+		private string GenerateOTP()
+		{
+			Random res = new Random();
+			return res.Next(100000, 999999).ToString();
+		}
+
+		private async Task SendEmailOTP(string email, string otp)
+		{
+			var message = new MimeMessage();
+			message.From.Add(new MailboxAddress("MenShop Security", "leythien2508@gmail.com"));
+			message.To.Add(new MailboxAddress("", email));
+			message.Subject = "Mã xác thực đăng ký MenShop";
+
+			message.Body = new TextPart("plain")
+			{
+				Text = $"Mã xác thực (OTP) của bạn là: {otp}. Mã có hiệu lực trong 5 phút. Vui lòng không cung cấp mã này cho ai."
+			};
+
+			using (var client = new SmtpClient())
+			{
+				await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+				await client.AuthenticateAsync("leythien2508@gmail.com", "hszr hbjw vamm twxa");
+				await client.SendAsync(message);
+				await client.DisconnectAsync(true);
+			}
 		}
 
 		// Views : xong
@@ -110,7 +138,6 @@ namespace ShopQuanAo.Controllers
 					{
 						await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
 						await client.AuthenticateAsync("leythien2508@gmail.com", "hszr hbjw vamm twxa");
-
 						await client.SendAsync(emailMessage);
 						await client.DisconnectAsync(true);
 					}
@@ -147,7 +174,7 @@ namespace ShopQuanAo.Controllers
 			}
 		}
 
-		// ── Users API ──────────────────────────────────────────
+		// ── Users API ───────────────────────────────────────────
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{
@@ -177,16 +204,33 @@ namespace ShopQuanAo.Controllers
 			if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
 				return Json(new { success = false, message = "Email và mật khẩu không được để trống." });
 
-			var user = new IdentityUser { UserName = dto.Email, Email = dto.Email, EmailConfirmed = true };
+			var user = new ApplicationUser
+			{
+				UserName = dto.Email,
+				Email = dto.Email,
+				EmailConfirmed = false,
+				OTPCode = GenerateOTP(),
+				OTPExpiry = DateTime.Now.AddMinutes(5)
+			};
+
 			var result = await _userManager.CreateAsync(user, dto.Password);
 
 			if (!result.Succeeded)
 				return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
 
+			try
+			{
+				await SendEmailOTP(user.Email, user.OTPCode ?? "");
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = "Lỗi khi gửi mail OTP: " + ex.Message });
+			}
+
 			if (!string.IsNullOrEmpty(dto.Role))
 				await _userManager.AddToRoleAsync(user, dto.Role);
 
-			return Json(new { success = true });
+			return Json(new { success = true, message = "Đã gửi mã OTP xác nhận vào email của khách!" });
 		}
 
 		[HttpPost]
@@ -208,15 +252,36 @@ namespace ShopQuanAo.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> DeleteUser([FromBody] DeleteDto dto)
 		{
-			var currentUser = await _userManager.GetUserAsync(User);
-			if (currentUser?.Id == dto.Id)
-				return Json(new { success = false, message = "Không thể xóa tài khoản đang đăng nhập." });
+			try
+			{
+				var currentUser = await _userManager.GetUserAsync(User);
+				if (currentUser?.Id == dto.Id)
+					return Json(new { success = false, message = "Bạn không thể tự xóa tài khoản của chính mình." });
 
-			var user = await _userManager.FindByIdAsync(dto.Id);
-			if (user == null) return Json(new { success = false, message = "Không tìm thấy người dùng." });
+				var user = await _userManager.FindByIdAsync(dto.Id);
+				if (user == null) return Json(new { success = false, message = "Không tìm thấy người dùng." });
 
-			var result = await _userManager.DeleteAsync(user);
-			return Json(result.Succeeded ? new { success = true } : new { success = false, message = "Lỗi khi xóa." });
+				var carts = _context.ShoppingCarts.Where(c => c.UserId == dto.Id);
+				if (carts.Any())
+				{
+					_context.ShoppingCarts.RemoveRange(carts);
+					await _context.SaveChangesAsync();
+				}
+
+				var result = await _userManager.DeleteAsync(user);
+				if (result.Succeeded)
+				{
+					return Json(new { success = true, message = "Xóa người dùng thành công!" });
+				}
+				else
+				{
+					return Json(new { success = false, message = "Lỗi khi xóa tài khoản." });
+				}
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+			}
 		}
 
 		// ── Products API ──────────────────────────────────────────
@@ -235,12 +300,12 @@ namespace ShopQuanAo.Controllers
 						price = p.Price,
 						image = p.Image,
 						categoryId = p.CategoryId,
-						categoryName = p.Category.CategoryName,
+						categoryName = p.Category != null ? p.Category.CategoryName : "Chưa có danh mục",
 						productSizes = p.ProductSizes
-							.OrderBy(ps => ps.Size.SizeName)
+							.OrderBy(ps => ps.Size != null ? ps.Size.SizeName : "")
 							.Select(ps => new {
 								id = ps.Id,
-								sizeName = ps.Size.SizeName,
+								sizeName = ps.Size != null ? ps.Size.SizeName : "N/A",
 								quantity = ps.Quantity
 							}).ToList()
 					})
@@ -279,24 +344,27 @@ namespace ShopQuanAo.Controllers
 				_context.Products.Add(product);
 				await _context.SaveChangesAsync();
 
-				foreach (var sizeItem in dto.Sizes.Where(s => s.Quantity >= 0))
+				if (dto.Sizes != null)
 				{
-					var size = await _context.Sizes.FirstOrDefaultAsync(s => s.SizeName == sizeItem.SizeName);
-					if (size == null)
+					foreach (var sizeItem in dto.Sizes.Where(s => s.Quantity >= 0))
 					{
-						size = new Size { SizeName = sizeItem.SizeName.ToUpper() };
-						_context.Sizes.Add(size);
-						await _context.SaveChangesAsync();
-					}
+						var size = await _context.Sizes.FirstOrDefaultAsync(s => s.SizeName == sizeItem.SizeName);
+						if (size == null)
+						{
+							size = new Size { SizeName = sizeItem.SizeName.ToUpper() };
+							_context.Sizes.Add(size);
+							await _context.SaveChangesAsync();
+						}
 
-					_context.ProductSizes.Add(new ProductSize
-					{
-						ProductId = product.Id,
-						SizeId = size.Id,
-						Quantity = sizeItem.Quantity
-					});
+						_context.ProductSizes.Add(new ProductSize
+						{
+							ProductId = product.Id,
+							SizeId = size.Id,
+							Quantity = sizeItem.Quantity
+						});
+					}
+					await _context.SaveChangesAsync();
 				}
-				await _context.SaveChangesAsync();
 
 				return Json(new { success = true, message = "Thêm sản phẩm thành công!" });
 			}
@@ -315,10 +383,10 @@ namespace ShopQuanAo.Controllers
 				var product = await _context.Products.FindAsync(dto.Id);
 				if (product == null) return Json(new { success = false, message = "Không tìm thấy." });
 
-				product.ProductName = dto.ProductName;
+				product.ProductName = dto.ProductName ?? product.ProductName;
 				product.BrandName = dto.BrandName ?? product.BrandName;
 				product.Price = dto.Price;
-				product.Image = dto.Image;
+				product.Image = dto.Image ?? product.Image;
 				product.CategoryId = dto.CategoryId;
 
 				await _context.SaveChangesAsync();
@@ -356,7 +424,7 @@ namespace ShopQuanAo.Controllers
 				.Include(ps => ps.Size)
 				.Select(ps => new {
 					id = ps.Id,
-					sizeName = ps.Size.SizeName,
+					sizeName = ps.Size != null ? ps.Size.SizeName : "N/A",
 					quantity = ps.Quantity
 				}).ToListAsync();
 			return Json(productSizes);
@@ -461,14 +529,14 @@ namespace ShopQuanAo.Controllers
         }
     }
 
-	// ── DTOs (Data Transfer Objects) ──
-	public class CreateUserDto { public string Email { get; set; } public string Password { get; set; } public string Role { get; set; } }
-	public class EditUserDto { public string Id { get; set; } public string Role { get; set; } }
-	public class DeleteDto { public string Id { get; set; } }
+	// ── DTOs (Đặt bên trong namespace để tránh lỗi Build) ──
+	public class CreateUserDto { public string Email { get; set; } = ""; public string Password { get; set; } = ""; public string? Role { get; set; } }
+	public class EditUserDto { public string Id { get; set; } = ""; public string? Role { get; set; } }
+	public class DeleteDto { public string Id { get; set; } = ""; }
 	public class DeleteIntDto { public int Id { get; set; } }
-	public class ProductDto { public int Id { get; set; } public string ProductName { get; set; } public string BrandName { get; set; } public double Price { get; set; } public string Image { get; set; } public int CategoryId { get; set; } }
-	public class CreateProductWithSizesDto { public string ProductName { get; set; } public string BrandName { get; set; } public double Price { get; set; } public string Image { get; set; } public int CategoryId { get; set; } public List<SizeDto> Sizes { get; set; } }
-	public class SizeDto { public string SizeName { get; set; } public int Quantity { get; set; } }
+	public class ProductDto { public int Id { get; set; } public string? ProductName { get; set; } public string? BrandName { get; set; } public double Price { get; set; } public string? Image { get; set; } public int CategoryId { get; set; } }
+	public class CreateProductWithSizesDto { public string ProductName { get; set; } = ""; public string? BrandName { get; set; } public double Price { get; set; } public string? Image { get; set; } public int CategoryId { get; set; } public List<SizeDto>? Sizes { get; set; } }
+	public class SizeDto { public string SizeName { get; set; } = ""; public int Quantity { get; set; } }
 	public class UpdateProductSizeDto { public int ProductSizeId { get; set; } public int Quantity { get; set; } }
 	public class DeleteProductSizeDto { public int ProductSizeId { get; set; } }
     public class UpdateOrderStatusDto
