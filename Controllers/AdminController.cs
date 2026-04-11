@@ -51,13 +51,15 @@ namespace ShopQuanAo.Controllers
 		}
 
 		// Views : xong
-		public IActionResult Index() 
+		public IActionResult Index()
 		{
+			// Thêm .ThenInclude để lấy dữ liệu từ bảng OrderDetail
 			ViewBag.RecentOrders = _context.Orders
-				.Include(o => o.OrderDetails)
+				.Include(o => o.OrderDetails) // Lấy danh sách chi tiết đơn hàng
 				.OrderByDescending(o => o.CreateTime)
 				.Take(10)
 				.ToList();
+
 			return View();
 		}
 

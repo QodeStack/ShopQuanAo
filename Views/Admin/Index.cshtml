@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using ShopQuanAo.Models @* Đảm bảo có dòng này để nhận diện model *@
 @inject UserManager<ApplicationUser> UserManager
 @{
     ViewData["Title"] = "Admin Dashboard";
@@ -8,7 +9,6 @@
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
 }
 
-@* <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"> *@
 <link href="~/css/Admin_Index.css" asp-append-version="true" rel="stylesheet" />
 
 <div class="admin-wrap">
@@ -92,9 +92,7 @@
                         <div class="panel-title">Doanh thu 6 tháng gần nhất</div>
                         <div class="panel-badge">Đơn vị: Triệu VND</div>
                     </div>
-                    <div class="chart-bars" id="revenueChart">
-                        @* Chart sẽ được load bằng Javascript bên dưới *@
-                    </div>
+                    <div class="chart-bars" id="revenueChart"></div>
                 </div>
 
                 <div class="panel">
@@ -136,21 +134,25 @@
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
-                        @if (ViewBag.RecentOrders != null && ((IEnumerable<dynamic>)ViewBag.RecentOrders).Any())
+                        @if (ViewBag.RecentOrders != null)
                         {
-                            foreach (var order in ViewBag.RecentOrders)
+                            @* Ép kiểu rõ ràng thành danh sách Order *@
+                            foreach (var order in (IEnumerable<ShopQuanAo.Models.Order>)ViewBag.RecentOrders)
                             {
                                 <tr>
                                     <td class="order-id">#@order.Id</td>
                                     <td>@order.Name</td>
-                                    <td>@order.OrderDetails?.Count sp</td>
+                                    <td>@(order.OrderDetails?.Count ?? 0) sp</td>
                                     <td class="amount-cell">
-                                        @* Tính tổng tiền thực tế từ OrderDetails *@
                                         @{
-                                            decimal total = 0;
+                                            double total = 0;
                                             if (order.OrderDetails != null)
                                             {
-                                                foreach (var d in order.OrderDetails) { total += d.Price * d.Quantity; }
+                                                foreach (var d in order.OrderDetails) 
+                                                { 
+                                                    // Sử dụng đúng UnitPrice đã khai báo trong model
+                                                    total += (d.UnitPrice * d.Quantity); 
+                                                }
                                             }
                                         }
                                         @total.ToString("N0")₫
@@ -178,18 +180,14 @@
 </div>
 
 <script>
-    // 1. Hiển thị ngày tháng tiếng Việt
     document.getElementById('currentDate').textContent =
         new Date().toLocaleDateString('vi-VN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-    // 2. Gọi API lấy thông số thực tế từ Database
     async function loadStats() {
         try {
             const res = await fetch('/Admin/GetStats');
             if (!res.ok) throw new Error();
             const d = await res.json();
-            
-            // Format doanh thu sang dạng triệu (M)
             const revenueM = (d.revenue / 1000000).toFixed(1);
             
             document.getElementById('statRevenue').textContent  = revenueM + 'M₫';
@@ -204,9 +202,8 @@
     }
     loadStats();
 
-    // 3. Biểu đồ doanh thu (Dữ liệu mẫu - Quốc có thể viết thêm API để truyền dữ liệu thật vào đây)
     const months = ['T11','T12','T1','T2','T3','T4'];
-    const values = [42, 58, 35, 71, 63, 89]; // Đơn vị: Triệu
+    const values = [42, 58, 35, 71, 63, 89]; 
     const max = Math.max(...values);
     const chart = document.getElementById('revenueChart');
     
