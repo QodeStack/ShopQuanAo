@@ -1,4 +1,4 @@
-namespace ShopQuanAo.Models
+namespace ShopQuanAo.Models.Entity
 {
     public class ErrorViewModel
     {

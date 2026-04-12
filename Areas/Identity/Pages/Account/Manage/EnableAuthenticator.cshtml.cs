@@ -9,10 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using ShopQuanAo.Models.Entity;
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 {

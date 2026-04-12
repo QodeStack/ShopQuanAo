@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ShopQuanAo.Models
+namespace ShopQuanAo.Models.Entity
 {
 	[Table("Product")]
 	public class Product

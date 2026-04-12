@@ -1,68 +1,52 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShopQuanAo.Data;
 using ShopQuanAo.Models;
+using ShopQuanAo.Models.DTO;
+using ShopQuanAo.Models.Entity;
+using ShopQuanAo.Services;
 using System.Diagnostics;
 
 namespace ShopQuanAo.Controllers
 {
-	public class HomeController : Controller
-	{
-		private readonly ApplicationDbContext _context;
+    public class HomeController : Controller
+    {
+        private readonly HomeService _homeService;
 
-		// Inject Database Context để sử dụng
-		public HomeController(ApplicationDbContext context)
-		{
-			_context = context;
-		}
+        public HomeController(HomeService homeService)
+        {
+            _homeService = homeService;
+        }
 
-		public IActionResult Index()
-		{
-			return View();
-		}
+        // Các trang tĩnh
+        public IActionResult Index() => View();
+        public IActionResult AboutUs() => View();
+        public IActionResult Sale() => View();
+        public IActionResult Contact() => View();
 
-		public IActionResult AboutUs()
-		{
-			return View();
-		}
+        // Xử lý gửi liên hệ
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendContact(ContactFormDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Contact", model);
+            }
 
-		public IActionResult Sale()
-		{
-			return View();
-		}
+            var success = await _homeService.SaveContactAsync(model);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Gửi tin nhắn thành công! Admin sẽ phản hồi bạn sớm nhất.";
+                return RedirectToAction("Contact");
+            }
 
-		public IActionResult Contact()
-		{
-			return View();
-		}
+            ModelState.AddModelError("", "Có lỗi xảy ra khi gửi tin nhắn.");
+            return View("Contact", model);
+        }
 
-		// Action xử lý khi khách hàng gửi thông tin liên hệ
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> SendContact(Contacts model)
-		{
-			if (ModelState.IsValid)
-			{
-				// Mặc định ngày tạo là hiện tại
-				model.CreatedDate = DateTime.Now;
-				model.IsRead = false;
-
-				_context.Contacts.Add(model);
-				await _context.SaveChangesAsync();
-
-				// Thông báo thành công cho người dùng
-				TempData["SuccessMessage"] = "Gửi tin nhắn thành công! Admin sẽ phản hồi bạn sớm nhất có thể.";
-				return RedirectToAction("Contact");
-			}
-
-			// Nếu dữ liệu không hợp lệ, trả về view kèm lỗi
-			return View("Contact", model);
-		}
-
-		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error()
-		{
-			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-		}
-	}
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+    }
 }

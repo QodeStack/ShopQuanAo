@@ -1,5 +1,5 @@
 ﻿<link href="~/css/shoppingCart.css" asp-append-version="true" rel="stylesheet"/>
-@model ShopQuanAo.Models.ShoppingCart
+@model ShopQuanAo.Models.Entity.ShoppingCart
 @{
     ViewData["Title"] = "Giỏ Hàng";
     var total = Model.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
@@ -160,9 +160,12 @@
         return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
     }
 
-    function formatVND(n) {
-        return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '₫';
-    }
+        // 1. Sửa hàm formatVND
+        function formatVND(n) {
+            // Sửa lỗi: Khai báo biến 'val' và dùng nó nhất quán
+            let val = parseFloat(n) || 0;
+            return new Intl.NumberFormat('vi-VN').format(Math.round(val)) + '₫';
+        }
 
     function showToast(msg, isError = false) {
         const t = document.getElementById('cartToast');
@@ -209,36 +212,43 @@
         updateQty(id, newVal);
     }
 
-    async function updateQty(cartDetailId, quantity) {
-        const row = document.getElementById('row-' + cartDetailId);
-        row?.classList.add('row-loading');
+        async function updateQty(cartDetailId, quantity) {
+            const row = document.getElementById('row-' + cartDetailId);
+            row?.classList.add('row-loading');
 
-        try {
-            const formData = new FormData();
-            formData.append('cartDetailId', cartDetailId);
-            formData.append('quantity', quantity);
-            formData.append('__RequestVerificationToken', getToken());
+            try {
+                const formData = new FormData();
+                formData.append('cartDetailId', cartDetailId);
+                formData.append('quantity', quantity);
+                formData.append('__RequestVerificationToken', getToken());
 
-            const res = await fetch('/Cart/UpdateQuantity', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.success) {
-                const subEl = document.getElementById('sub-' + cartDetailId);
-                if (subEl) subEl.textContent = formatVND(data.subtotal);
-                updateSummary(data.total, data.cartCount);
-                if (quantity <= 0) row?.remove();
-            } else {
-                showToast(data.message || 'Lỗi cập nhật', true);
+                const res = await fetch('/Cart/UpdateQuantity', {
+                    method: 'POST',
+                    body: formData
+                });
+        
+                const data = await res.json();
+                console.log("Dữ liệu từ server:", data); // KIỂM TRA TẠI ĐÂY
+
+                if (data.success) {
+                    const subEl = document.getElementById('sub-' + cartDetailId);
+                    if (subEl) {
+                        // Đảm bảo data.subtotal tồn tại và là số
+                        subEl.textContent = formatVND(data.subtotal);
+                    }
+                    updateSummary(data.total, data.cartCount);
+                } else {
+                    showToast(data.message || 'Lỗi cập nhật', true);
+                    // Nếu lỗi, reset lại giá trị input về cũ (tùy chọn)
+                    location.reload();
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Không thể kết nối máy chủ', true);
+            } finally {
+                row?.classList.remove('row-loading');
             }
-        } catch (err) {
-            console.error(err);
-            showToast('Không thể kết nối máy chủ', true);
-        } finally {
-            row?.classList.remove('row-loading');
         }
-    }
 
     async function removeItem(cartDetailId) {
         const row = document.getElementById('row-' + cartDetailId);

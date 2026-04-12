@@ -1,5 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@using ShopQuanAo.Models @* Đảm bảo có dòng này để nhận diện model *@
+@using ShopQuanAo.Models.Entity @* Đảm bảo có dòng này để nhận diện model *@
 @inject UserManager<ApplicationUser> UserManager
 @{
     ViewData["Title"] = "Admin Dashboard";
@@ -137,7 +137,7 @@
                         @if (ViewBag.RecentOrders != null)
                         {
                             @* Ép kiểu rõ ràng thành danh sách Order *@
-                            foreach (var order in (IEnumerable<ShopQuanAo.Models.Order>)ViewBag.RecentOrders)
+                            foreach (var order in (IEnumerable<ShopQuanAo.Models.Entity.Order>)ViewBag.RecentOrders)
                             {
                                 <tr>
                                     <td class="order-id">#@order.Id</td>

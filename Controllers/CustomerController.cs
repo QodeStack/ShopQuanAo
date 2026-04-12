@@ -1,125 +1,54 @@
 ﻿using Microsoft.AspNetCore.Authorization;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShopQuanAo.Data;
+using ShopQuanAo.Models.Entity;
 using ShopQuanAo.ViewModels;
+using ShopQuanAo.Services;
 
 namespace ShopQuanAo.Controllers
 {
     [Authorize]
     public class CustomerController : Controller
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CustomerService _customerService;
 
-        public CustomerController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public CustomerController(UserManager<ApplicationUser> userManager, CustomerService customerService)
         {
-            _context = context;
             _userManager = userManager;
+            _customerService = customerService;
         }
 
-        // giao diên chính : xong 
         public async Task<IActionResult> Index(string status = "", int page = 1)
         {
-            const int pageSize = 5;
-            var userId = _userManager.GetUserId(User);
-
-            var query = _context.Orders
-                .Include(o => o.OrderStatus)
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Product)
-                .Where(o => o.UserId == userId && !o.IsDeleted)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(status))
-                query = query.Where(o => o.OrderStatus.StatusName == status);
-
-            query = query.OrderByDescending(o => o.CreateTime);
-
-            var total = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
-            page = Math.Clamp(page, 1, Math.Max(1, totalPages));
-
-            var orders = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            var result = await _customerService.GetOrdersAsync(_userManager.GetUserId(User), status, page);
 
             var vm = new CustomerOrderViewModel
             {
-                Orders = orders,
-                CurrentPage = page,
-                TotalPages = totalPages,
-                CurrentStatus = status
+                Orders = result.Orders,
+                CurrentPage = result.CurrentPage,
+                TotalPages = result.TotalPages,
+                CurrentStatus = result.CurrentStatus
             };
 
             return View(vm);
         }
 
-        // Hủy đơn : xong 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int orderId)
         {
-            var userId = _userManager.GetUserId(User);
-            var order = await _context.Orders
-                .Include(o => o.OrderStatus)
-                .Include(o => o.OrderDetails) 
-                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
-
-            if (order == null) return NotFound();
-
-            if (order.OrderStatus?.StatusName == "Chờ xác nhận")
-            {
-                var cancelStatus = await _context.OrderStatuses
-                    .FirstOrDefaultAsync(s => s.StatusName == "Đã hủy");
-
-                if (cancelStatus != null)
-                {
-                    order.OrderStatusId = cancelStatus.Id;
-                    foreach (var detail in order.OrderDetails)
-                    {
-                        var productSize = await _context.ProductSizes
-                            .Include(ps => ps.Size)
-                            .FirstOrDefaultAsync(ps => ps.ProductId == detail.ProductId
-                                                    && ps.Size.SizeName == detail.Size);
-
-                        if (productSize != null)
-                            productSize.Quantity += detail.Quantity;
-                    }
-
-                    await _context.SaveChangesAsync();
-                    TempData["Message"] = "Đã hủy đơn hàng thành công.";
-                }
-            }
-
+            var result = await _customerService.CancelOrderAsync(_userManager.GetUserId(User), orderId);
+            if (result.Success) TempData["Message"] = result.Message;
             return RedirectToAction(nameof(Index));
         }
 
-        // Xác nhận đã nhận hàng : xong 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmReceived(int orderId)
         {
-            var userId = _userManager.GetUserId(User);
-            var order = await _context.Orders
-                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
-
-            if (order == null) return NotFound();
-            var completedStatus = await _context.OrderStatuses
-                .FirstOrDefaultAsync(s => s.StatusName == "Đã hoàn thành");
-
-            if (completedStatus != null)
-            {
-                order.OrderStatusId = completedStatus.Id;
-                order.OrderStatus = null;
-                order.IsPaid = true;
-                _context.Entry(order).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                TempData["Message"] = "Cảm ơn bạn đã mua hàng!";
-            }
-
+            var result = await _customerService.ConfirmReceivedAsync(_userManager.GetUserId(User), orderId);
+            if (result.Success) TempData["Message"] = result.Message;
             return RedirectToAction(nameof(Index));
         }
     }

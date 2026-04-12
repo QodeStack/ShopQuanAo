@@ -1,9 +1,9 @@
-﻿@model ShopQuanAo.Models.Order
+﻿@model ShopQuanAo.Models.Entity.Order
 @{
     ViewData["Title"] = "Thanh toán";
     
     // Lấy thông tin giỏ hàng và tổng tiền từ ViewBag
-    var cart = ViewBag.Cart as ShopQuanAo.Models.ShoppingCart;
+    var cart = ViewBag.Cart as ShopQuanAo.Models.Entity.ShoppingCart;
     var totalAmount = ViewBag.TotalAmount != null ? Convert.ToDouble(ViewBag.TotalAmount) : 0; 
 }
 

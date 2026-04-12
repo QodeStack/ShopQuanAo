@@ -1,16 +1,23 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ShopQuanAo.Models
+namespace ShopQuanAo.Models.Entity
 {
-    public class CartDetail
+    [Table("OrderDetail")]
+
+    public class OrderDetail
     {
         public int Id { get; set; }
 
         [Required]
-        public int ShoppingCartId { get; set; }
+        public int OrderId { get; set; }
+
+        public Order Order { get; set; }
 
         [Required]
         public int ProductId { get; set; }
+
+        public Product Product { get; set; }
 
         [Required]
         public int Quantity { get; set; }
@@ -18,12 +25,7 @@ namespace ShopQuanAo.Models
         [Required]
         public double UnitPrice { get; set; }
 
-        [Required]
         [StringLength(10)]
-        public string Size { get; set; }
-
-        public Product Product { get; set; }
-
-        public ShoppingCart ShoppingCart { get; set; }
+        public string Size { get; set; } = "";
     }
 }

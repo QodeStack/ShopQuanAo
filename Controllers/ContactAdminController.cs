@@ -1,60 +1,43 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShopQuanAo.Data;
-using ShopQuanAo.Models;
+using ShopQuanAo.Models.DTO;
+using ShopQuanAo.Services;
 
 namespace ShopQuanAo.Controllers
 {
-	[Authorize(Roles = "Admin")] // Đảm bảo chỉ Admin mới vào được
-	public class ContactAdminController : Controller
-	{
-		private readonly ApplicationDbContext _context;
+    [Authorize(Roles = "Admin")]
+    public class ContactAdminController : Controller
+    {
+        private readonly ContactAdminService _service;
 
-		public ContactAdminController(ApplicationDbContext context)
-		{
-			_context = context;
-		}
+        public ContactAdminController(ContactAdminService service)
+        {
+            _service = service;
+        }
 
-		// 1. Trang danh sách phản hồi
-		public async Task<IActionResult> Index()
-		{
-			var contacts = await _context.Contacts
-				.OrderByDescending(c => c.CreatedDate)
-				.ToListAsync();
-			return View(contacts);
-		}
+        // 1. Trang danh sách phản hồi
+        public async Task<IActionResult> Index()
+        {
+            var contacts = await _service.GetAllContactsAsync();
+            return View(contacts);
+        }
 
-		// 2. API Phản hồi khách hàng
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Reply(int id, string adminReply)
-		{
-			var contact = await _context.Contacts.FindAsync(id);
-			if (contact == null) return Json(new { success = false, message = "Không tìm thấy tin nhắn." });
+        // 2. API Phản hồi khách hàng
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reply([FromBody] ContactReplyDto dto)
+        {
+            var result = await _service.ReplyToContactAsync(dto);
+            return Json(new { success = result.Success, message = result.Message });
+        }
 
-			if (!string.IsNullOrWhiteSpace(adminReply))
-			{
-				contact.AdminReply = adminReply;
-				contact.IsRead = true;
-				_context.Update(contact);
-				await _context.SaveChangesAsync();
-				return Json(new { success = true });
-			}
-			return Json(new { success = false, message = "Nội dung trống." });
-		}
-
-		// 3. API Xóa tin nhắn
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Delete(int id)
-		{
-			var contact = await _context.Contacts.FindAsync(id);
-			if (contact == null) return Json(new { success = false });
-
-			_context.Contacts.Remove(contact);
-			await _context.SaveChangesAsync();
-			return Json(new { success = true });
-		}
-	}
+        // 3. API Xóa tin nhắn
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var success = await _service.DeleteContactAsync(id);
+            return Json(new { success });
+        }
+    }
 }

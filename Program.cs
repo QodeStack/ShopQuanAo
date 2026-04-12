@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
-using ShopQuanAo.Models;
+using ShopQuanAo.Models.Entity;
+using ShopQuanAo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,13 @@ builder.Services.ConfigureApplicationCookie(options => {
 });
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<CartService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<CheckoutService>();
+builder.Services.AddScoped<HomeService>();
 
 var app = builder.Build();
 

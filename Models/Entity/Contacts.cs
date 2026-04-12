@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ShopQuanAo.Models
+namespace ShopQuanAo.Models.Entity
 {
 	public class Contacts
 	{

@@ -1,550 +1,75 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
-using MailKit.Net.Smtp;
 using ShopQuanAo.Data;
-using ShopQuanAo.Models; // Đảm bảo ApplicationUser nằm trong này
+using ShopQuanAo.Models.Entity;
+using ShopQuanAo.Services;
+using ShopQuanAo.Models.DTO;
 
 namespace ShopQuanAo.Controllers
 {
-	[Authorize(Roles = "Admin")]
-	public class AdminController : Controller
-	{
-		private readonly ApplicationDbContext _context;
-		private readonly UserManager<ApplicationUser> _userManager;
+    [Authorize(Roles = "Admin")]
+    public class AdminController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly AdminService _service;
 
-		public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
-		{
-			_context = context;
-			_userManager = userManager;
-		}
-
-		// ── Hàm hỗ trợ OTP ──────────────────────────────────────
-		private string GenerateOTP()
-		{
-			Random res = new Random();
-			return res.Next(100000, 999999).ToString();
-		}
-
-		private async Task SendEmailOTP(string email, string otp)
-		{
-			var message = new MimeMessage();
-			message.From.Add(new MailboxAddress("MenShop Security", "leythien2508@gmail.com"));
-			message.To.Add(new MailboxAddress("", email));
-			message.Subject = "Mã xác thực đăng ký MenShop";
-
-			message.Body = new TextPart("plain")
-			{
-				Text = $"Mã xác thực (OTP) của bạn là: {otp}. Mã có hiệu lực trong 5 phút. Vui lòng không cung cấp mã này cho ai."
-			};
-
-			using (var client = new SmtpClient())
-			{
-				await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-				await client.AuthenticateAsync("leythien2508@gmail.com", "hszr hbjw vamm twxa");
-				await client.SendAsync(message);
-				await client.DisconnectAsync(true);
-			}
-		}
-
-		// Views : xong
-		public IActionResult Index()
-		{
-			// Thêm .ThenInclude để lấy dữ liệu từ bảng OrderDetail
-			ViewBag.RecentOrders = _context.Orders
-				.Include(o => o.OrderDetails) // Lấy danh sách chi tiết đơn hàng
-				.OrderByDescending(o => o.CreateTime)
-				.Take(10)
-				.ToList();
-
-			return View();
-		}
-
-		public IActionResult Users() => View();
-
-		public IActionResult Products()
-		{
-			ViewBag.Categories = _context.Categories.ToList();
-			return View();
-		}
-
-		public async Task<IActionResult> Contacts()
-		{
-			var contacts = await _context.Contacts
-				.OrderByDescending(c => c.CreatedDate)
-				.ToListAsync();
-			return View(contacts);
-		}
-
-		// ── Dashboard Stats API ────────────────────────────────
-		[HttpGet]
-		public async Task<IActionResult> GetStats()
-		{
-			try
-			{
-				var now = DateTime.Now;
-				var startOfMonth = new DateTime(now.Year, now.Month, 1);
-
-				var revenue = await _context.OrderDetails
-					.Where(od => od.Order.CreateTime >= startOfMonth && od.Order.IsPaid)
-					.SumAsync(od => (double?)(od.UnitPrice * od.Quantity)) ?? 0;
-
-				var orders = await _context.Orders
-					.Where(o => o.CreateTime >= startOfMonth)
-					.CountAsync();
-
-				var users = await _userManager.Users.CountAsync();
-
-				var products = await _context.Products
-					.Select(p => p.ProductName)
-					.Distinct()
-					.CountAsync();
-
-				return Json(new { revenue, orders, users, products });
-			}
-			catch (Exception ex)
-			{
-				return Json(new { error = ex.Message });
-			}
-		}
-
-		//Contact Admin : xong 
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> ReplyContact(int id, string adminReply)
-		{
-			try
-			{
-				var contact = await _context.Contacts.FindAsync(id);
-				if (contact == null) return Json(new { success = false, message = "Không tìm thấy khách hàng." });
-				contact.AdminReply = adminReply;
-				contact.IsRead = true;
-				_context.Update(contact);
-				await _context.SaveChangesAsync();
-				try
-				{
-					var emailMessage = new MimeMessage();
-					emailMessage.From.Add(new MailboxAddress("MenShop Admin", "leythien2508@gmail.com"));
-					emailMessage.To.Add(new MailboxAddress(contact.FullName, contact.Email));
-					emailMessage.Subject = "[MenShop] Phản hồi yêu cầu liên hệ";
-
-					emailMessage.Body = new TextPart("plain")
-					{
-						Text = $"Chào {contact.FullName},\n\nAdmin MenShop xin phản hồi về nội dung của bạn như sau:\n\"{adminReply}\"\n\nCảm ơn bạn đã quan tâm đến cửa hàng chúng tôi!"
-					};
-
-					using (var client = new SmtpClient())
-					{
-						await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-						await client.AuthenticateAsync("leythien2508@gmail.com", "hszr hbjw vamm twxa");
-						await client.SendAsync(emailMessage);
-						await client.DisconnectAsync(true);
-					}
-					return Json(new { success = true, message = "Đã lưu phản hồi và gửi mail thành công!" });
-				}
-				catch (Exception mailEx)
-				{
-					return Json(new { success = true, message = "Lưu thành công nhưng gửi mail thất bại: " + mailEx.Message });
-				}
-			}
-			catch (Exception ex)
-			{
-				return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
-			}
-		}
-
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> DeleteContact(int id)
-		{
-			try
-			{
-				var contact = await _context.Contacts.FindAsync(id);
-				if (contact == null) return Json(new { success = false });
-
-				_context.Contacts.Remove(contact);
-				await _context.SaveChangesAsync();
-				return Json(new { success = true });
-			}
-			catch (Exception ex)
-			{
-				return Json(new { success = false, message = ex.Message });
-			}
-		}
-
-		// ── Users API ───────────────────────────────────────────
-		[HttpGet]
-		public async Task<IActionResult> GetUsers()
-		{
-			var users = await _userManager.Users.ToListAsync();
-			var result = new List<object>();
-
-			foreach (var u in users)
-			{
-				var roles = await _userManager.GetRolesAsync(u);
-				result.Add(new
-				{
-					id = u.Id,
-					email = u.Email,
-					userName = u.UserName,
-					emailConfirmed = u.EmailConfirmed,
-					twoFactorEnabled = u.TwoFactorEnabled,
-					roles = roles.ToList()
-				});
-			}
-			return Json(result);
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
-		{
-			if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
-				return Json(new { success = false, message = "Email và mật khẩu không được để trống." });
-
-			var user = new ApplicationUser
-			{
-				UserName = dto.Email,
-				Email = dto.Email,
-				EmailConfirmed = false,
-				OTPCode = GenerateOTP(),
-				OTPExpiry = DateTime.Now.AddMinutes(5)
-			};
-
-			var result = await _userManager.CreateAsync(user, dto.Password);
-
-			if (!result.Succeeded)
-				return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
-
-			try
-			{
-				await SendEmailOTP(user.Email, user.OTPCode ?? "");
-			}
-			catch (Exception ex)
-			{
-				return Json(new { success = false, message = "Lỗi khi gửi mail OTP: " + ex.Message });
-			}
-
-			if (!string.IsNullOrEmpty(dto.Role))
-				await _userManager.AddToRoleAsync(user, dto.Role);
-
-			return Json(new { success = true, message = "Đã gửi mã OTP xác nhận vào email của khách!" });
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> EditUser([FromBody] EditUserDto dto)
-		{
-			var user = await _userManager.FindByIdAsync(dto.Id);
-			if (user == null) return Json(new { success = false, message = "Không tìm thấy người dùng." });
-
-			var currentRoles = await _userManager.GetRolesAsync(user);
-			await _userManager.RemoveFromRolesAsync(user, currentRoles);
-			if (!string.IsNullOrEmpty(dto.Role))
-				await _userManager.AddToRoleAsync(user, dto.Role);
-
-			return Json(new { success = true });
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> DeleteUser([FromBody] DeleteDto dto)
-		{
-			try
-			{
-				var currentUser = await _userManager.GetUserAsync(User);
-				if (currentUser?.Id == dto.Id)
-					return Json(new { success = false, message = "Bạn không thể tự xóa tài khoản của chính mình." });
-
-				var user = await _userManager.FindByIdAsync(dto.Id);
-				if (user == null) return Json(new { success = false, message = "Không tìm thấy người dùng." });
-
-				var carts = _context.ShoppingCarts.Where(c => c.UserId == dto.Id);
-				if (carts.Any())
-				{
-					_context.ShoppingCarts.RemoveRange(carts);
-					await _context.SaveChangesAsync();
-				}
-
-				var result = await _userManager.DeleteAsync(user);
-				if (result.Succeeded)
-				{
-					return Json(new { success = true, message = "Xóa người dùng thành công!" });
-				}
-				else
-				{
-					return Json(new { success = false, message = "Lỗi khi xóa tài khoản." });
-				}
-			}
-			catch (Exception ex)
-			{
-				return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
-			}
-		}
-
-		// ── Products API ──────────────────────────────────────────
-		[HttpGet]
-		public async Task<IActionResult> GetProducts()
-		{
-			try
-			{
-				var products = await _context.Products
-					.Include(p => p.Category)
-					.Include(p => p.ProductSizes).ThenInclude(ps => ps.Size)
-					.Select(p => new {
-						id = p.Id,
-						productName = p.ProductName,
-						brandName = p.BrandName,
-						price = p.Price,
-						image = p.Image,
-						categoryId = p.CategoryId,
-						categoryName = p.Category != null ? p.Category.CategoryName : "Chưa có danh mục",
-						productSizes = p.ProductSizes
-							.OrderBy(ps => ps.Size != null ? ps.Size.SizeName : "")
-							.Select(ps => new {
-								id = ps.Id,
-								sizeName = ps.Size != null ? ps.Size.SizeName : "N/A",
-								quantity = ps.Quantity
-							}).ToList()
-					})
-					.ToListAsync();
-
-				return Json(products);
-			}
-			catch (Exception ex)
-			{
-				return Json(new { error = "Lỗi: " + ex.Message });
-			}
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> CreateProduct([FromBody] CreateProductWithSizesDto dto)
-		{
-			try
-			{
-				if (string.IsNullOrWhiteSpace(dto.ProductName))
-					return Json(new { success = false, message = "Tên sản phẩm không trống." });
-
-				var isExist = await _context.Products.AnyAsync(p => p.ProductName.ToLower() == dto.ProductName.ToLower());
-				if (isExist)
-					return Json(new { success = false, message = "Sản phẩm này đã tồn tại mẫu." });
-
-				var product = new Product
-				{
-					ProductName = dto.ProductName,
-					BrandName = dto.BrandName ?? "MenShop",
-					Price = dto.Price,
-					Image = dto.Image,
-					CategoryId = dto.CategoryId
-				};
-
-				_context.Products.Add(product);
-				await _context.SaveChangesAsync();
-
-				if (dto.Sizes != null)
-				{
-					foreach (var sizeItem in dto.Sizes.Where(s => s.Quantity >= 0))
-					{
-						var size = await _context.Sizes.FirstOrDefaultAsync(s => s.SizeName == sizeItem.SizeName);
-						if (size == null)
-						{
-							size = new Size { SizeName = sizeItem.SizeName.ToUpper() };
-							_context.Sizes.Add(size);
-							await _context.SaveChangesAsync();
-						}
-
-						_context.ProductSizes.Add(new ProductSize
-						{
-							ProductId = product.Id,
-							SizeId = size.Id,
-							Quantity = sizeItem.Quantity
-						});
-					}
-					await _context.SaveChangesAsync();
-				}
-
-				return Json(new { success = true, message = "Thêm sản phẩm thành công!" });
-			}
-			catch (Exception ex)
-			{
-				return Json(new { success = false, message = "Lỗi: " + ex.Message });
-			}
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> EditProduct([FromBody] ProductDto dto)
-		{
-			try
-			{
-				var product = await _context.Products.FindAsync(dto.Id);
-				if (product == null) return Json(new { success = false, message = "Không tìm thấy." });
-
-				product.ProductName = dto.ProductName ?? product.ProductName;
-				product.BrandName = dto.BrandName ?? product.BrandName;
-				product.Price = dto.Price;
-				product.Image = dto.Image ?? product.Image;
-				product.CategoryId = dto.CategoryId;
-
-				await _context.SaveChangesAsync();
-				return Json(new { success = true, message = "Cập nhật thành công!" });
-			}
-			catch (Exception ex)
-			{
-				return Json(new { success = false, message = ex.Message });
-			}
-		}    
-		[ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteProduct([FromBody] DeleteIntDto dto)
+        public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, AdminService service)
         {
-            try
-            {
-                var product = await _context.Products.FindAsync(dto.Id);
-                if (product == null) return Json(new { success = false, message = "Không tìm thấy." });
-
-                _context.Products.Remove(product);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Xóa thành công!" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            _context = context;
+            _userManager = userManager;
+            _service = service;
         }
 
-        // ── Product Sizes API ──────────────────────────────────────
-        [HttpGet]
-		public async Task<IActionResult> GetProductSizes(int productId)
-		{
-			var productSizes = await _context.ProductSizes
-				.Where(ps => ps.ProductId == productId)
-				.Include(ps => ps.Size)
-				.Select(ps => new {
-					id = ps.Id,
-					sizeName = ps.Size != null ? ps.Size.SizeName : "N/A",
-					quantity = ps.Quantity
-				}).ToListAsync();
-			return Json(productSizes);
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> UpdateProductSize([FromBody] UpdateProductSizeDto dto)
-		{
-			var productSize = await _context.ProductSizes.FindAsync(dto.ProductSizeId);
-			if (productSize == null) return Json(new { success = false, message = "Không tìm thấy." });
-
-			productSize.Quantity = dto.Quantity;
-			await _context.SaveChangesAsync();
-			return Json(new { success = true });
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> DeleteProductSize([FromBody] DeleteProductSizeDto dto)
-		{
-			var productSize = await _context.ProductSizes.FindAsync(dto.ProductSizeId);
-			if (productSize == null) return Json(new { success = false, message = "Không tìm thấy." });
-
-			_context.ProductSizes.Remove(productSize);
-			await _context.SaveChangesAsync();
-			return Json(new { success = true });
-		}
-
-
-		// giao diện order : xong	
+        // --- Views ---
+        public IActionResult Index()
+        {
+            ViewBag.RecentOrders = _context.Orders.Include(o => o.OrderDetails).OrderByDescending(o => o.CreateTime).Take(10).ToList();
+            return View();
+        }
+        public IActionResult Users() => View();
+        public IActionResult Products() { ViewBag.Categories = _context.Categories.ToList(); return View(); }
+        public async Task<IActionResult> Contacts() => View(await _context.Contacts.OrderByDescending(c => c.CreatedDate).ToListAsync());
         public IActionResult Orders() => View();
 
-		// Lấy danh sách đơn hàng : xong 
-        [HttpGet]
-        public async Task<IActionResult> GetOrders()
-        {
-            var orders = await _context.Orders
-                .Include(o => o.OrderStatus)
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Product)
-                .OrderByDescending(o => o.CreateTime)
-                .Where(o => !o.IsDeleted)
-                .Select(o => new
-                {
-                    id = o.Id,
-                    name = o.Name,
-                    email = o.Email,
-                    mobileNumber = o.MobileNumber,
-                    address = o.Address,
-                    paymentMethod = o.PaymentMethod,
-                    isPaid = o.IsPaid,
-                    createTime = o.CreateTime,
-                    statusName = o.OrderStatus.StatusName,
-                    orderStatusId = o.OrderStatusId,
-                    orderDetails = o.OrderDetails.Select(d => new
-                    {
-                        d.Id,
-                        d.Quantity,
-                        d.UnitPrice,
-                        productName = d.Product.ProductName,
-                        productImage = d.Product.Image
-                    }).ToList()
-                })
-                .ToListAsync();
+        // --- API Endpoints ---
+        [HttpGet] public async Task<IActionResult> GetStats() => Json(await _service.GetStatsAsync());
+        [HttpGet] public async Task<IActionResult> GetUsers() => Json(await _service.GetUsersAsync());
+        [HttpGet] public async Task<IActionResult> GetProducts() => Json(await _service.GetAllProductsAsync());
+        [HttpGet] public async Task<IActionResult> GetOrders() => Json(await _service.GetOrdersAsync());
 
-            return Json(orders);
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
+        {
+            var res = await _service.CreateUserAsync(dto);
+            return Json(new { success = res.Success, message = res.Message });
         }
 
-        // 3. Thêm UpdateOrderStatus API : xong 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateProduct([FromBody] CreateProductWithSizesDto dto)
+        {
+            var res = await _service.CreateProductAsync(dto);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderStatusDto dto)
         {
-            var order = await _context.Orders
-                .Include(o => o.OrderStatus)
-                .FirstOrDefaultAsync(o => o.Id == dto.OrderId);
-            if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng." });
-            var currentStatus = order.OrderStatus?.StatusName;
-            string? nextStatusName = dto.Action switch
-            {
-                "confirm" when currentStatus == "Chờ xác nhận" => "Đang xử lý",
-                "ship" when currentStatus == "Đang xử lý" => "Đang giao hàng",
-                "cancel" when currentStatus == "Chờ xác nhận" => "Đã hủy",
-
-                _ => null
-            };
-
-            if (nextStatusName == null)
-                return Json(new { success = false, message = $"Hành động '{dto.Action}' không hợp lệ cho trạng thái hiện tại '{currentStatus}'." });
-
-            var nextStatus = await _context.OrderStatuses
-                .FirstOrDefaultAsync(s => s.StatusName == nextStatusName);
-
-            if (nextStatus == null)
-                return Json(new { success = false, message = $"Lỗi hệ thống: Trạng thái '{nextStatusName}' chưa được khởi tạo trong Database." });
-
-            order.OrderStatusId = nextStatus.Id;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, newStatus = nextStatusName });
+            var res = await _service.UpdateOrderStatusAsync(dto);
+            return Json(new { success = res.Success, newStatus = res.NewStatus });
         }
-    }
 
-	// ── DTOs (Đặt bên trong namespace để tránh lỗi Build) ──
-	public class CreateUserDto { public string Email { get; set; } = ""; public string Password { get; set; } = ""; public string? Role { get; set; } }
-	public class EditUserDto { public string Id { get; set; } = ""; public string? Role { get; set; } }
-	public class DeleteDto { public string Id { get; set; } = ""; }
-	public class DeleteIntDto { public int Id { get; set; } }
-	public class ProductDto { public int Id { get; set; } public string? ProductName { get; set; } public string? BrandName { get; set; } public double Price { get; set; } public string? Image { get; set; } public int CategoryId { get; set; } }
-	public class CreateProductWithSizesDto { public string ProductName { get; set; } = ""; public string? BrandName { get; set; } public double Price { get; set; } public string? Image { get; set; } public int CategoryId { get; set; } public List<SizeDto>? Sizes { get; set; } }
-	public class SizeDto { public string SizeName { get; set; } = ""; public int Quantity { get; set; } }
-	public class UpdateProductSizeDto { public int ProductSizeId { get; set; } public int Quantity { get; set; } }
-	public class DeleteProductSizeDto { public int ProductSizeId { get; set; } }
-    public class UpdateOrderStatusDto
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser([FromBody] DeleteDto dto)
         {
-            public int OrderId { get; set; }
-            public string Action { get; set; }    // "confirm" | "ship" | "cancel"
-            public string? ShippingProvider { get; set; }
+            var success = await _service.DeleteUserAsync(dto.Id, _userManager.GetUserId(User));
+            return Json(new { success, message = success ? "Xóa thành công" : "Lỗi!" });
         }
     }
+}

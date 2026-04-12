@@ -1,119 +1,60 @@
 ﻿using Microsoft.AspNetCore.Authorization;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShopQuanAo.Data;
-using ShopQuanAo.Models;
+using ShopQuanAo.Models.Entity;
+using ShopQuanAo.Models.DTO;
+using ShopQuanAo.Services;
 
 namespace ShopQuanAo.Controllers
 {
-	[Authorize]
-	public class CheckoutController : Controller
-	{
-		private readonly ApplicationDbContext _context;
-		// SỬA TẠI ĐÂY: Thay ApplicationUser bằng ApplicationUser
-		private readonly UserManager<ApplicationUser> _userManager;
+    [Authorize]
+    public class CheckoutController : Controller
+    {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CheckoutService _checkoutService;
 
-		public CheckoutController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
-		{
-			_context = context;
-			_userManager = userManager;
-		}
+        public CheckoutController(UserManager<ApplicationUser> userManager, CheckoutService checkoutService)
+        {
+            _userManager = userManager;
+            _checkoutService = checkoutService;
+        }
 
-        // Giao diện cbi thanh toán : xong 
         public async Task<IActionResult> Index()
         {
-            var userId = _userManager.GetUserId(User);
-
-			var cart = await _context.ShoppingCarts
-				.Include(c => c.CartDetails)
-					.ThenInclude(cd => cd.Product)
-				.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
-
-			if (cart == null || cart.CartDetails == null || !cart.CartDetails.Any())
-			{
-				return RedirectToAction("Index", "Cart");
-			}
-
-			ViewBag.Cart = cart;
-			ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
-
-			return View(new Order());
-		}
-
-        // Quy trình thanh toán : xong 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> PlaceOrder(Order order)
-        {
-            var userId = _userManager.GetUserId(User);
-            var cart = await _context.ShoppingCarts
-                .Include(c => c.CartDetails)
-                    .ThenInclude(cd => cd.Product)
-                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
-
+            var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User));
             if (cart == null || cart.CartDetails == null || !cart.CartDetails.Any())
             {
                 return RedirectToAction("Index", "Cart");
             }
-            ModelState.Remove("UserId");
-            ModelState.Remove("OrderStatus");
-            ModelState.Remove("OrderDetails");
+
+            ViewBag.Cart = cart;
+            ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
+
+            return View(new Order());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PlaceOrder(PlaceOrderDto dto)
+        {
             if (!ModelState.IsValid)
             {
-                ViewBag.Cart = cart; 
-                ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
-                return View("Index", order);
-            }
-            order.UserId = userId;
-            order.CreateTime = DateTime.Now;
-            order.IsDeleted = false;
-            order.IsPaid = false;
-            order.OrderStatusId = 1;
-
-			if (string.IsNullOrEmpty(order.PaymentMethod))
-			{
-				order.PaymentMethod = "COD"; // Mặc định là thanh toán khi nhận hàng
-			}
-
-			_context.Orders.Add(order);
-			await _context.SaveChangesAsync();
-
-            foreach (var item in cart.CartDetails)
-            {
-                var orderDetail = new OrderDetail
-                {
-                    OrderId = order.Id,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitPrice = (double)item.UnitPrice,
-                    Size = item.Size
-                };
-                _context.OrderDetails.Add(orderDetail);
-                var productSize = await _context.ProductSizes
-                    .Include(ps => ps.Size)
-                    .FirstOrDefaultAsync(ps => ps.ProductId == item.ProductId
-                                            && ps.Size.SizeName == item.Size);
-
-                if (productSize != null)
-                {
-                    productSize.Quantity -= item.Quantity;
-                    if (productSize.Quantity < 0)
-                        productSize.Quantity = 0;
-                }
+                var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User));
+                ViewBag.Cart = cart;
+                ViewBag.TotalAmount = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
+                return View("Index", dto);
             }
 
-			// Xóa giỏ hàng sau khi đặt thành công
-			_context.CartDetails.RemoveRange(cart.CartDetails);
-			await _context.SaveChangesAsync();
+            var result = await _checkoutService.PlaceOrderAsync(_userManager.GetUserId(User), dto);
+            if (!result.Success) return RedirectToAction("Index", "Cart");
 
-			return RedirectToAction("OrderSuccess", new { orderId = order.Id });
-		}
+            return RedirectToAction("OrderSuccess", new { orderId = result.OrderId });
+        }
 
-		public IActionResult OrderSuccess(int orderId)
-		{
-			ViewBag.OrderId = orderId;
-			return View();
-		}
-	}
+        public IActionResult OrderSuccess(int orderId)
+        {
+            ViewBag.OrderId = orderId;
+            return View();
+        }
+    }
 }

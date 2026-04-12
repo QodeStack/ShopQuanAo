@@ -1,6 +1,6 @@
-﻿ using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+﻿using Microsoft.AspNetCore.Identity;
 using ShopQuanAo.Const;
-using ShopQuanAo.Models; // Thêm namespace chứa ApplicationUser
+using ShopQuanAo.Models.Entity; // Thêm namespace chứa ApplicationUser
 
 namespace ShopQuanAo.Data
 {

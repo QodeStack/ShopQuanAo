@@ -5,9 +5,10 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using ShopQuanAo.Models.Entity;
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using ShopQuanAo.Models;
+using ShopQuanAo.Models.Entity;
 
 namespace ShopQuanAo.Data
 {

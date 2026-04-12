@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace ShopQuanAo.Models
+namespace ShopQuanAo.Models.Entity
 {
 	// Sửa chỗ này: Kế thừa từ IdentityUser chứ không phải ApplicationUser
 	public class ApplicationUser : IdentityUser

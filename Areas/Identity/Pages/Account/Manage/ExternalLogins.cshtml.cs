@@ -8,9 +8,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using ShopQuanAo.Models.Entity;
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 {

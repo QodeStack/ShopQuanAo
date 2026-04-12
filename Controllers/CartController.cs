@@ -1,204 +1,62 @@
 ﻿using Microsoft.AspNetCore.Authorization;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShopQuanAo.Data;
-using ShopQuanAo.Models;
+using ShopQuanAo.Models.Entity;
+using ShopQuanAo.Models.DTO;
+using ShopQuanAo.Services;
 
 namespace ShopQuanAo.Controllers
 {
-	[Authorize]
-	public class CartController : Controller
-	{
-		private readonly ApplicationDbContext _context;
-		// SỬA TẠI ĐÂY: Thay ApplicationUser bằng ApplicationUser
-		private readonly UserManager<ApplicationUser> _userManager;
+    [Authorize]
+    public class CartController : Controller
+    {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CartService _cartService;
 
-		public CartController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
-		{
-			_context = context;
-			_userManager = userManager;
-		}
+        public CartController(UserManager<ApplicationUser> userManager, CartService cartService)
+        {
+            _userManager = userManager;
+            _cartService = cartService;
+        }
 
-		// GET: /Cart
-		public async Task<IActionResult> Index()
-		{
-			var userId = _userManager.GetUserId(User);
+        public async Task<IActionResult> Index()
+        {
+            var cart = await _cartService.GetCartAsync(_userManager.GetUserId(User));
+            return View(cart);
+        }
 
-			var cart = await _context.ShoppingCarts
-				.Include(c => c.CartDetails)
-					.ThenInclude(cd => cd.Product)
-						.ThenInclude(p => p.ProductSizes)
-							.ThenInclude(ps => ps.Size)
-				.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddToCart(int productId, int quantity, string size)
+        {
+            var result = await _cartService.AddToCartAsync(_userManager.GetUserId(User), new AddToCartDto { ProductId = productId, Quantity = quantity, Size = size });
+            if (!result.Success) return BadRequest(result.Message);
+            return Json(new { success = true, cartCount = result.CartCount });
+        }
 
-			if (cart == null)
-			{
-				cart = new ShoppingCart { UserId = userId ?? "", CartDetails = new List<CartDetail>() };
-			}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateQuantity(int cartDetailId, int quantity)
+        {
+            var result = await _cartService.UpdateQuantityAsync(_userManager.GetUserId(User), new UpdateCartQtyDto { CartDetailId = cartDetailId, Quantity = quantity });
+            if (!result.Success) return Json(new { success = false, message = result.Message, maxQty = (result.Data as dynamic)?.maxQty });
+            return Json(new { success = true, data = result.Data });
+        }
 
-			return View(cart);
-		}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveItem(int cartDetailId)
+        {
+            var data = await _cartService.RemoveItemAsync(_userManager.GetUserId(User), cartDetailId);
+            return Json(new { success = true, data });
+        }
 
-		// POST: /Cart/AddToCart
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> AddToCart(int productId, int quantity, string size)
-		{
-			var userId = _userManager.GetUserId(User);
-			if (string.IsNullOrEmpty(userId)) return Unauthorized();
-
-			var product = await _context.Products.FindAsync(productId);
-			if (product == null)
-				return BadRequest("Sản phẩm không tồn tại.");
-
-			// Kiểm tra tồn kho theo size
-			var productSize = await _context.ProductSizes
-				.Include(ps => ps.Size)
-				.FirstOrDefaultAsync(ps => ps.ProductId == productId && ps.Size != null && ps.Size.SizeName == size);
-
-			if (productSize == null)
-				return BadRequest($"Sản phẩm không có size {size}.");
-
-			var cart = await _context.ShoppingCarts
-				.Include(c => c.CartDetails)
-				.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
-
-			if (cart == null)
-			{
-				cart = new ShoppingCart { UserId = userId };
-				_context.ShoppingCarts.Add(cart);
-				await _context.SaveChangesAsync();
-			}
-
-			var existingDetail = cart.CartDetails?
-				.FirstOrDefault(cd => cd.ProductId == productId && cd.Size == size);
-
-			int currentQtyInCart = existingDetail?.Quantity ?? 0;
-			int requestedTotal = currentQtyInCart + quantity;
-
-			if (requestedTotal > productSize.Quantity)
-			{
-				int available = productSize.Quantity - currentQtyInCart;
-				if (available <= 0)
-					return BadRequest($"Sản phẩm size {size} đã đủ số lượng trong giỏ hàng (tối đa {productSize.Quantity}).");
-				return BadRequest($"Chỉ còn {available} sản phẩm size {size} có thể thêm vào giỏ.");
-			}
-
-			if (existingDetail != null)
-			{
-				existingDetail.Quantity += quantity;
-			}
-			else
-			{
-				_context.CartDetails.Add(new CartDetail
-				{
-					ShoppingCartId = cart.Id,
-					ProductId = productId,
-					Quantity = quantity,
-					UnitPrice = product.Price,
-					Size = size
-				});
-			}
-
-			await _context.SaveChangesAsync();
-
-			var cartCount = await _context.CartDetails
-				.Where(cd => cd.ShoppingCart != null && cd.ShoppingCart.UserId == userId && !cd.ShoppingCart.IsDeleted)
-				.SumAsync(cd => cd.Quantity);
-
-			return Json(new { success = true, cartCount });
-		}
-
-		// POST: /Cart/UpdateQuantity
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> UpdateQuantity(int cartDetailId, int quantity)
-		{
-			var userId = _userManager.GetUserId(User);
-
-			var cartDetail = await _context.CartDetails
-				.Include(cd => cd.ShoppingCart)
-				.Include(cd => cd.Product)
-				.FirstOrDefaultAsync(cd => cd.Id == cartDetailId && cd.ShoppingCart != null && cd.ShoppingCart.UserId == userId);
-
-			if (cartDetail == null)
-				return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ." });
-
-			// Kiểm tra tồn kho
-			var productSize = await _context.ProductSizes
-				.Include(ps => ps.Size)
-				.FirstOrDefaultAsync(ps => ps.ProductId == cartDetail.ProductId
-										&& ps.Size != null && ps.Size.SizeName == cartDetail.Size);
-
-			int maxQty = productSize?.Quantity ?? 0;
-
-			if (quantity > maxQty)
-				return Json(new { success = false, message = $"Chỉ còn {maxQty} sản phẩm trong kho.", maxQty });
-
-			if (quantity <= 0)
-				_context.CartDetails.Remove(cartDetail);
-			else
-				cartDetail.Quantity = quantity;
-
-			await _context.SaveChangesAsync();
-
-			var cart = await _context.ShoppingCarts
-				.Include(c => c.CartDetails)
-				.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
-
-			var subtotal = cartDetail.UnitPrice * quantity;
-			var total = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
-			var cartCount = cart?.CartDetails?.Sum(cd => cd.Quantity) ?? 0;
-
-			return Json(new { success = true, subtotal, total, cartCount, maxQty });
-		}
-
-		// POST: /Cart/RemoveItem
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> RemoveItem(int cartDetailId)
-		{
-			var userId = _userManager.GetUserId(User);
-
-			var cartDetail = await _context.CartDetails
-				.Include(cd => cd.ShoppingCart)
-				.FirstOrDefaultAsync(cd => cd.Id == cartDetailId && cd.ShoppingCart != null && cd.ShoppingCart.UserId == userId);
-
-			if (cartDetail == null)
-				return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
-
-			_context.CartDetails.Remove(cartDetail);
-			await _context.SaveChangesAsync();
-
-			var cart = await _context.ShoppingCarts
-				.Include(c => c.CartDetails)
-				.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
-
-			var total = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
-			var cartCount = cart?.CartDetails?.Sum(cd => cd.Quantity) ?? 0;
-
-			return Json(new { success = true, total, cartCount });
-		}
-
-		// POST: /Cart/ClearCart
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> ClearCart()
-		{
-			var userId = _userManager.GetUserId(User);
-
-			var cart = await _context.ShoppingCarts
-				.Include(c => c.CartDetails)
-				.FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
-
-			if (cart != null && cart.CartDetails != null)
-			{
-				_context.CartDetails.RemoveRange(cart.CartDetails);
-				await _context.SaveChangesAsync();
-			}
-
-			return Json(new { success = true });
-		}
-	}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearCart()
+        {
+            await _cartService.ClearCartAsync(_userManager.GetUserId(User));
+            return Json(new { success = true });
+        }
+    }
 }

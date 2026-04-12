@@ -6,10 +6,10 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ShopQuanAo.Models; // Đảm bảo đúng namespace chứa ApplicationUser
+using ShopQuanAo.Models.Entity; // Đảm bảo đúng namespace chứa ApplicationUser
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 {

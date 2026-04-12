@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
- using Microsoft.AspNetCore.Identity; using ShopQuanAo.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using ShopQuanAo.Models; // CHỈ CẦN THÊM DÒNG NÀY VÀO ĐÂY
+using ShopQuanAo.Models.Entity; // CHỈ CẦN THÊM DÒNG NÀY VÀO ĐÂY
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account
 {
