@@ -10,6 +10,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/product.css" asp-append-version="true" />
+    
+    <style>
+        .out-of-stock-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10;
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+        .product-image { position: relative; }
+    </style>
 </head>
 <body>
 
@@ -74,87 +94,40 @@
                             <i class="bi bi-x"></i>
                         </button>
                     </div>
-                    <div class="filter-bar">
-                        <div class="filter-item">
-                            <button class="filter-btn" onclick="toggleFilter('fSize')">
-                                Kích cỡ <i class="bi bi-chevron-down"></i>
-                            </button>
-                            <div class="filter-dropdown" id="fSize">
-                                <a href="#">S</a>
-                                <a href="#">M</a>
-                                <a href="#">L</a>
-                                <a href="#">XL</a>
-                            </div>
-                        </div>
-                        <div class="filter-item">
-                            <button class="filter-btn" onclick="toggleFilter('fPrice')">
-                                Giá <i class="bi bi-chevron-down"></i>
-                            </button>
-                            <div class="filter-dropdown" id="fPrice">
-                                <a href="#">Dưới 500,000đ</a>
-                                <a href="#">500,000đ – 1,000,000đ</a>
-                                <a href="#">1,000,000đ – 2,000,000đ</a>
-                                <a href="#">Trên 2,000,000đ</a>
-                            </div>
-                        </div>
-                        <div class="filter-item">
-                            <button class="filter-btn" onclick="toggleFilter('fSort')">
-                                Sắp xếp <i class="bi bi-chevron-down"></i>
-                            </button>
-                            <div class="filter-dropdown" id="fSort">
-                                <a href="#">Mới nhất</a>
-                                <a href="#">Giá tăng dần</a>
-                                <a href="#">Giá giảm dần</a>
-                                <a href="#">Bán chạy</a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <div class="active-filters">
-                @if (ViewBag.CurrentCategoryId != null)
-                {
-                    var activeCat = ((List<Categories>)ViewBag.Categories)
-                        .FirstOrDefault(c => c.Id == (int)ViewBag.CurrentCategoryId);
-                    <span class="filter-tag">
-                        @activeCat?.CategoryName
-                        <a href="@Url.Action("Index", "Product")" style="color:inherit;text-decoration:none;">
-                            <i class="bi bi-x"></i>
-                        </a>
-                    </span>
-                }
-                else
-                {
-                    <span class="filter-tag">Tất cả <i class="bi bi-x"></i></span>
-                }
-            </div>
-
             <div class="product-grid" id="productGrid">
-                @if (!Model.Any())
-                {
-                    <div style="grid-column:1/-1;text-align:center;padding:80px 0;color:var(--light);font-size:14px;letter-spacing:1px;">
-                        <i class="bi bi-box-seam" style="font-size:40px;display:block;margin-bottom:16px;opacity:0.3"></i>
-                        Không có sản phẩm nào trong danh mục này.
-                    </div>
-                }
-                else
+                @if (Model != null)
                 {
                     @foreach (var item in Model)
                     {
-                        <div class="product-card">
+                        bool isOutOfStock = item.TotalQuantity <= 0;
+
+                        <div class="product-card @(isOutOfStock ? "out-of-stock" : "")">
                             <div class="product-image">
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                    <img src="@item.Image" alt="@item.ProductName" loading="lazy" />
+                                @if (isOutOfStock)
+                                {
+                                    <div class="out-of-stock-overlay">Đã hết hàng</div>
+                                }
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" style="@(isOutOfStock ? "pointer-events: none;" : "")">
+                                    <img src="@item.Image" alt="@item.ProductName" loading="lazy" style="@(isOutOfStock ? "opacity: 0.4;" : "")" />
                                 </a>
                             </div>
                             <div class="product-info">
                                 <div class="product-name">
-                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                        @item.ProductName
-                                    </a>
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">@item.ProductName</a>
                                 </div>
-                                <div class="product-price">@item.Price.ToString("N0")đ</div>
+                                <div class="product-price">
+                                    @if (isOutOfStock)
+                                    {
+                                        <span style="color: #aaa; text-decoration: line-through;">@(item.Price.ToString("N0"))đ</span>
+                                    }
+                                    else
+                                    {
+                                        <text>@(item.Price.ToString("N0"))đ</text>
+                                    }
+                                </div>
                             </div>
                         </div>
                     }
@@ -162,80 +135,24 @@
             </div>
 
             @{
-                int pg = (int)ViewBag.CurrentPage;
-                int totalPgs = (int)ViewBag.TotalPages;
+                int pg = ViewBag.CurrentPage ?? 1;
+                int totalPgs = ViewBag.TotalPages ?? 1;
                 int? fCatId = ViewBag.CurrentCategoryId;
                 string fSearch = ViewBag.CurrentSearch;
-                int pgStart = Math.Max(1, pg - 2);
-                int pgEnd = Math.Min(totalPgs, pg + 2);
             }
 
             @if (totalPgs > 1)
             {
                 <div class="pagination-area">
-
-                    @if (pg > 1)
+                    @for (int p = 1; p <= totalPgs; p++)
                     {
-                        <a class="page-num" href="@Url.Action("Index", "Product", new { page = pg - 1, categoryId = fCatId, search = fSearch })">
-                            <i class="bi bi-chevron-left" style="font-size:13px"></i>
-                        </a>
+                        <a class="page-num @(p == pg ? "active" : "")" 
+                           href="@Url.Action("Index", "Product", new { page = p, categoryId = fCatId, search = fSearch })">@p</a>
                     }
-                    else
-                    {
-                        <span class="page-num" style="opacity:0.3;cursor:default;"><i class="bi bi-chevron-left" style="font-size:13px"></i></span>
-                    }
-
-                    @if (pgStart > 1)
-                    {
-                        <a class="page-num" href="@Url.Action("Index", "Product", new { page = 1, categoryId = fCatId, search = fSearch })">1</a>
-                        if (pgStart > 2)
-                        {
-                            <span class="page-num" style="border:none;color:var(--light);cursor:default;">…</span>
-                        }
-                    }
-
-                    @for (int p = pgStart; p <= pgEnd; p++)
-                    {
-                        if (p == pg)
-                        {
-                            <span class="page-num active">@p</span>
-                        }
-                        else
-                        {
-                            <a class="page-num" href="@Url.Action("Index", "Product", new { page = p, categoryId = fCatId, search = fSearch })">@p</a>
-                        }
-                    }
-
-                    @if (pgEnd < totalPgs)
-                    {
-                        if (pgEnd < totalPgs - 1)
-                        {
-                            <span class="page-num" style="border:none;color:var(--light);cursor:default;">…</span>
-                        }
-                        <a class="page-num" href="@Url.Action("Index", "Product", new { page = totalPgs, categoryId = fCatId, search = fSearch })">@totalPgs</a>
-                    }
-
-                    @if (pg < totalPgs)
-                    {
-                        <a class="page-num" href="@Url.Action("Index", "Product", new { page = pg + 1, categoryId = fCatId, search = fSearch })">
-                            <i class="bi bi-chevron-right" style="font-size:13px"></i>
-                        </a>
-                    }
-                    else
-                    {
-                        <span class="page-num" style="opacity:0.3;cursor:default;"><i class="bi bi-chevron-right" style="font-size:13px"></i></span>
-                    }
-
-                </div>
-
-                <div style="text-align:center;font-size:12px;color:var(--light);margin-top:12px;letter-spacing:0.5px;">
-                    Trang @pg / @totalPgs &nbsp;·&nbsp; @ViewBag.TotalCount sản phẩm
                 </div>
             }
-
         </main>
     </div>
-
     <script src="~/js/product.js"></script>
 </body>
 </html>

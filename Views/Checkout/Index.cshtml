@@ -1,8 +1,8 @@
-﻿@model ShopQuanAo.Models.Entity.Order
+﻿@model ShopQuanAo.Models.DTO.PlaceOrderDto
 @{
     ViewData["Title"] = "Thanh toán";
     
-    // Lấy thông tin giỏ hàng và tổng tiền từ ViewBag
+    // Lấy thông tin giỏ hàng và tổng tiền từ ViewBag (Giữ nguyên logic của mày)
     var cart = ViewBag.Cart as ShopQuanAo.Models.Entity.ShoppingCart;
     var totalAmount = ViewBag.TotalAmount != null ? Convert.ToDouble(ViewBag.TotalAmount) : 0; 
 }
@@ -101,7 +101,8 @@
                                     <div class="flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <h6 class="mb-1 fw-bold text-uppercase" style="font-size: 0.9rem;">@item.Product.ProductName</h6>
-                                            <a href="#" class="text-muted"><i class="bi bi-trash"></i></a>
+                                            @* Icon rác ở đây chỉ để trang trí vì đây là trang checkout *@
+                                            <span class="text-muted"><i class="bi bi-bag-check"></i></span>
                                         </div>
                                         <div class="text-muted small mb-2 bg-light d-inline-block px-2 py-1 rounded">
                                             Size @item.Size
@@ -146,7 +147,7 @@
                         </div>
                         <div class="d-flex justify-content-between mb-3">
                             <span class="text-muted">Phí vận chuyển</span>
-                            <span class="fw-bold">-</span>
+                            <span class="fw-bold text-success">Miễn phí</span>
                         </div>
                         
                         <hr class="text-muted opacity-25 my-3">

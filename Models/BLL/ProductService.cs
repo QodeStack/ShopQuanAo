@@ -16,9 +16,10 @@ namespace ShopQuanAo.Services
 
         public async Task<ProductPagedDto> GetPagedProductsAsync(string? category, string? search, int page, int pageSize)
         {
-            var query = _context.Products.Include(p => p.Category).AsQueryable();
+            // 1. Tạo query cơ bản để lọc
+            var query = _context.Products.AsQueryable();
 
-            // 1. Lọc theo danh mục (Số hoặc Chuỗi)
+            // Lọc theo danh mục
             if (!string.IsNullOrWhiteSpace(category))
             {
                 if (int.TryParse(category, out int id))
@@ -27,25 +28,54 @@ namespace ShopQuanAo.Services
                     query = query.Where(p => p.Category.CategoryName.Replace(" ", "").Contains(category));
             }
 
-            // 2. Lọc theo từ khóa
+            // Lọc theo từ khóa
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(p => p.ProductName.Contains(search));
 
-            // 3. Gom nhóm sản phẩm trùng tên
-            var groupedQuery = query.GroupBy(p => p.ProductName).Select(g => g.First());
+            // 2. PHẦN QUAN TRỌNG: Lấy ID đại diện và sắp xếp theo tồn kho (SQL có thể dịch được)
+            var groupedQuery = query
+                .GroupBy(p => p.ProductName)
+                .Select(g => new
+                {
+                    Id = g.Max(p => p.Id), // Lấy ID của một thằng đại diện trong nhóm
+                    TotalStock = g.SelectMany(p => p.ProductSizes).Sum(ps => ps.Quantity)
+                })
+                .OrderByDescending(x => x.TotalStock);
 
+            // Tính tổng số trang
             int total = await groupedQuery.CountAsync();
             int totalPages = (int)Math.Ceiling((double)total / pageSize);
             page = Math.Clamp(page, 1, Math.Max(1, totalPages));
 
-            var products = await groupedQuery
+            // Lấy danh sách ID sau khi phân trang
+            var pagedData = await groupedQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
+            var pagedIds = pagedData.Select(x => x.Id).ToList();
+
+            // 3. Lấy đầy đủ thông tin sản phẩm từ danh sách ID đã chọn
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductSizes)
+                .Where(p => pagedIds.Contains(p.Id))
+                .ToListAsync();
+
+            // Sắp xếp lại danh sách products theo đúng thứ tự pagedIds (vì lệnh Where Contains làm mất thứ tự sort)
+            var sortedProducts = pagedIds
+                .Select(id => products.First(p => p.Id == id))
+                .ToList();
+
+            // 4. Gán giá trị vào biến ảo TotalQuantity để hiển thị ở View
+            foreach (var p in sortedProducts)
+            {
+                p.TotalQuantity = p.ProductSizes?.Sum(ps => ps.Quantity) ?? 0;
+            }
+
             return new ProductPagedDto
             {
-                Products = products,
+                Products = sortedProducts,
                 TotalCount = total,
                 TotalPages = totalPages,
                 CurrentPage = page
@@ -70,18 +100,21 @@ namespace ShopQuanAo.Services
 
         public async Task<(Product? product, List<object> sizes)> GetProductDetailAsync(int id)
         {
-            var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _context.Products
+            .Include(p => p.Category)
+            .Include(p => p.ProductSizes)
+            .ThenInclude(ps => ps.Size) 
+            .FirstOrDefaultAsync(p => p.Id == id); 
+
             if (product == null) return (null, new List<object>());
 
-            var sizes = await _context.Products
-                .Where(p => p.ProductName == product.ProductName)
-                .Include(p => p.ProductSizes).ThenInclude(ps => ps.Size)
-                .SelectMany(p => p.ProductSizes)
-                .Select(ps => new {
-                    SizeName = ps.Size.SizeName,
-                    Quantity = ps.Quantity,
-                    ProductId = ps.ProductId
-                }).Cast<object>().ToListAsync();
+            product.TotalQuantity = product.ProductSizes?.Sum(s => s.Quantity) ?? 0;
+
+            var sizes = product.ProductSizes?.Select(ps => new {
+                SizeName = ps.Size.SizeName,
+                Quantity = ps.Quantity,
+                ProductId = ps.ProductId
+            }).Cast<object>().ToList() ?? new List<object>();
 
             return (product, sizes);
         }

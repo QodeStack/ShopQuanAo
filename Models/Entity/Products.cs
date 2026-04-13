@@ -21,6 +21,9 @@ namespace ShopQuanAo.Models.Entity
 
 		[Required]
 		public double Price { get; set; }
+		
+		[NotMapped]
+		public int TotalQuantity { get; set; }
 
 		[Column(TypeName = "varchar(500)")]
 		public string? Image { get; set; }
