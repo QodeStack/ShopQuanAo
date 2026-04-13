@@ -11,6 +11,15 @@ document.addEventListener('click', e => {
         document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('show'));
     }
 });
+// Nhấn Enter để tìm kiếm
+document.getElementById('searchInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('searchForm').submit();
+});
+// Xóa search
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchForm').submit();
+}
 
 (function () {
     const input = document.getElementById('searchInput');

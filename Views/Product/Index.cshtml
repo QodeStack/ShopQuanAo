@@ -23,7 +23,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-label">Danh mục</div>
             <div class="cat-all">
-                <a href="@Url.Action("Index", "Product")"
+                <ahref ="@Url.Action("Index", "Product", new { categoryId = (int?)null })"
                        style="color:inherit;text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:@(ViewBag.CurrentCategoryId == null ? "600" : "400")">
                     Tất cả sản phẩm
                 </a>
@@ -62,39 +62,59 @@
                     <div class="product-count">@ViewBag.TotalCount sản phẩm</div>
                 </div>
                 <div class="header-right">
-                    <div class="search-box" id="sbox">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text"
-                               id="searchInput"
-                               placeholder="Tìm sản phẩm..."
-                               value="@ViewBag.CurrentSearch"
-                               autocomplete="off" />
-                        <button class="search-clear" id="searchClear"
-                                style="display:@(ViewBag.CurrentSearch != null ? "flex" : "none")">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    </div>
+                    <form method="get" asp-action="Index" asp-controller="Product" id="searchForm">
+                        <input type="hidden" name="categoryId" value="@(ViewBag.CurrentCategoryId ?? ViewBag.CurrentCategoryName)" />
+                        <input type="hidden" name="price" value="@ViewBag.CurrentPrice" />
+                        <div class="search-box" id="sbox">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" name="search" id="searchInput"
+                                   placeholder="Tìm sản phẩm..."
+                                   value="@ViewBag.CurrentSearch"
+                                   autocomplete="off" />
+                            <button type="button" class="search-clear" id="searchClear"
+                                    style="display:@(ViewBag.CurrentSearch != null ? "flex" : "none")"
+                                    onclick="clearSearch()">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </form>
                     <div class="filter-bar">
                         <div class="filter-item">
-                            <button class="filter-btn" onclick="toggleFilter('fSize')">
-                                Kích cỡ <i class="bi bi-chevron-down"></i>
+                            <button class="filter-btn @(!string.IsNullOrEmpty(ViewBag.CurrentRating as string) ? "active" : "")" onclick="toggleFilter('fRating')">
+                                Đánh giá <i class="bi bi-chevron-down"></i>
                             </button>
-                            <div class="filter-dropdown" id="fSize">
-                                <a href="#">S</a>
-                                <a href="#">M</a>
-                                <a href="#">L</a>
-                                <a href="#">XL</a>
+                            <div class="filter-dropdown" id="fRating">
+                                @for (int i = 5; i >= 1; i--)
+                                {
+                                    <a href="@Url.Action("Index", "Product", new { categoryId = ViewBag.CurrentCategoryId, search = ViewBag.CurrentSearch, price = ViewBag.CurrentPrice, rating = i, page = 1 })"
+                                           class="@(ViewBag.CurrentRating?.ToString() == i.ToString() ? "active-filter" : "")">
+                                        @for (int s = 0; s < i; s++)
+                                        {
+                                            <i class="bi bi-star-fill" style="color: #ffc107; font-size: 12px;"></i>
+                                        }
+                                        @(i < 5 ? " trở lên" : "")
+                                    </a>
+                                }
                             </div>
                         </div>
+                        <!-- Trong phần filter-bar, thay filter giá: -->
                         <div class="filter-item">
-                            <button class="filter-btn" onclick="toggleFilter('fPrice')">
+                            <button class="filter-btn @(!string.IsNullOrEmpty(ViewBag.CurrentPrice as string) ? "active" : "")" onclick="toggleFilter('fPrice')">
                                 Giá <i class="bi bi-chevron-down"></i>
                             </button>
                             <div class="filter-dropdown" id="fPrice">
-                                <a href="#">Dưới 500,000đ</a>
-                                <a href="#">500,000đ – 1,000,000đ</a>
-                                <a href="#">1,000,000đ – 2,000,000đ</a>
-                                <a href="#">Trên 2,000,000đ</a>
+                                @* Sửa 'category' thành 'categoryId' và dùng ViewBag.CurrentCategoryId *@
+                                <a href="@Url.Action("Index", "Product", new { categoryId = ViewBag.CurrentCategoryId, search = ViewBag.CurrentSearch, price = "under500", page = 1 })"
+                                   class="@(ViewBag.CurrentPrice == "under500" ? "active-filter" : "")">Dưới 500,000đ</a>
+       
+                                <a href="@Url.Action("Index", "Product", new { categoryId = ViewBag.CurrentCategoryId, search = ViewBag.CurrentSearch, price = "500to1000", page = 1 })"
+                                   class="@(ViewBag.CurrentPrice == "500to1000" ? "active-filter" : "")">500,000đ – 1,000,000đ</a>
+       
+                                <a href="@Url.Action("Index", "Product", new { categoryId = ViewBag.CurrentCategoryId, search = ViewBag.CurrentSearch, price = "1000to2000", page = 1 })"
+                                   class="@(ViewBag.CurrentPrice == "1000to2000" ? "active-filter" : "")">1,000,000đ – 2,000,000đ</a>
+       
+                                <a href="@Url.Action("Index", "Product", new { categoryId = ViewBag.CurrentCategoryId, search = ViewBag.CurrentSearch, price = "over2000", page = 1 })"
+                                   class="@(ViewBag.CurrentPrice == "over2000" ? "active-filter" : "")">Trên 2,000,000đ</a>
                             </div>
                         </div>
                         <div class="filter-item">
@@ -119,7 +139,7 @@
                         .FirstOrDefault(c => c.Id == (int)ViewBag.CurrentCategoryId);
                     <span class="filter-tag">
                         @activeCat?.CategoryName
-                        <a href="@Url.Action("Index", "Product")" style="color:inherit;text-decoration:none;">
+                        <a href="@Url.Action("Index", "Product", new { categoryId = ViewBag.CurrentCategoryId, search = ViewBag.CurrentSearch })" style="color:inherit;text-decoration:none;">
                             <i class="bi bi-x"></i>
                         </a>
                     </span>
@@ -127,6 +147,23 @@
                 else
                 {
                     <span class="filter-tag">Tất cả <i class="bi bi-x"></i></span>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.CurrentPrice as string))
+                {
+                    var priceLabel = (ViewBag.CurrentPrice as string) switch
+                    {
+                        "under500" => "Dưới 500k",
+                        "500to1000" => "500k – 1tr",
+                        "1000to2000" => "1tr – 2tr",
+                        "over2000" => "Trên 2tr",
+                        _ => ""
+                    };
+                    <span class="filter-tag">
+                        @priceLabel
+                        <a href="@Url.Action("Index", "Product", new { category = ViewBag.CurrentCategoryId ?? ViewBag.CurrentCategoryName, search = ViewBag.CurrentSearch })" style="color:inherit;text-decoration:none;">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
                 }
             </div>
 
@@ -202,7 +239,7 @@
                         }
                         else
                         {
-                            <a class="page-num" href="@Url.Action("Index", "Product", new { page = p, categoryId = fCatId, search = fSearch })">@p</a>
+                            <a class="page-num" href="@Url.Action("Index", "Product", new { page = p, categoryId = fCatId, search = fSearch, price = ViewBag.CurrentPrice })">@p</a>
                         }
                     }
 

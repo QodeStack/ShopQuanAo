@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShopQuanAo.Data;
 
@@ -11,9 +12,11 @@ using ShopQuanAo.Data;
 namespace ShopQuanAo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260413055623_updatedb14_3")]
+    partial class updatedb14_3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -153,6 +156,42 @@ namespace ShopQuanAo.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ProductReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductReviews");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.Entity.ApplicationUser", b =>
@@ -456,43 +495,6 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductReview", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductReview");
-                });
-
             modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductSize", b =>
                 {
                     b.Property<int>("Id")
@@ -607,6 +609,17 @@ namespace ShopQuanAo.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ProductReview", b =>
+                {
+                    b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("ShopQuanAo.Models.Entity.CartDetail", b =>
                 {
                     b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
@@ -667,17 +680,6 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductReview", b =>
-                {
-                    b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
-                        .WithMany("ProductReviews")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductSize", b =>
                 {
                     b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
@@ -712,8 +714,6 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("CartDetail");
 
                     b.Navigation("OrderDetail");
-
-                    b.Navigation("ProductReviews");
 
                     b.Navigation("ProductSizes");
                 });

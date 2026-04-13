@@ -36,5 +36,8 @@ namespace ShopQuanAo.Models.Entity
 
 		// Liên kết 1 - Nhiều với bảng ProductSize (Để gom size)
 		public virtual ICollection<ProductSize> ProductSizes { get; set; } = new List<ProductSize>();
-	}
+
+        // Liên kết 1 - Nhiều với bảng ProductReview
+        public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
+    }
 }

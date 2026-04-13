@@ -1,13 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
+using ShopQuanAo.Models.Entity;
 using ShopQuanAo.Services;
+using System.Security.Claims;
 
 namespace ShopQuanAo.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly ApplicationDbContext _context; // Vẫn cần để lấy list Category nhanh
+        private readonly ApplicationDbContext _context; 
         private readonly ProductService _productService;
 
         public ProductController(ApplicationDbContext context, ProductService productService)
@@ -16,10 +18,11 @@ namespace ShopQuanAo.Controllers
             _productService = productService;
         }
 
-        public async Task<IActionResult> Index(string? category, string? search, int page = 1)
+        public async Task<IActionResult> Index(int? categoryId, string? search, string? price, int? rating, int page = 1)
         {
             int pageSize = 9;
-            var result = await _productService.GetPagedProductsAsync(category, search, page, pageSize);
+            var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating);
+
 
             ViewBag.Categories = await _context.Categories.ToListAsync();
             ViewBag.TotalCount = result.TotalCount;
@@ -27,10 +30,11 @@ namespace ShopQuanAo.Controllers
             ViewBag.CurrentPage = result.CurrentPage;
             ViewBag.TotalPages = result.TotalPages;
             ViewBag.PageSize = pageSize;
+            ViewBag.CurrentRating = rating;
+            ViewBag.CurrentPrice = price;
 
-            // Truyền thông tin Category để UI hiển thị active menu
-            if (int.TryParse(category, out int id)) ViewBag.CurrentCategoryId = id;
-            else ViewBag.CurrentCategoryName = category;
+            if (int.TryParse(categoryId?.ToString(), out int id)) ViewBag.CurrentCategoryId = id;
+            else ViewBag.CurrentCategoryName = categoryId;
 
             return View(result.Products);
         }
@@ -47,8 +51,40 @@ namespace ShopQuanAo.Controllers
             var (product, sizes) = await _productService.GetProductDetailAsync(id);
             if (product == null) return NotFound();
 
+            // Thêm dòng này để lấy danh sách đánh giá từ DB
+            var reviews = await _context.ProductReviews
+                                        .Where(r => r.ProductId == id)
+                                        .OrderByDescending(r => r.CreatedAt)
+                                        .ToListAsync();
+
             ViewBag.AvailableSizes = sizes;
+            ViewBag.Reviews = reviews; // Cực kỳ quan trọng để giao diện không bị lỗi
+
             return View(product);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitReview(int ProductId, int Rating, string Comment)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account");
+
+            var review = new ProductReview
+            {
+                ProductId = ProductId,
+                Rating = Rating,
+                Comment = Comment,
+                UserId = userId,
+                FullName = User.Identity.Name ?? "Khách hàng",
+                CreatedAt = DateTime.Now
+            };
+
+            // Lưu ý: Tên bảng trong DbContext của bạn là ProductReview
+            _context.ProductReviews.Add(review);
+            await _context.SaveChangesAsync();
+
+            // Sau khi đánh giá xong quay lại trang đơn hàng của khách
+            return RedirectToAction("Index", "Customer");
         }
     }
 }

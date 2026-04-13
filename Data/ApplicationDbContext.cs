@@ -22,8 +22,8 @@ namespace ShopQuanAo.Data
 		public DbSet<Size> Sizes { get; set; }
 		public DbSet<ProductSize> ProductSizes { get; set; }
 		public DbSet<Contacts> Contacts { get; set; }
-
-		protected override void OnModelCreating(ModelBuilder builder)
+        public DbSet<ProductReview> ProductReviews{ get; set; }
+        protected override void OnModelCreating(ModelBuilder builder)
 		{
 			base.OnModelCreating(builder);
 			// Bạn có thể thêm các cấu hình Fluent API ở đây nếu cần

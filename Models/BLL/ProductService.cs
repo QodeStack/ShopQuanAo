@@ -3,6 +3,7 @@ using ShopQuanAo.Data;
 using ShopQuanAo.Models.DTO;
 using ShopQuanAo.Models.Entity;
 
+
 namespace ShopQuanAo.Services
 {
     public class ProductService
@@ -14,24 +15,39 @@ namespace ShopQuanAo.Services
             _context = context;
         }
 
-        public async Task<ProductPagedDto> GetPagedProductsAsync(string? category, string? search, int page, int pageSize)
+        public async Task<ProductPagedDto> GetPagedProductsAsync(string? category, string? search, int page, int pageSize, string? price = null, int? rating = null)
         {
             var query = _context.Products.Include(p => p.Category).AsQueryable();
 
-            // 1. Lọc theo danh mục (Số hoặc Chuỗi)
+            // Lọc theo danh mục (ID số hoặc tên)
             if (!string.IsNullOrWhiteSpace(category))
             {
                 if (int.TryParse(category, out int id))
                     query = query.Where(p => p.CategoryId == id);
                 else
-                    query = query.Where(p => p.Category.CategoryName.Replace(" ", "").Contains(category));
+                    query = query.Where(p => p.Category.CategoryName.Contains(category));
             }
 
-            // 2. Lọc theo từ khóa
+            // Lọc theo từ khóa tìm kiếm
             if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(p => p.ProductName.Contains(search));
+                query = query.Where(p => p.ProductName.Contains(search) || p.BrandName.Contains(search));
 
-            // 3. Gom nhóm sản phẩm trùng tên
+            // Lọc theo giá
+            query = price switch
+            {
+                "under500" => query.Where(p => p.Price < 500000),
+                "500to1000" => query.Where(p => p.Price >= 500000 && p.Price <= 1000000),
+                "1000to2000" => query.Where(p => p.Price > 1000000 && p.Price <= 2000000),
+                "over2000" => query.Where(p => p.Price > 2000000),
+                _ => query
+            };
+            if (rating.HasValue)
+            {
+                // Lọc những sản phẩm có ít nhất 1 đánh giá VÀ điểm trung bình >= mức chọn
+                query = query.Where(p => p.ProductReviews.Any() &&
+                                         p.ProductReviews.Average(r => r.Rating) >= rating.Value);
+            }
+
             var groupedQuery = query.GroupBy(p => p.ProductName).Select(g => g.First());
 
             int total = await groupedQuery.CountAsync();
@@ -85,5 +101,6 @@ namespace ShopQuanAo.Services
 
             return (product, sizes);
         }
+
     }
 }

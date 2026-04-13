@@ -160,6 +160,26 @@
                             }
                             else if (statusName == "Đã hoàn thành")
                             {
+                                var reviewedIds = ViewBag.ReviewedProductIds as List<int> ?? new List<int>();
+
+                                @foreach (var detail in order.OrderDetails)
+                                {
+                                    bool isReviewed = reviewedIds.Contains(detail.ProductId);
+
+                                    if (isReviewed)
+                                    {
+                                        <button class="btn btn-sm btn-light disabled" style="color: #999; border: 1px solid #ccc;">
+                                            ✓ ĐÃ ĐÁNH GIÁ
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn-order-cancel" style="border-color: #ffb400; color: #ffb400;"
+                                                onclick="openReviewModal('@detail.ProductId', '@detail.Product?.ProductName', '@detail.Product?.Image')">
+                                            ĐÁNH GIÁ @(order.OrderDetails.Count > 1 ? detail.Product?.ProductName : "")
+                                        </button>
+                                    }
+                                }
                                 <a href="@Url.Action("Index", "Product")" class="btn-order-rebuy">Mua Lại</a>
                             }
                         </div>
@@ -202,3 +222,77 @@
 
     </div>
 </div>
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="SubmitReview" asp-controller="Product" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Đánh giá sản phẩm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <input type="hidden" name="ProductId" id="modalProductId" />
+                    
+                    <img id="modalProductImg" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" />
+                    <p id="modalProductName" class="fw-bold"></p>
+
+                    <div class="rating-stars mb-3" style="font-size: 2rem; color: #ddd; cursor: pointer;">
+                        <i class="bi bi-star-fill star-item" data-value="1"></i>
+                        <i class="bi bi-star-fill star-item" data-value="2"></i>
+                        <i class="bi bi-star-fill star-item" data-value="3"></i>
+                        <i class="bi bi-star-fill star-item" data-value="4"></i>
+                        <i class="bi bi-star-fill star-item" data-value="5"></i>
+                    </div>
+                    <input type="hidden" name="Rating" id="modalRatingValue" value="5" />
+
+                    <textarea name="Comment" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..." required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #000; border: none;">Gửi đánh giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function openReviewModal(productId, productName, productImg) {
+        document.getElementById('modalProductId').value = productId;
+        document.getElementById('modalProductName').innerText = productName;
+        document.getElementById('modalProductImg').src = productImg;
+        
+        // Reset stars
+        resetStars(5);
+        
+        var myModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+        myModal.show();
+    }
+
+    // Xử lý chọn sao
+    const stars = document.querySelectorAll('.star-item');
+    const ratingInput = document.getElementById('modalRatingValue');
+
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const val = this.getAttribute('data-value');
+            ratingInput.value = val;
+            resetStars(val);
+        });
+
+        star.addEventListener('mouseover', function() {
+            const val = this.getAttribute('data-value');
+            resetStars(val);
+        });
+    });
+
+    function resetStars(val) {
+        stars.forEach(s => {
+            if (s.getAttribute('data-value') <= val) {
+                s.style.color = '#ffb400'; // Vàng
+            } else {
+                s.style.color = '#ddd'; // Xám
+            }
+        });
+    }
+</script>
