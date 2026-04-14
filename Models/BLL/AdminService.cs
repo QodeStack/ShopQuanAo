@@ -40,7 +40,79 @@ namespace ShopQuanAo.Services
 		}
 		#endregion
 
-		#region Dashboard & Stats
+		#region Dashboard & Stats (Doanh thu nâng cao)
+		public async Task<object> GetRevenueStatsAsync(DateTime? startDate = null, DateTime? endDate = null)
+		{
+			var now = DateTime.Now;
+
+			// 0. Xử lý logic ngày mặc định: Nếu không truyền thì lấy từ đầu tháng đến hiện tại
+			var start = startDate ?? new DateTime(now.Year, now.Month, 1);
+			var end = endDate ?? now;
+			// Đảm bảo lấy đến cuối ngày của endDate (23:59:59)
+			var endOfPeriod = end.Date.AddDays(1).AddTicks(-1);
+
+			// 1. Lấy tất cả chi tiết đơn hàng đã thanh toán trong KHOẢNG THỜI GIAN đã chọn
+			var paidOrders = await _context.OrderDetails
+				.Include(od => od.Order)
+				.Include(od => od.Product)
+				.Where(od => od.Order.IsPaid
+						&& od.Order.CreateTime >= start
+						&& od.Order.CreateTime <= endOfPeriod
+						&& !od.Order.IsDeleted)
+				.ToListAsync();
+
+			// 2. Tính toán các con số (Chỉ tính trong khoảng thời gian đã lọc)
+			var totalRevenue = paidOrders.Sum(od => (double)od.UnitPrice * od.Quantity);
+
+			// Đếm số đơn hàng trong khoảng thời gian lọc
+			var totalOrders = await _context.Orders
+				.CountAsync(o => o.CreateTime >= start && o.CreateTime <= endOfPeriod && !o.IsDeleted);
+
+			var totalItemsSold = paidOrders.Sum(od => od.Quantity);
+			var totalUsers = await _userManager.Users.CountAsync(); // Giữ nguyên tổng user hệ thống
+
+			// 3. Thống kê theo danh mục (Dữ liệu sẽ thay đổi theo ngày đã lọc)
+			var categoryData = paidOrders
+				.GroupBy(od => od.Product.CategoryId)
+				.Select(g => new {
+					name = _context.Categories.FirstOrDefault(c => c.Id == g.Key)?.CategoryName ?? "Khác",
+					value = g.Sum(x => x.Quantity * x.UnitPrice)
+				}).ToList();
+
+			// 4. Top 5 sản phẩm bán chạy nhất trong khoảng thời gian này
+			var topProducts = paidOrders
+				.GroupBy(od => new { od.ProductId, od.Product.ProductName, od.Product.Image })
+				.Select(g => new {
+					productName = g.Key.ProductName,
+					image = g.Key.Image,
+					soldCount = g.Sum(x => x.Quantity),
+					revenue = g.Sum(x => x.Quantity * x.UnitPrice)
+				})
+				.OrderByDescending(x => x.soldCount)
+				.Take(5)
+				.ToList();
+
+
+			// 5. Thống kê doanh thu theo từng ngày (Cho biểu đồ đường)
+			var dailyData = paidOrders
+				.GroupBy(od => od.Order.CreateTime.Date) // Gom theo ngày
+				.Select(g => new {
+					date = g.Key.ToString("dd/MM"),
+					revenue = g.Sum(x => x.Quantity * x.UnitPrice)
+				})
+				.OrderBy(x => x.date)
+				.ToList();
+
+			return new
+			{
+				metrics = new { totalRevenue, totalOrders, totalItemsSold, totalUsers },
+				categoryData,
+				topProducts,
+				dailyData, // Thêm dòng này để gửi dữ liệu ngày về
+				period = new { start = start.ToString("dd/MM/yyyy"), end = end.ToString("dd/MM/yyyy") }
+			};
+		}
+		#endregion
 		public async Task<object> GetStatsAsync()
 		{
 			var now = DateTime.Now;
@@ -57,7 +129,7 @@ namespace ShopQuanAo.Services
 				products = await _context.Products.Select(p => p.ProductName).Distinct().CountAsync()
 			};
 		}
-		#endregion
+	
 
 		#region User Management
 		public async Task<List<object>> GetUsersAsync()
