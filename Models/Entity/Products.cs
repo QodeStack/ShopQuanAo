@@ -21,14 +21,17 @@ namespace ShopQuanAo.Models.Entity
 
 		[Required]
 		public double Price { get; set; }
-		
-		[NotMapped]
+        [Required]
+        public int SalePrice { get; set; }
+
+        [NotMapped]
 		public int TotalQuantity { get; set; }
 
 		[Column(TypeName = "varchar(500)")]
 		public string? Image { get; set; }
 
 		// Khóa ngoại Category
+
 		public int CategoryId { get; set; }
 		[ForeignKey("CategoryId")]
 		public Categories Category { get; set; }

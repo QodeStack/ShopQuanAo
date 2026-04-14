@@ -38,7 +38,30 @@ namespace ShopQuanAo.Controllers
 
             return View(result.Products);
         }
+        public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, int page = 1)
+        {
+            int pageSize = 9;
+            // Điểm mấu chốt: Truyền isSaleOnly = true vào đây
+            var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, isSaleOnly: true);
 
+            // Đổ dữ liệu ra ViewBag giống hệt Index để giao diện Sidebar và Phân trang không bị lỗi
+            ViewBag.Categories = await _context.Categories.ToListAsync();
+            ViewBag.TotalCount = result.TotalCount;
+            ViewBag.CurrentSearch = search;
+            ViewBag.CurrentPage = result.CurrentPage;
+            ViewBag.TotalPages = result.TotalPages;
+            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentRating = rating;
+            ViewBag.CurrentPrice = price;
+
+            if (int.TryParse(categoryId?.ToString(), out int id))
+                ViewBag.CurrentCategoryId = id;
+            else
+                ViewBag.CurrentCategoryName = categoryId;
+
+            // Trả về View Sale.cshtml với danh sách sản phẩm đang giảm giá
+            return View(result.Products);
+        }
         [HttpGet]
         public async Task<IActionResult> SearchProducts(string? keyword, int? categoryId)
         {

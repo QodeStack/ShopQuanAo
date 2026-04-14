@@ -20,8 +20,12 @@ namespace ShopQuanAo.Controllers
 		// Các trang tĩnh
 		public IActionResult Index() => View();
 		public IActionResult AboutUs() => View();
-		public IActionResult Sale() => View();
-		public IActionResult Contact() => View();
+        public IActionResult Sale()
+        {
+            // Lệnh này sẽ đá người dùng từ Home/Sale sang Product/Sale
+            return RedirectToAction("Sale", "Product");
+        }
+        public IActionResult Contact() => View();
 
 		// Xử lý gửi liên hệ
 		[Authorize]

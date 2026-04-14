@@ -1,0 +1,213 @@
+﻿@model List<ShopQuanAo.Models.Entity.Product>
+@{
+    ViewData["Title"] = "Sale - MENSHOP";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+    /* --- ÉP FONT DM SANS TOÀN TRANG (CHUẨN MENSHOP) --- */
+    body, .sale-page, .filter-sidebar, .main-content {
+        font-family: 'DM Sans', sans-serif !important;
+        background-color: #fff;
+        color: #222;
+    }
+
+    /* Sidebar Danh mục */
+    .filter-sidebar { border-right: 1px solid #f0f0f0; padding-right: 30px; margin-top: 20px; }
+    .sidebar-label { font-size: 14px; font-weight: 700; text-transform: uppercase; margin-bottom: 25px; color: #000; letter-spacing: 1px; border-bottom: 2px solid #000; padding-bottom: 8px; display: inline-block; }
+    
+    .filter-group { margin-bottom: 35px; }
+    .filter-list { list-style: none; padding: 0; margin: 0; }
+    .filter-list li { margin-bottom: 15px; }
+    .filter-list a { text-decoration: none; color: #666; font-size: 18px; transition: all 0.2s ease; display: block; }
+    .filter-list a:hover, .active-cat { color: #000 !important; padding-left: 5px; font-weight: 700 !important; }
+    
+    /* Page Header */
+    .page-header { margin-bottom: 30px; border-bottom: 1px solid #f0f0f0; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
+    .page-eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #ff0000; font-weight: 700; margin-bottom: 8px; }
+    .page-title { font-size: 32px; font-weight: 700; margin: 0; color: #000; text-transform: uppercase; letter-spacing: -0.5px; }
+    .product-count { font-size: 14px; color: #888; margin-top: 8px; }
+
+    /* Lưới sản phẩm & Card chuẩn như ảnh mẫu */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; margin-top: 10px; }
+    .product-card { border: 1px solid #f0f0f0; border-radius: 6px; position: relative; transition: 0.3s; background: #fff; overflow: hidden; }
+    .product-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+    .product-img-container { position: relative; overflow: hidden; background: #f5f5f5; aspect-ratio: 3/4; }
+    .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; display: block; }
+    .product-card:hover .product-img { transform: scale(1.04); }
+    
+    .sale-tag { position: absolute; top: 10px; left: 10px; background: #ff0000; color: #fff; padding: 4px 10px; font-size: 12px; font-weight: 700; z-index: 2; border-radius: 2px; }
+    
+    .product-info { padding: 16px; text-align: left; }
+    /* Tên sản phẩm VIẾT HOA mảnh gọn giống trang chi tiết */
+    .product-name a { font-size: 14px; color: #333; font-weight: 500; text-decoration: none; display: block; margin-bottom: 8px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.5px; }
+    .product-name a:hover { color: #000; }
+    
+    .price-box { display: flex; gap: 12px; align-items: center; }
+    .price-current { color: #ff0000; font-weight: 700; font-size: 17px; }
+    .price-old { text-decoration: line-through; color: #999; font-size: 14px; }
+
+    /* Active Filter Tags */
+    .active-filters { margin-bottom: 20px; display: flex; gap: 10px; }
+    .filter-tag { background: #f5f5f5; border: 1px solid #ddd; padding: 5px 12px; font-size: 13px; border-radius: 4px; color: #000; display: flex; align-items: center; gap: 8px; }
+    .filter-tag a { color: #000; text-decoration: none; font-weight: bold; }
+
+    /* Phân trang */
+    .pagination-area { display: flex; justify-content: center; gap: 8px; margin-top: 50px; }
+    .page-num { display: flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding: 0 10px; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; color: #333; font-size: 14px; transition: 0.2s; }
+    .page-num:hover:not(.active) { border-color: #000; background: #fafafa; color: #000; }
+    .page-num.active { background: #000; color: #fff; border-color: #000; font-weight: bold; pointer-events: none; }
+</style>
+
+<div class="sale-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3">
+                <aside class="filter-sidebar">
+                    <div class="sidebar-label">Danh mục sale</div>
+                    <div class="filter-group">
+                        <ul class="filter-list">
+                            <li>
+                                <a href="@Url.Action("Sale", "Product", new { categoryId = (int?)null, price = ViewBag.CurrentPrice })" 
+                                   class="@(ViewBag.CurrentCategoryId == null ? "active-cat" : "")">
+                                    Tất cả sản phẩm
+                                </a>
+                            </li>
+                            @* Fix lỗi NullReference bằng cách ép kiểu an toàn *@
+                            @foreach (var cat in (ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>) ?? new List<ShopQuanAo.Models.Entity.Categories>())
+                            {
+                                bool isActive = ViewBag.CurrentCategoryId != null && (int)ViewBag.CurrentCategoryId == cat.Id;
+                                <li>
+                                    <a href="@Url.Action("Sale", "Product", new { categoryId = cat.Id, price = ViewBag.CurrentPrice })"
+                                       class="@(isActive ? "active-cat" : "")">
+                                        @cat.CategoryName
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="page-header">
+                    <div class="page-title-area">
+                        <div class="page-eyebrow">Outlet Sale</div>
+                        <h1 class="page-title">
+                            @if (ViewBag.CurrentCategoryId != null)
+                            {
+                                var categories = ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>;
+                                var currentCat = categories?.FirstOrDefault(c => c.Id == (int)ViewBag.CurrentCategoryId);
+                                @(currentCat?.CategoryName ?? "Sản phẩm")
+                            }
+                            else
+                            {
+                                @:Tất cả đồ sale
+                            }
+                        </h1>
+                        <div class="product-count">@ViewBag.TotalCount sản phẩm đang giảm giá</div>
+                    </div>
+
+                    <div class="header-right">
+                        <form method="get" action="@Url.Action("Sale", "Product")" id="sortForm">
+                            <input type="hidden" name="categoryId" value="@ViewBag.CurrentCategoryId" />
+                            <select class="form-select form-select-sm border-0 border-bottom" name="price" onchange="this.form.submit()" style="font-family: 'DM Sans', sans-serif; cursor:pointer;">
+                                <option value="">Sắp xếp khoảng giá</option>
+                                <option value="under500" selected="@(ViewBag.CurrentPrice == "under500")">Dưới 500k</option>
+                                <option value="500to1000" selected="@(ViewBag.CurrentPrice == "500to1000")">500k - 1tr</option>
+                                <option value="1000to2000" selected="@(ViewBag.CurrentPrice == "1000to2000")">1tr - 2tr</option>
+                                <option value="over2000" selected="@(ViewBag.CurrentPrice == "over2000")">Trên 2tr</option>
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="active-filters">
+                    @if (ViewBag.CurrentCategoryId != null)
+                    {
+                        var categories = ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>;
+                        var activeCat = categories?.FirstOrDefault(c => c.Id == (int)ViewBag.CurrentCategoryId);
+                        <span class="filter-tag">
+                            Danh mục: @activeCat?.CategoryName
+                            <a href="@Url.Action("Sale", "Product", new { price = ViewBag.CurrentPrice })"><i class="bi bi-x"></i></a>
+                        </span>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentPrice))
+                    {
+                        string priceLabel = ViewBag.CurrentPrice switch { "under500" => "Dưới 500k", "500to1000" => "500k-1tr", "1000to2000" => "1tr-2tr", "over2000" => "Trên 2tr", _ => "" };
+                        <span class="filter-tag">
+                            Giá: @priceLabel
+                            <a href="@Url.Action("Sale", "Product", new { categoryId = ViewBag.CurrentCategoryId })"><i class="bi bi-x"></i></a>
+                        </span>
+                    }
+                </div>
+
+                <div class="product-grid">
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            int discount = 0;
+                            if (item.Price > 0)
+                            {
+                                discount = (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100);
+                            }
+
+                            <div class="product-card">
+                                <div class="product-img-container">
+                                    <span class="sale-tag">-@discount%</span>
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                        <img src="@item.Image" class="product-img" alt="@item.ProductName" loading="lazy">
+                                    </a>
+                                </div>
+                                <div class="product-info">
+                                    <div class="product-name">
+                                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">@item.ProductName</a>
+                                    </div>
+                                    <div class="price-box">
+                                        <span class="price-current">@item.SalePrice.ToString("N0")₫</span>
+                                        <span class="price-old">@item.Price.ToString("N0")₫</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div style="grid-column: 1/-1; text-align: center; padding: 100px 0; opacity: 0.5;">
+                            <i class="bi bi-tags" style="font-size: 48px; display: block; margin-bottom: 15px;"></i>
+                            <p>Không tìm thấy sản phẩm sale nào.</p>
+                        </div>
+                    }
+                </div>
+
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="pagination-area">
+                        @if (ViewBag.CurrentPage > 1)
+                        {
+                            <a class="page-num" href="@Url.Action("Sale", "Product", new { page = ViewBag.CurrentPage - 1, categoryId = ViewBag.CurrentCategoryId, price = ViewBag.CurrentPrice })">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        }
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <a href="@Url.Action("Sale", "Product", new { page = i, categoryId = ViewBag.CurrentCategoryId, price = ViewBag.CurrentPrice })" 
+                               class="page-num @(ViewBag.CurrentPage == i ? "active" : "")">@i</a>
+                        }
+
+                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                        {
+                            <a class="page-num" href="@Url.Action("Sale", "Product", new { page = ViewBag.CurrentPage + 1, categoryId = ViewBag.CurrentCategoryId, price = ViewBag.CurrentPrice })">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -14,7 +14,7 @@ namespace ShopQuanAo.Services
             _context = context;
         }
 
-        // 1. LẤY GIỎ HÀNG: Tự động cập nhật số lượng nếu kho thực tế thay đổi (Do người khác mua)
+        // 1. LẤY GIỎ HÀNG: Tự động cập nhật số lượng và GIÁ TIỀN (Sale) thực tế
         public async Task<ShoppingCart> GetCartAsync(string userId)
         {
             var cart = await _context.ShoppingCarts
@@ -31,36 +31,43 @@ namespace ShopQuanAo.Services
 
             foreach (var item in cart.CartDetails)
             {
-                // Tìm kho thực tế dựa trên tên Size (Dùng Trim và ToLower để tránh lệch data)
+                // Tìm kho thực tế dựa trên tên Size
                 var stockRecord = item.Product.ProductSizes
                     .FirstOrDefault(ps => ps.Size.SizeName.Trim().ToLower() == item.Size.Trim().ToLower());
 
                 int actualStock = stockRecord?.Quantity ?? 0;
 
-                // Nếu số lượng trong giỏ lớn hơn kho hiện có (Do thằng khác vừa mua mất)
+                // Nếu số lượng trong giỏ lớn hơn kho hiện có
                 if (item.Quantity > actualStock)
                 {
-                    item.Quantity = actualStock; // Ép về bằng kho thực tế
+                    item.Quantity = actualStock;
+                    isModified = true;
+                }
+
+                // FIX SALE: Cập nhật lại giá tiền trong giỏ nếu Admin vừa đổi giá/bật Sale
+                double realPrice = item.Product.SalePrice > 0 ? item.Product.SalePrice : item.Product.Price;
+                if (item.UnitPrice != realPrice)
+                {
+                    item.UnitPrice = realPrice;
                     isModified = true;
                 }
             }
 
             if (isModified)
             {
-                // Cập nhật lại Database ngay để giỏ hàng của khách B luôn chính xác
+                // Cập nhật lại Database ngay để giỏ hàng luôn chuẩn kho và chuẩn giá
                 await _context.SaveChangesAsync();
             }
 
             return cart;
         }
 
-        // 2. THÊM VÀO GIỎ: Fix lỗi so sánh chuỗi và chặn vượt kho
+        // 2. THÊM VÀO GIỎ: Bắt giá Sale ngay từ lúc bốc hàng
         public async Task<(bool Success, string Message, int CartCount)> AddToCartAsync(string userId, AddToCartDto dto)
         {
             var product = await _context.Products.FindAsync(dto.ProductId);
             if (product == null) return (false, "Sản phẩm không tồn tại.", 0);
 
-            // Check kho thực tế - Dùng Trim/ToLower để fix lỗi "còn hàng mà không thêm được"
             var productSize = await _context.ProductSizes
                 .Include(ps => ps.Size)
                 .FirstOrDefaultAsync(ps => ps.ProductId == dto.ProductId
@@ -87,15 +94,18 @@ namespace ShopQuanAo.Services
             int currentInCart = existingDetail?.Quantity ?? 0;
             int requestedTotal = currentInCart + dto.Quantity;
 
-            // Nếu tổng định thêm vào lớn hơn kho đang có
             if (requestedTotal > productSize.Quantity)
             {
                 return (false, $"Kho chỉ còn {productSize.Quantity} sản phẩm. Bạn đã có {currentInCart} trong giỏ.", 0);
             }
 
+            // FIX SALE CHÍNH: Bắt giá Sale để nạp vào giỏ
+            double finalPrice = product.SalePrice > 0 ? product.SalePrice : product.Price;
+
             if (existingDetail != null)
             {
                 existingDetail.Quantity += dto.Quantity;
+                existingDetail.UnitPrice = finalPrice; // Lỡ khách thêm hàng lúc vừa chạy Sale
             }
             else
             {
@@ -104,14 +114,13 @@ namespace ShopQuanAo.Services
                     ShoppingCartId = cart.Id,
                     ProductId = dto.ProductId,
                     Quantity = dto.Quantity,
-                    UnitPrice = product.Price,
-                    Size = dto.Size // Lưu đúng tên size khách chọn
+                    UnitPrice = finalPrice, // Lưu đúng giá đã giảm
+                    Size = dto.Size
                 });
             }
 
             await _context.SaveChangesAsync();
 
-            // Tính lại tổng số món trong giỏ để trả về Header cập nhật icon giỏ hàng
             int cartCount = await _context.CartDetails
                 .Where(cd => cd.ShoppingCart.UserId == userId && !cd.ShoppingCart.IsDeleted)
                 .SumAsync(cd => cd.Quantity);
@@ -129,7 +138,6 @@ namespace ShopQuanAo.Services
 
             if (cartDetail == null) return (false, "Không tìm thấy sản phẩm trong giỏ.", null!);
 
-            // Lấy kho thực tế
             var productSize = cartDetail.Product.ProductSizes
                 .FirstOrDefault(ps => ps.Size.SizeName.Trim().ToLower() == cartDetail.Size.Trim().ToLower());
 
@@ -137,13 +145,16 @@ namespace ShopQuanAo.Services
 
             if (dto.Quantity > maxQty)
             {
-                cartDetail.Quantity = maxQty; // Tự động đưa về max nếu khách cố tình nhập tay số lớn
+                cartDetail.Quantity = maxQty;
                 await _context.SaveChangesAsync();
                 return (false, $"Kho chỉ còn tối đa {maxQty} sản phẩm.", new { maxQty });
             }
 
             if (dto.Quantity <= 0) _context.CartDetails.Remove(cartDetail);
             else cartDetail.Quantity = dto.Quantity;
+
+            // FIX SALE CHỖ NÀY LUÔN: Đồng bộ lại giá lỡ có thay đổi
+            cartDetail.UnitPrice = cartDetail.Product.SalePrice > 0 ? cartDetail.Product.SalePrice : cartDetail.Product.Price;
 
             await _context.SaveChangesAsync();
 
