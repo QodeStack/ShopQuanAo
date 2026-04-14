@@ -30,7 +30,8 @@ namespace ShopQuanAo.Controllers
             ViewBag.Cart = cart;
             ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
 
-            return View(new Order());
+            // FIX: Trả về PlaceOrderDto thay vì Order để đồng nhất dữ liệu
+            return View(new PlaceOrderDto());
         }
 
         [HttpPost]
@@ -42,6 +43,8 @@ namespace ShopQuanAo.Controllers
                 var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User));
                 ViewBag.Cart = cart;
                 ViewBag.TotalAmount = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
+
+                // Trả về cùng một View "Index" với dữ liệu DTO
                 return View("Index", dto);
             }
 
