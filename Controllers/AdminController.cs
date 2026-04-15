@@ -52,11 +52,24 @@ namespace ShopQuanAo.Controllers
 
 		public IActionResult Orders() => View();
 
+		// Trang Giao diện Doanh thu
+		public IActionResult Revenue() => View();
+
 		// --- Các hàm lấy dữ liệu (API Endpoints) ---
 		[HttpGet] public async Task<IActionResult> GetStats() => Json(await _service.GetStatsAsync());
 		[HttpGet] public async Task<IActionResult> GetUsers() => Json(await _service.GetUsersAsync());
 		[HttpGet] public async Task<IActionResult> GetProducts() => Json(await _service.GetAllProductsAsync());
 		[HttpGet] public async Task<IActionResult> GetOrders() => Json(await _service.GetOrdersAsync());
+
+		// Lấy dữ liệu báo cáo doanh thu chuyên sâu
+		[HttpGet]
+		[HttpGet]
+		public async Task<IActionResult> GetRevenueData(DateTime? startDate, DateTime? endDate)
+		{
+			// Truyền 2 tham số ngày vào hàm GetRevenueStatsAsync
+			var data = await _service.GetRevenueStatsAsync(startDate, endDate);
+			return Ok(data);
+		}
 
 		// --- QUẢN LÝ SẢN PHẨM (CREATE / EDIT / DELETE) ---
 
@@ -96,7 +109,6 @@ namespace ShopQuanAo.Controllers
 
 				if (int.TryParse(dto.Id, out int productId))
 				{
-					// Hàm service này giờ đã xóa sạch các bảng liên quan (OrderDetails, ProductSizes...)
 					var res = await _service.DeleteProductAsync(productId);
 					if (res)
 					{
@@ -145,7 +157,6 @@ namespace ShopQuanAo.Controllers
 			}
 		}
 
-		// THÊM MỚI: Xóa liên hệ
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> DeleteContact([FromBody] DeleteDto dto)

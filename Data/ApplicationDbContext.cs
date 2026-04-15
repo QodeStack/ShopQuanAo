@@ -4,7 +4,6 @@ using ShopQuanAo.Models.Entity;
 
 namespace ShopQuanAo.Data
 {
-	// Sửa IdentityDbContext thành IdentityDbContext<ApplicationUser> để hỗ trợ thêm cột OTP
 	public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 	{
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -22,11 +21,16 @@ namespace ShopQuanAo.Data
 		public DbSet<Size> Sizes { get; set; }
 		public DbSet<ProductSize> ProductSizes { get; set; }
 		public DbSet<Contacts> Contacts { get; set; }
-        public DbSet<ProductReview> ProductReviews{ get; set; }
-        protected override void OnModelCreating(ModelBuilder builder)
+		public DbSet<ProductReview> ProductReviews { get; set; } // Đã có, rất tốt!
+
+		protected override void OnModelCreating(ModelBuilder builder)
 		{
 			base.OnModelCreating(builder);
-			// Bạn có thể thêm các cấu hình Fluent API ở đây nếu cần
+
+			// Thêm dòng này để đảm bảo EF Core tạo bảng đúng tên bạn muốn
+			builder.Entity<ProductReview>().ToTable("ProductReviews");
+
+			// Nếu bạn có các ràng buộc khác như khóa ngoại, có thể cấu hình thêm ở đây
 		}
 	}
 }

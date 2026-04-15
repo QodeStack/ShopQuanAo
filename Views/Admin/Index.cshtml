@@ -19,10 +19,13 @@
                 <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
                     <span class="sidebar-icon">▣</span> Dashboard
                 </a>
-                <a class="sidebar-link" href="#">
+                
+                @* Đoạn thay đổi ở đây *@
+                <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
                     <span class="sidebar-icon">◈</span> Doanh thu
                 </a>
-                <a class="sidebar-link" href="@Url.Action("Orders", "Admin")">
+
+                <a class="sidebar-link @(currentAction == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")">
                     <span class="sidebar-icon">◎</span> Đơn hàng
                 </a>
             </div>

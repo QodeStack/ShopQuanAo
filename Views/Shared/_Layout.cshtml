@@ -65,13 +65,13 @@
                                 </div>
                             </li>
                         <li class="nav-item"><a class="nav-link text-danger fw-bold" asp-controller="Home" asp-action="Sale">SALE</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="AboutUs">ABOUT US</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">CONTACT</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="AboutUs">Về Chúng Tôi</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">Liên Hệ </a></li>
                         
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link fw-bold text-primary" asp-controller="Admin" asp-action="Index">MANAGE</a>
+                                <a class="nav-link fw-bold text-primary" asp-controller="Admin" asp-action="Index">Quản Lý</a>
                             </li>
                         }
                     </ul>
