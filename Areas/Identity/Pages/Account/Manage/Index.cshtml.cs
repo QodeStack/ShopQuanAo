@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ShopQuanAo.Models.Entity; // Đảm bảo đúng namespace chứa ApplicationUser
+using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account.Manage
 {

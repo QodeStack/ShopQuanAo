@@ -1,5 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@using ShopQuanAo.Models.Entity
+@using ShopQuanAo.Models.BEAN.Entity
 @inject SignInManager<ApplicationUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();

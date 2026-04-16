@@ -1,7 +1,7 @@
 ﻿<link href="~/css/personalPage.css" asp-append-version="true" rel="stylesheet" />
 @using ShopQuanAo.Areas.Identity.Pages.Account.Manage
 @using Microsoft.AspNetCore.Identity
-@using ShopQuanAo.Models.Entity
+@using ShopQuanAo.Models.BEAN.Entity
 @inject UserManager<ApplicationUser> LayoutUserManager
 @{
     if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)

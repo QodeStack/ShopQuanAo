@@ -1,4 +1,4 @@
-﻿@model List<ShopQuanAo.Models.Entity.Product>
+﻿@model List<ShopQuanAo.Models.BEAN.Entity.Product>
 @{
     ViewData["Title"] = "Sale - MENSHOP";
 }
@@ -76,7 +76,7 @@
                                 </a>
                             </li>
                             @* Fix lỗi NullReference bằng cách ép kiểu an toàn *@
-                            @foreach (var cat in (ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>) ?? new List<ShopQuanAo.Models.Entity.Categories>())
+                            @foreach (var cat in (ViewBag.Categories as List<ShopQuanAo.Models.BEAN.Entity.Categories>) ?? new List<ShopQuanAo.Models.BEAN.Entity.Categories>())
                             {
                                 bool isActive = ViewBag.CurrentCategoryId != null && (int)ViewBag.CurrentCategoryId == cat.Id;
                                 <li>
@@ -98,7 +98,7 @@
                         <h1 class="page-title">
                             @if (ViewBag.CurrentCategoryId != null)
                             {
-                                var categories = ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>;
+                                var categories = ViewBag.Categories as List<ShopQuanAo.Models.BEAN.Entity.Categories>;
                                 var currentCat = categories?.FirstOrDefault(c => c.Id == (int)ViewBag.CurrentCategoryId);
                                 @(currentCat?.CategoryName ?? "Sản phẩm")
                             }
@@ -127,7 +127,7 @@
                 <div class="active-filters">
                     @if (ViewBag.CurrentCategoryId != null)
                     {
-                        var categories = ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>;
+                        var categories = ViewBag.Categories as List<ShopQuanAo.Models.BEAN.Entity.Categories>;
                         var activeCat = categories?.FirstOrDefault(c => c.Id == (int)ViewBag.CurrentCategoryId);
                         <span class="filter-tag">
                             Danh mục: @activeCat?.CategoryName

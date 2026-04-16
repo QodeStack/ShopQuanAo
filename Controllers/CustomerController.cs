@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ShopQuanAo.Models.Entity;
-using ShopQuanAo.Services;
+using ShopQuanAo.Models.BEAN.Entity;
+using ShopQuanAo.BO;
 using ShopQuanAo.ViewModels;
 
 namespace ShopQuanAo.Controllers

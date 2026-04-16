@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
-using ShopQuanAo.Models.Entity;
-using ShopQuanAo.Services;
+using ShopQuanAo.Models.BEAN.Entity;
+
+using ShopQuanAo.BO;
 
 namespace ShopQuanAo.Controllers
 {
