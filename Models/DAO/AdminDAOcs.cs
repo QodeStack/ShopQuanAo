@@ -32,7 +32,6 @@ namespace ShopQuanAo.DAO
                 .CountAsync(o => o.CreateTime >= start && o.CreateTime <= endOfPeriod && !o.IsDeleted);
         }
 
-        // Lưu ý: Dùng đúng tên Categories có 's' theo cấu trúc file của bạn
         public async Task<List<Categories>> GetAllCategoriesAsync()
         {
             return await _context.Categories.ToListAsync();
@@ -91,6 +90,7 @@ namespace ShopQuanAo.DAO
             await _context.SaveChangesAsync();
         }
 
+        // ĐÂY LÀ HÀM LẤY SẢN PHẨM THEO ID (Chỉ có 1 bản duy nhất)
         public async Task<Product?> GetProductByIdAsync(int id)
         {
             return await _context.Products.Include(p => p.ProductSizes).FirstOrDefaultAsync(p => p.Id == id);
@@ -150,6 +150,7 @@ namespace ShopQuanAo.DAO
             return await _context.OrderStatuses.FirstAsync(s => s.StatusName == statusName);
         }
 
+        // ĐÂY LÀ HÀM LƯU DATABASE (Chỉ có 1 bản duy nhất)
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();

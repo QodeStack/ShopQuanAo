@@ -12,16 +12,67 @@
     <link rel="stylesheet" href="~/css/product.css" asp-append-version="true" />
     
     <style>
+        /* --- ĐIỀU CHỈNH KÍCH THƯỚC TO GẤP 1.5 LẦN --- */
+        .product-grid { 
+            display: grid; 
+            /* Giảm xuống 3 cột để mỗi card tự động to ra */
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 30px; 
+            padding: 20px 0;
+        }
+
+        .product-card { 
+            background: #fff; 
+            border: 1px solid #f0f0f0; 
+            border-radius: 4px; 
+            transition: all 0.3s ease;
+            /* Tăng max-width lên để card có không gian nở ra */
+            max-width: 380px; 
+            margin: 0 auto;
+            width: 100%;
+        }
+        .product-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+
+        .product-image { position: relative; overflow: hidden; background: #f9f9f9; }
+        .product-image img { 
+            width: 100%; 
+            aspect-ratio: 3/4; 
+            object-fit: cover; 
+        }
+
+        .sale-badge {
+            position: absolute; top: 15px; left: 15px;
+            background: #ff0000; color: #fff;
+            padding: 4px 10px; font-size: 13px; font-weight: 700;
+            border-radius: 2px; z-index: 5; font-family: 'DM Sans', sans-serif;
+        }
+
         .out-of-stock-overlay {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.75); color: #fff;
-            padding: 8px 16px; border-radius: 4px;
-            font-size: 14px; font-weight: 500; z-index: 10;
-            pointer-events: none; white-space: nowrap; letter-spacing: 0.5px;
+            background: rgba(0, 0, 0, 0.6); color: #fff;
+            padding: 10px 20px; border-radius: 2px;
+            font-size: 14px; z-index: 10; font-family: 'DM Sans', sans-serif;
         }
-        .product-image { position: relative; }
-        .out-of-stock img { opacity: 0.4; }
+
+        .product-info { padding: 20px; text-align: left; }
+        
+        .product-name a { 
+            font-family: 'DM Sans', sans-serif; 
+            font-size: 15px; /* Tăng size chữ một chút cho cân xứng */
+            color: #333; 
+            text-decoration: none; 
+            font-weight: 400;
+            display: block;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .product-price { font-family: 'DM Sans', sans-serif; font-size: 16px; }
+        .price-sale { color: #ff0000; font-weight: 700; margin-right: 8px; }
+        .price-old { text-decoration: line-through; color: #bbb; font-size: 14px; }
+        .price-regular { color: #333; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -96,7 +147,6 @@
                     </form>
 
                     <div class="filter-bar">
-                        @* Filter Đánh giá *@
                         <div class="filter-item">
                             <button class="filter-btn @(ViewBag.CurrentRating != null ? "active" : "")" onclick="toggleFilter('fRating')">
                                 Đánh giá <i class="bi bi-chevron-down"></i>
@@ -113,7 +163,6 @@
                             </div>
                         </div>
 
-                        @* Filter Giá *@
                         <div class="filter-item">
                             <button class="filter-btn @(!string.IsNullOrEmpty(ViewBag.CurrentPrice) ? "active" : "")" onclick="toggleFilter('fPrice')">
                                 Giá <i class="bi bi-chevron-down"></i>
@@ -157,11 +206,17 @@
                     foreach (var item in Model)
                     {
                         bool isOutOfStock = item.TotalQuantity <= 0;
+                        bool hasSale = item.SalePrice > 0;
+                        
                         <div class="product-card @(isOutOfStock ? "out-of-stock" : "")">
                             <div class="product-image">
                                 @if (isOutOfStock)
                                 {
                                     <div class="out-of-stock-overlay">Đã hết hàng</div>
+                                }
+                                else if (hasSale)
+                                {
+                                    <div class="sale-badge">-@((int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100))%</div>
                                 }
                                 <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
                                     <img src="@item.Image" alt="@item.ProductName" loading="lazy" />
@@ -174,11 +229,16 @@
                                 <div class="product-price">
                                     @if (isOutOfStock)
                                     {
-                                        <span style="color: #aaa; text-decoration: line-through;">@item.Price.ToString("N0")đ</span>
+                                        <span class="price-old">@item.Price.ToString("N0")đ</span>
+                                    }
+                                    else if (hasSale)
+                                    {
+                                        <span class="price-sale">@item.SalePrice.ToString("N0")đ</span>
+                                        <span class="price-old">@item.Price.ToString("N0")đ</span>
                                     }
                                     else
                                     {
-                                        <span>@item.Price.ToString("N0")đ</span>
+                                        <span class="price-regular">@item.Price.ToString("N0")đ</span>
                                     }
                                 </div>
                             </div>

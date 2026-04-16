@@ -16,4 +16,9 @@
     // --- Order & Contact DTOs ---
     public class UpdateOrderStatusDto { public int OrderId { get; set; } public string Action { get; set; } = ""; public string? ShippingProvider { get; set; } }
     public class ReplyContactDto { public int Id { get; set; } public string AdminReply { get; set; } = ""; }
+    public class SaleRequestDto
+    {
+        public int ProductId { get; set; }
+        public int SalePrice { get; set; }
+    }
 }

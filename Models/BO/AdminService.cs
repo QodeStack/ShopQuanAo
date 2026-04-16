@@ -5,6 +5,7 @@ using ShopQuanAo.Models.BEAN.DTO;
 using ShopQuanAo.Models.BEAN.Entity;
 using ShopQuanAo.DAO;
 using Microsoft.EntityFrameworkCore;
+
 namespace ShopQuanAo.BO
 {
     public class AdminService
@@ -39,16 +40,14 @@ namespace ShopQuanAo.BO
         }
         #endregion
 
-        #region Dashboard & Stats (Doanh thu nâng cao)
+        #region Dashboard & Stats
         public async Task<object> GetRevenueStatsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
             var now = DateTime.Now;
-
             var start = startDate ?? new DateTime(now.Year, now.Month, 1);
             var end = endDate ?? now;
             var endOfPeriod = end.Date.AddDays(1).AddTicks(-1);
 
-            // Lấy dữ liệu qua DAO
             var paidOrders = await _adminDAO.GetPaidOrderDetailsAsync(start, endOfPeriod);
             var categories = await _adminDAO.GetAllCategoriesAsync();
 
@@ -156,7 +155,7 @@ namespace ShopQuanAo.BO
         }
         #endregion
 
-        #region Product & Size Management
+        #region Product, Size & Sale Management
         public async Task<object> GetAllProductsAsync()
         {
             var products = await _adminDAO.GetAllProductsWithRelationsAsync();
@@ -239,6 +238,41 @@ namespace ShopQuanAo.BO
         public async Task<bool> DeleteProductAsync(int id)
         {
             return await _adminDAO.DeleteProductDependenciesAsync(id);
+        }
+
+        // --- CÁC HÀM XỬ LÝ KHUYẾN MÃI (SALE) ---
+        public async Task<(bool Success, string Message)> UpdateSalePriceAsync(int productId, int salePrice)
+        {
+            var product = await _adminDAO.GetProductByIdAsync(productId);
+            if (product == null) return (false, "Không tìm thấy sản phẩm.");
+
+            try
+            {
+                product.SalePrice = salePrice;
+                await _adminDAO.SaveChangesAsync();
+                return (true, "Cập nhật khuyến mãi thành công!");
+            }
+            catch (Exception ex)
+            {
+                return (false, "Lỗi SQL: " + (ex.InnerException?.Message ?? ex.Message));
+            }
+        }
+
+        public async Task<(bool Success, string Message)> DisableSaleAsync(int productId)
+        {
+            var product = await _adminDAO.GetProductByIdAsync(productId);
+            if (product == null) return (false, "Không tìm thấy sản phẩm.");
+
+            try
+            {
+                product.SalePrice = 0; // Giá sale về 0 tức là tắt
+                await _adminDAO.SaveChangesAsync();
+                return (true, "Đã tắt khuyến mãi.");
+            }
+            catch (Exception ex)
+            {
+                return (false, "Lỗi SQL: " + (ex.InnerException?.Message ?? ex.Message));
+            }
         }
         #endregion
 

@@ -41,6 +41,13 @@
                 <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@Url.Action("Categories", "Admin")">
                     <span class="sidebar-icon">◧</span> Danh mục
                 </a>
+                
+                @* --- ĐOẠN CODE THÊM QUẢN LÝ SALE MỚI --- *@
+                <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@Url.Action("Sales", "Admin")">
+                    <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
+                </a>
+                @* --------------------------------------- *@
+
                 <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
                     <span class="sidebar-icon">✉</span> Phản hồi khách
                 </a>
@@ -151,10 +158,10 @@
                                             double total = 0;
                                             if (order.OrderDetails != null)
                                             {
-                                                foreach (var d in order.OrderDetails) 
-                                                { 
+                                                foreach (var d in order.OrderDetails)
+                                                {
                                                     // Sử dụng đúng UnitPrice đã khai báo trong model
-                                                    total += (d.UnitPrice * d.Quantity); 
+                                                    total += (d.UnitPrice * d.Quantity);
                                                 }
                                             }
                                         }
@@ -206,7 +213,7 @@
     loadStats();
 
     const months = ['T11','T12','T1','T2','T3','T4'];
-    const values = [42, 58, 35, 71, 63, 89]; 
+    const values = [42, 58, 35, 71, 63, 89];
     const max = Math.max(...values);
     const chart = document.getElementById('revenueChart');
     
