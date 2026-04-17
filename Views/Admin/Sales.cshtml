@@ -9,6 +9,7 @@
     var currentAction = "Sales";
 }
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link href="~/css/Admin_Index.css" asp-append-version="true" rel="stylesheet" />
 
 <style>
@@ -101,7 +102,7 @@
                         <input type="text" name="search" placeholder="Tìm kiếm sản phẩm sale..." value="@ViewContext.HttpContext.Request.Query["search"]" />
                         <button type="submit" class="btn-dark">Tìm kiếm</button>
                     </form>
-                    <button class="btn-dark" onclick="openModal(null, '', '')">+ Thêm chương trình Sale</button>
+                    <button class="btn-dark" onclick="openModal(null, '', '', '')">+ Thêm chương trình Sale</button>
                 </div>
 
                 <table class="table-light">
@@ -139,7 +140,7 @@
                                         }
                                     </td>
                                     <td class="actions">
-                                        <a onclick="openModal(@item.Id, '@item.ProductName', @(item.SalePrice > 0 ? item.SalePrice : item.Price))">Sửa</a>
+                                        <a onclick="openModal(@item.Id, '@item.ProductName', @(item.SalePrice > 0 ? item.SalePrice : item.Price), @item.Price)">Sửa</a>
                                         <a onclick="disableSale(@item.Id)" class="text-danger">Tắt Sale</a>
                                     </td>
                                 </tr>
@@ -164,6 +165,7 @@
         </div>
         <div class="modal-body">
             <input type="hidden" id="inputProductId" />
+            <input type="hidden" id="inputOriginalPrice" /> 
 
             <div class="form-group" id="productSelectGroup">
                 <label>Tìm kiếm Sản phẩm</label>
@@ -189,6 +191,7 @@
     const modal = document.getElementById('saleModal');
     const title = document.getElementById('modalTitle');
     const hiddenId = document.getElementById('inputProductId');
+    const hiddenOriginalPrice = document.getElementById('inputOriginalPrice'); // Biến lưu giá gốc
     const searchInput = document.getElementById('inputProductSearch');
     const searchDropdown = document.getElementById('searchDropdown');
     const inputPrice = document.getElementById('inputSalePrice');
@@ -200,15 +203,14 @@
         clearTimeout(searchTimeout);
         const keyword = this.value.trim();
 
-        // Xóa chọn cũ nếu người dùng sửa chữ
         hiddenId.value = ''; 
+        hiddenOriginalPrice.value = ''; 
 
         if (keyword.length < 2) {
             searchDropdown.style.display = 'none';
             return;
         }
 
-        // Chờ 300ms sau khi người dùng ngừng gõ mới gọi API để đỡ giật lag Server
         searchTimeout = setTimeout(async () => {
             try {
                 const res = await fetch(`/Admin/SearchProducts?keyword=${encodeURIComponent(keyword)}`);
@@ -218,7 +220,6 @@
                 if (data && data.length > 0) {
                     data.forEach(item => {
                         const li = document.createElement('li');
-                        // Nếu item.image bị null thì dùng ảnh mặc định
                         const imgUrl = item.image ? `/${item.image}` : '/images/default.jpg';
                         
                         li.innerHTML = `
@@ -229,14 +230,14 @@
                             </div>
                         `;
                         
-                        // Khi bấm vào 1 dòng kết quả
                         li.onclick = () => {
-                            hiddenId.value = item.id;          // Lưu ID thật vào ô ẩn
-                            searchInput.value = item.productName; // Hiển thị tên ra ô gõ
-                            searchDropdown.style.display = 'none'; // Giấu dropdown đi
+                            hiddenId.value = item.id;          
+                            searchInput.value = item.productName; 
+                            searchDropdown.style.display = 'none'; 
                             
-                            // Tự mớm giá cũ vào ô nhập Giá Sale để admin dễ gõ lại
                             inputPrice.value = item.price;
+                            hiddenOriginalPrice.value = item.price; // Lưu giá gốc từ API
+                            inputPrice.max = item.price - 1; // Giới hạn nút bấm tăng giá
                         };
                         searchDropdown.appendChild(li);
                     });
@@ -251,7 +252,6 @@
         }, 300); 
     });
 
-    // Ẩn dropdown khi bấm ra chỗ khác
     document.addEventListener('click', function(e) {
         if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
             searchDropdown.style.display = 'none';
@@ -259,24 +259,26 @@
     });
 
     // --- LOGIC MỞ/ĐÓNG POPUP ---
-    function openModal(id, name, price) {
+    function openModal(id, name, price, originalPrice) {
         modal.style.display = 'flex';
         searchDropdown.style.display = 'none';
         
         if (id) {
-            // SỬA: Đổ sẵn dữ liệu, khóa ô tìm kiếm
             title.innerText = 'Sửa Khuyến Mãi';
             hiddenId.value = id;
             searchInput.value = name;
-            searchInput.disabled = true; // Sửa thì không cho chọn lại SP khác
+            searchInput.disabled = true; 
             inputPrice.value = price; 
+            hiddenOriginalPrice.value = originalPrice; // Nhận và lưu giá gốc từ nút bấm
+            inputPrice.max = originalPrice - 1; // Set giới hạn khi sửa
         } else {
-            // THÊM MỚI: Dọn sạch ô nhập
             title.innerText = 'Thêm Khuyến Mãi Mới';
             hiddenId.value = '';
             searchInput.value = '';
-            searchInput.disabled = false; // Mở khóa cho tìm kiếm
+            searchInput.disabled = false; 
             inputPrice.value = '';
+            hiddenOriginalPrice.value = ''; // Xóa sạch khi thêm mới
+            inputPrice.removeAttribute('max'); // Mở khóa giới hạn khi form trống
         }
     }
 
@@ -284,24 +286,36 @@
         modal.style.display = 'none';
     }
 
-    // --- LOGIC LƯU VÀ TẮT ---
+    // --- LOGIC LƯU VÀ TẮT (TÍCH HỢP SWEETALERT2) ---
     async function saveSale() {
-        const pId = hiddenId.value; // Lấy từ ô ẩn
+        const pId = hiddenId.value; 
         const sPrice = inputPrice.value;
+        const originalPrice = hiddenOriginalPrice.value;
 
         if(!pId) {
-            alert('Vui lòng tìm và chọn một sản phẩm từ danh sách!');
-            searchInput.focus();
+            Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng tìm và chọn một sản phẩm từ danh sách!' });
             return;
         }
         if(sPrice === '') {
-            alert('Vui lòng nhập Giá Sale!');
-            inputPrice.focus();
+            Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng nhập Giá Sale!' });
             return;
         }
-        if(parseInt(sPrice, 10) < 0) {
-            alert('Giá Sale không được phép nhỏ hơn 0!');
-            inputPrice.focus();
+        
+        const parsedSalePrice = parseInt(sPrice, 10);
+        const parsedOriginalPrice = parseInt(originalPrice, 10);
+
+        if(parsedSalePrice < 0) {
+            Swal.fire({ icon: 'error', title: 'Không hợp lệ', text: 'Giá Sale không được phép nhỏ hơn 0!' });
+            return;
+        }
+
+        // Logic chặn Sale ảo/Lỗi nhập liệu
+        if (parsedSalePrice >= parsedOriginalPrice) {
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Giá không hợp lệ', 
+                text: `Giá Sale (${parsedSalePrice.toLocaleString()}₫) bắt buộc phải nhỏ hơn Giá gốc (${parsedOriginalPrice.toLocaleString()}₫)!` 
+            });
             return;
         }
 
@@ -309,39 +323,51 @@
             const res = await fetch('/Admin/UpdateSalePrice', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId: parseInt(pId), salePrice: parseInt(sPrice, 10) })
+                body: JSON.stringify({ productId: parseInt(pId), salePrice: parsedSalePrice })
             });
             const data = await res.json();
             
             if(data.success) {
-                alert('Thành công!');
-                location.reload(); 
+                Swal.fire({ icon: 'success', title: 'Thành công!', text: 'Đã cập nhật giá sale.', timer: 1500, showConfirmButton: false })
+                .then(() => location.reload());
             } else {
-                alert('Lỗi: ' + data.message);
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message });
             }
         } catch(err) {
-            alert('Lỗi kết nối tới máy chủ!');
+            Swal.fire({ icon: 'error', title: 'Lỗi mạng', text: 'Không thể kết nối tới máy chủ!' });
         }
     }
 
-    async function disableSale(id) {
-        if(!confirm('Bạn có chắc muốn tắt khuyến mãi cho sản phẩm này?')) return;
-        
-        try {
-            const res = await fetch('/Admin/DisableSale', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId: id })
-            });
-            const data = await res.json();
-            
-            if(data.success) {
-                location.reload();
-            } else {
-                alert('Lỗi: ' + data.message);
+    function disableSale(id) {
+        Swal.fire({
+            title: 'Tắt khuyến mãi?',
+            text: "Sản phẩm này sẽ quay về giá gốc. Bạn có chắc chắn không?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#111',
+            cancelButtonColor: '#dc2626',
+            confirmButtonText: 'Đồng ý tắt',
+            cancelButtonText: 'Hủy bỏ'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch('/Admin/DisableSale', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId: id })
+                    });
+                    const data = await res.json();
+                    
+                    if(data.success) {
+                        Swal.fire({ icon: 'success', title: 'Thành công!', text: 'Đã tắt khuyến mãi.', timer: 1500, showConfirmButton: false })
+                        .then(() => location.reload());
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message });
+                    }
+                } catch(err) {
+                    Swal.fire({ icon: 'error', title: 'Lỗi mạng', text: 'Không thể kết nối tới máy chủ!' });
+                }
             }
-        } catch(err) {
-            alert('Lỗi kết nối tới máy chủ!');
-        }
+        });
     }
 </script>

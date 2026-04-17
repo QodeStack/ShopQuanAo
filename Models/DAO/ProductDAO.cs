@@ -20,7 +20,7 @@ namespace ShopQuanAo.DAO
         {
             var query = _context.Products.Include(p => p.Category).AsQueryable();
 
-            if (isSaleOnly) query = query.Where(p => p.SalePrice > 0);
+            if (isSaleOnly) query = query.Where(p => p.SalePrice > 0 && p.Price > p.SalePrice );
 
             if (!string.IsNullOrWhiteSpace(category))
             {

@@ -19,9 +19,13 @@ namespace ShopQuanAo.Controllers
             _checkoutService = checkoutService;
         }
 
-        public async Task<IActionResult> Index()
+        // ĐÃ SỬA: Hứng selectedIds từ thanh URL
+        [HttpGet]
+        public async Task<IActionResult> Index([FromQuery] List<int> selectedIds)
         {
-            var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User));
+            var userId = _userManager.GetUserId(User);
+            var cart = await _checkoutService.GetCartForCheckoutAsync(userId, selectedIds);
+
             if (cart == null || cart.CartDetails == null || !cart.CartDetails.Any())
             {
                 return RedirectToAction("Index", "Cart");
@@ -30,8 +34,21 @@ namespace ShopQuanAo.Controllers
             ViewBag.Cart = cart;
             ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
 
-            // FIX: Trả về PlaceOrderDto thay vì Order để đồng nhất dữ liệu
-            return View(new PlaceOrderDto());
+            // Khởi tạo DTO và nhét sẵn danh sách ID
+            var dto = new PlaceOrderDto { SelectedIds = selectedIds };
+
+            // TÍNH NĂNG MỚI: Tự động điền thông tin từ đơn hàng cũ (nếu có)
+            var lastOrder = await _checkoutService.GetLatestOrderAsync(userId);
+            if (lastOrder != null)
+            {
+                dto.Name = lastOrder.Name;
+                dto.MobileNumber = lastOrder.MobileNumber;
+                dto.Address = lastOrder.Address;
+                dto.Email = lastOrder.Email; // Thêm dòng này nếu Order của bạn có lưu Email
+            }
+
+            // Truyền dto đã có sẵn data sang View
+            return View(dto);
         }
 
         [HttpPost]
@@ -40,14 +57,15 @@ namespace ShopQuanAo.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User));
+                // ĐÃ SỬA: Truyền dto.SelectedIds vào để load lại đúng giỏ hàng nếu nhập sai form
+                var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User), dto.SelectedIds);
                 ViewBag.Cart = cart;
                 ViewBag.TotalAmount = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
 
-                // Trả về cùng một View "Index" với dữ liệu DTO
                 return View("Index", dto);
             }
 
+            // ĐÃ SỬA: Gọi hàm đã được dọn dẹp bên Service
             var result = await _checkoutService.PlaceOrderAsync(_userManager.GetUserId(User), dto);
             if (!result.Success) return RedirectToAction("Index", "Cart");
 
