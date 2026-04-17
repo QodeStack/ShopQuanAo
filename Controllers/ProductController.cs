@@ -70,12 +70,13 @@ namespace ShopQuanAo.Controllers
 			int pageSize = 12;
 			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, isSaleOnly: true, sort: sort);
 
-			ViewBag.BannerPath = "/Image/Banner_sanpham/Banner_sale.jpg";
-			ViewBag.BannerTitle = "ƯU ĐÃI ĐẶC BIỆT";
+			// Không dùng ViewBag.BannerPath ở đây để tránh ảnh hưởng giao diện Index
 			ViewBag.CurrentSort = sort;
 
 			await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
-			return View("Index", result.Products); // Dùng chung view Index cho đồng nhất giao diện
+
+			// TRẢ VỀ ĐÚNG VIEW SALE CỦA NÓ (Sidebar bên trái)
+			return View(result.Products);
 		}
 
 		private string GenerateSlug(string phrase)
