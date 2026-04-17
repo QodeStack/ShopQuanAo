@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using ShopQuanAo.Models.Entity; // THÊM DÒNG NÀY
+using ShopQuanAo.Models.Entity; 
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account
 {

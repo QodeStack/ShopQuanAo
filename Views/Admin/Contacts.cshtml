@@ -1,172 +1,272 @@
-﻿@using ShopQuanAo.Models
-@model IEnumerable<ShopQuanAo.Models.Entity.Contacts>
-
+﻿@model IEnumerable<ShopQuanAo.Models.Entity.Product>
 @{
-    ViewData["Title"] = "Quản lý phản hồi";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Trang Chủ";
 }
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-@Html.AntiForgeryToken()
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono&family=Syne:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="~/css/Admin_Index.css" asp-append-version="true" />
+<style>
+    :root {
+        --torano-black: #000000;
+        --torano-red: #ff0000;
+        --font-main: 'Quicksand', sans-serif;
+    }
 
-<div class="admin-wrap" style="background: #0a0a0a; min-height: 100vh; padding: 30px; color: #f5f5f0;">
-    <div class="page-header" style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-        <div>
-            <h1 style="font-family: 'Syne'; font-size: 2.5rem; text-transform: uppercase; margin: 0;">Quản lý liên hệ</h1>
+    body { font-family: var(--font-main); margin: 0; padding: 0; background: #fff; overflow-x: hidden; }
+
+    /* --- BANNER SECTION: FIX MỜ VÀ NÚT BẤM --- */
+    .hero-slider-wrapper { 
+        width: 100%; 
+        position: relative;
+        background: none;
+    }
+
+    .hero-slider .slide { outline: none; border: none; position: relative; }
+
+    .hero-slider img { 
+        width: 100%; 
+        height: auto !important; 
+        display: block; 
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        filter: none !important; /* Đảm bảo ảnh banner sắc nét */
+    }
+
+    .banner-nav {
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        transform: translateY(-50%);
+        z-index: 10;
+        padding: 0 20px;
+        pointer-events: none;
+    }
+
+    .banner-btn {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.3);
+        border: none;
+        border-radius: 50%;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.3s;
+        pointer-events: auto;
+    }
+
+    .banner-btn:hover { background: rgba(0, 0, 0, 0.6); }
+
+    /* --- SLIDER CHUNG --- */
+    .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin: 40px 0 20px; }
+    .section-title { font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+    .nav-arrows { display: flex; gap: 10px; }
+    .nav-btn-custom { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ddd; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .nav-btn-custom:hover { background: #000; color: #fff; }
+
+    .item-wrapper { padding: 0 10px; outline: none; }
+    
+    /* --- DANH MỤC --- */
+    .uniform-card { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #f4f4f4; border-radius: 4px; }
+    .uniform-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+    .uniform-card:hover img { transform: scale(1.08); } /* Hiệu ứng zoom khi di chuột */
+    
+    .cat-label { 
+        position: absolute; bottom: 15px; left: 10px; right: 10px; 
+        background: rgba(255,255,255,0.95); padding: 10px; text-align: center; 
+        font-weight: 700; text-transform: uppercase; font-size: 13px; color: #000; 
+    }
+
+    /* --- SẢN PHẨM --- */
+    .product-info { padding: 15px 0; text-align: left; }
+    .p-name { font-weight: 500; text-transform: uppercase; color: #333; text-decoration: none; font-size: 14px; display: block; margin-bottom: 5px; }
+    .p-price { font-weight: 700; color: var(--torano-black); font-size: 1.1rem; margin: 0; }
+    .sale-tag { 
+        position: absolute; top: 10px; left: 10px; 
+        background: var(--torano-red); color: #fff; padding: 3px 8px; 
+        font-size: 11px; font-weight: 700; z-index: 2; 
+    }
+
+    /* --- CSS BỔ SUNG CHO COMBO --- */
+    .combo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 50px; }
+    .combo-item { position: relative; overflow: hidden; border-radius: 4px; aspect-ratio: 3/4; }
+    .combo-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+    .combo-item:hover img { transform: scale(1.05); }
+    .combo-icon { position: absolute; bottom: 15px; right: 15px; background: rgba(255,255,255,0.9); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+</style>
+
+<div class="container-fluid p-0">
+    <section class="hero-slider-wrapper">
+        <div class="hero-slider">
+            <div class="slide"><img src="/Image/Home_image/Baner1.jpg"></div>
+            <div class="slide"><img src="/Image/Home_image/Baner2.jpg"></div>
+            <div class="slide"><img src="/Image/Home_image/Baner3.jpg"></div>
+            <div class="slide"><img src="/Image/Home_image/Baner4.jpg"></div>
         </div>
-        <div id="totalBadge" style="font-family: 'Space Mono'; color: #c8ff00; border: 1px solid #c8ff00; padding: 5px 15px; font-size: 0.8rem;">
-            TỔNG: @Model.Count() TIN NHẮN
+        <div class="banner-nav">
+            <button class="banner-btn prev-banner"><i class="fa fa-chevron-left"></i></button>
+            <button class="banner-btn next-banner"><i class="fa fa-chevron-right"></i></button>
         </div>
-    </div>
+    </section>
 
-    <div class="panel" style="background: #141414; border: 1px solid #222; padding: 0;">
-        <table class="data-table" style="width: 100%; border-collapse: collapse; font-family: 'Space Mono';">
-            <thead>
-                <tr style="border-bottom: 1px solid #222; text-align: left; color: #6e6e68; font-size: 0.7rem; text-transform: uppercase;">
-                    <th style="padding: 20px;">Khách hàng</th>
-                    <th style="padding: 20px; width: 40%;">Nội dung gửi</th>
-                    <th style="padding: 20px;">Ngày gửi</th>
-                    <th style="padding: 20px;">Trạng thái</th>
-                    <th style="padding: 20px; text-align: right;">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr id="row-@item.Id" style="border-bottom: 1px solid #1a1a1a; transition: 0.3s;">
-                        <td style="padding: 20px; vertical-align: top;">
-                            <div style="color: #c8ff00; font-weight: bold;">@item.FullName</div>
-                            <div style="font-size: 0.75rem; color: #6e6e68;">@item.Email</div>
-                        </td>
-                        
-                        <td style="padding: 20px; font-size: 0.85rem; vertical-align: top;">
-                            <div class="msg-content"
-                                 style="cursor: pointer; transition: all 0.3s ease; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; line-height: 1.5;"
-                                 onclick="toggleMessage(this)"
-                                 title="Click để xem đầy đủ hoặc thu gọn">
-                                @item.Message
-                            </div>
-                        </td>
+    <section class="container">
+        <div class="section-header-flex">
+            <h2 class="section-title">Danh mục sản phẩm</h2>
+            <div class="nav-arrows">
+                <button class="nav-btn-custom prev-cat"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="nav-btn-custom next-cat"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+        <div class="category-slider">
+            @{
+                var cats = new[] {
+                    new { n = "Áo Khoác", i = "Aokhoac.jpg" },
+                    new { n = "Áo Polo", i = "Aopolo.jpg" },
+                    new { n = "Áo Sơ Mi", i = "Aosomi.jpg" },
+                    new { n = "Áo Thun", i = "Aothun.jpg" },
+                    new { n = "Quần Jeans", i = "Quanjeans.jpg" },
+                    new { n = "Quần Kaki", i = "Quankaki.jpg" },
+                    new { n = "Quần Short", i = "Quanshort.jpg" },
+                    new { n = "Quần Tây", i = "Quantay.jpg" }
+                };
+            }
+            @foreach (var c in cats) {
+                <div class="item-wrapper">
+                    <a href="@Url.Action("Index", "Product", new { categoryName = c.n })" class="text-decoration-none">
+                        <div class="uniform-card">
+                            <img src="/Image/Home_image/@c.i">
+                            <div class="cat-label">@c.n</div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </section>
 
-                        <td style="padding: 20px; font-size: 0.8rem; color: #6e6e68; vertical-align: top;">@item.CreatedDate.ToString("dd/MM/yyyy")</td>
-                        <td style="padding: 20px; vertical-align: top;">
-                            @if (item.IsRead)
-                            {
-                                <span style="color: #3b82ff; font-size: 0.7rem; border: 1px solid #3b82ff; padding: 2px 8px;">ĐÃ XỬ LÝ</span>
-                            }
-                            else
-                            {
-                                <span style="color: #ff3b3b; font-size: 0.7rem; border: 1px solid #ff3b3b; padding: 2px 8px;">CHƯA XỬ LÝ</span>
-                            }
-                        </td>
-                        <td style="padding: 20px; text-align: right; vertical-align: top;">
-                            <button class="btn-reply"
-                                    data-id="@item.Id"
-                                    data-msg="@item.Message"
-                                    style="background:none; border:none; color:#f5f5f0; cursor:pointer; margin-right:10px;">
-                                Reply
-                            </button>
-                            <button onclick="deleteMsg(@item.Id)" style="background:none; border:none; color:#ff3b3b; cursor:pointer;">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    <section class="container py-4 my-5" style="background: #fffafb; border-radius: 15px;">
+        <div class="section-header-flex">
+            <h2 class="section-title" style="color: var(--torano-red);"><i class="fa-solid fa-fire"></i> Đang khuyến mãi</h2>
+            <div class="nav-arrows">
+                <button class="nav-btn-custom prev-sale"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="nav-btn-custom next-sale"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+        <div class="sale-slider">
+            @foreach (var item in Model) {
+                <div class="item-wrapper">
+                    <div class="uniform-card">
+                        <span class="sale-tag">SALE</span>
+                        <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                    </div>
+                    <div class="product-info">
+                        <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                        <p class="p-price">@item.Price.ToString("N0")₫</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="container mb-5">
+        <div class="section-header-flex">
+            <h2 class="section-title">Best Seller</h2>
+            <div class="nav-arrows">
+                <button class="nav-btn-custom prev-best"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="nav-btn-custom next-best"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+        <div class="best-slider">
+            @* Hiển thị thêm các sản phẩm khác từ Model *@
+            @foreach (var item in Model.OrderByDescending(p => p.Id).Take(10)) {
+                <div class="item-wrapper">
+                    <div class="uniform-card">
+                        <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                    </div>
+                    <div class="product-info">
+                        <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                        <p class="p-price">@item.Price.ToString("N0")₫</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="container mb-5">
+        <h2 class="section-title mb-4">Combo Mix & Match</h2>
+        <div class="combo-grid">
+            <div class="combo-item">
+                <img src="/Image/Home_image/Combomix1.jpg">
+                <div class="combo-icon"><i class="fa-solid fa-expand"></i></div>
+            </div>
+            <div class="combo-item">
+                <img src="/Image/Home_image/Combomix2.jpg">
+                <div class="combo-icon"><i class="fa-solid fa-expand"></i></div>
+            </div>
+            <div class="combo-item">
+                <img src="/Image/Home_image/Combomix3.jpg">
+                <div class="combo-icon"><i class="fa-solid fa-expand"></i></div>
+            </div>
+            <div class="combo-item">
+                <img src="/Image/Home_image/Combomix4.jpg">
+                <div class="combo-icon"><i class="fa-solid fa-expand"></i></div>
+            </div>
+        </div>
+    </section>
 </div>
 
-@* Modal phản hồi *@
-<div id="modalReply" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:999; align-items:center; justify-content:center;">
-    <div style="background:#141414; border:1px solid #c8ff00; width:600px; padding:30px; font-family:'Space Mono';">
-        <h3 style="color:#c8ff00; margin-top:0; border-bottom:1px solid #222; padding-bottom:10px;">PHẢN HỒI LIÊN HỆ</h3>
-        <div style="margin-bottom: 15px;">
-            <label style="color:#6e6e68; font-size:0.7rem; text-transform:uppercase; display:block; margin-bottom:5px;">Tin nhắn khách:</label>
-            <div id="txtCustomerMsg" style="color:#fff; font-size:0.85rem; background:#0a0a0a; border-left:2px solid #c8ff00; padding:15px; max-height:180px; overflow-y:auto; white-space: pre-wrap; word-break: break-all;"></div>
-        </div>
-        <div style="margin-bottom: 20px;">
-            <label style="color:#6e6e68; font-size:0.7rem; text-transform:uppercase; display:block; margin-bottom:5px;">Phản hồi:</label>
-            <textarea id="adminReply" style="width:100%; background:#0a0a0a; border:1px solid #222; color:#fff; padding:10px;" rows="5" placeholder="Gõ phản hồi..."></textarea>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <button onclick="closeModal()" style="background:none; border:1px solid #6e6e68; color:#6e6e68; padding:8px 20px; cursor:pointer;">ĐÓNG</button>
-            <button id="btnSend" style="background:#c8ff00; border:none; color:#000; padding:8px 20px; font-weight:bold; cursor:pointer;">GỬI PHẢN HỒI</button>
-        </div>
-        <input type="hidden" id="hdnId" />
-    </div>
-</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
 
-@section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        function toggleMessage(element) {
-        const el = $(element);
-        if (el.css('-webkit-line-clamp') === '2') {
-        el.css({ '-webkit-line-clamp': 'unset', 'display': 'block', 'background': '#1a1a1a', 'padding': '10px', 'border-radius': '4px' });
-        } else {
-        el.css({ '-webkit-line-clamp': '2', 'display': '-webkit-box', 'background': 'transparent', 'padding': '0' });
-        }
-        }
+<script>
+    $(document).ready(function(){
+        // 1. Banner chính
+        var $hero = $('.hero-slider').slick({ 
+            autoplay: true, 
+            dots: true, 
+            arrows: false, 
+            fade: true, 
+            adaptiveHeight: true, 
+            autoplaySpeed: 5000 
+        });
+        $('.prev-banner').click(function() { $hero.slick('slickPrev'); });
+        $('.next-banner').click(function() { $hero.slick('slickNext'); });
 
-        $(document).on('click', '.btn-reply', function() {
-        const id = $(this).data('id');
-        const msg = $(this).data('msg');
-        $('#hdnId').val(id);
-        $('#txtCustomerMsg').text(msg);
-        $('#adminReply').val('');
-        $('#modalReply').css('display', 'flex');
+        // 2. Slider Danh mục
+        var $cat = $('.category-slider').slick({
+            slidesToShow: 4, 
+            slidesToScroll: 1, 
+            arrows: false,
+            responsive: [{ breakpoint: 992, settings: { slidesToShow: 2 } }]
         });
+        $('.prev-cat').click(function() { $cat.slick('slickPrev'); });
+        $('.next-cat').click(function() { $cat.slick('slickNext'); });
 
-        function closeModal() { $('#modalReply').hide(); }
+        // 3. Slider Khuyến mãi
+        var $sale = $('.sale-slider').slick({
+            slidesToShow: 4, 
+            slidesToScroll: 1, 
+            arrows: false, 
+            autoplay: true,
+            responsive: [{ breakpoint: 992, settings: { slidesToShow: 2 } }]
+        });
+        $('.prev-sale').click(function() { $sale.slick('slickPrev'); });
+        $('.next-sale').click(function() { $sale.slick('slickNext'); });
 
-        $('#btnSend').click(function() {
-        const id = $('#hdnId').val();
-        const reply = $('#adminReply').val();
-        if (!reply.trim()) return alert("Nhập nội dung!");
-            
-        $(this).prop('disabled', true).text('ĐANG GỬI...');
-        $.ajax({
-        url: '/Admin/ReplyContact',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ Id: parseInt(id), AdminReply: reply }),
-        success: function(res) {
-        if (res.success) { alert("Thành công!"); location.reload(); }
-        else { alert(res.message); $('#btnSend').prop('disabled', false).text('GỬI PHẢN HỒI'); }
-        }
+        // 4. Slider Best Seller (Mới)
+        var $best = $('.best-slider').slick({
+            slidesToShow: 4, 
+            slidesToScroll: 1, 
+            arrows: false, 
+            autoplay: true,
+            responsive: [{ breakpoint: 992, settings: { slidesToShow: 2 } }]
         });
-        });
-
-        // --- HÀM XÓA ĐÃ SỬA LẠI ---
-        function deleteMsg(id) {
-        if (confirm("Xóa tin nhắn này?")) {
-        const token = $('input[name="__RequestVerificationToken"]').val();
-                
-        $.ajax({
-        url: '/Admin/DeleteContact',
-        type: 'POST',
-        contentType: 'application/json', // Bắt buộc phải có để Controller nhận [FromBody]
-        headers: {
-        "RequestVerificationToken": token // Gửi token lên Header
-        },
-        data: JSON.stringify({ id: id.toString() }), // Chuyển sang JSON string
-        success: function(res) {
-        if (res.success) {
-        $('#row-' + id).fadeOut(400, function() {
-        $(this).remove();
-        let countText = $('#totalBadge').text();
-        let count = parseInt(countText.replace(/[^0-9]/g, ''));
-        $('#totalBadge').text('TỔNG: ' + (count > 0 ? count - 1 : 0) + ' TIN NHẮN');
-        });
-        } else {
-        alert(res.message || "Lỗi khi xóa!");
-        }
-        },
-        error: function() {
-        alert("Lỗi hệ thống hoặc chưa đăng nhập!");
-        }
-        });
-        }
-        }
-    </script>
-}
+        $('.prev-best').click(function() { $best.slick('slickPrev'); });
+        $('.next-best').click(function() { $best.slick('slickNext'); });
+    });
+</script>

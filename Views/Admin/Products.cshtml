@@ -4,129 +4,150 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@* <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"> *@
 <link href="~/css/Admin_Products.css" asp-append-version="true" rel="stylesheet" />
+
 <div class="admin-wrap">
     <div class="admin-body">
         <aside class="admin-sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-label">Tổng quan</div>
-                <a class="sidebar-link" href="@Url.Action("Index","Admin")"><span class="sidebar-icon">▣</span> Dashboard</a>
+                <a class="sidebar-link" href="@Url.Action("Index", "Admin")">
+                    <span class="sidebar-icon">▣</span> Dashboard
+                </a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">◈</span> Doanh thu</a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">◎</span> Đơn hàng</a>
             </div>
+
             <div class="sidebar-section">
                 <div class="sidebar-label">Quản lý</div>
-                <a class="sidebar-link" href="@Url.Action("Users","Admin")"><span class="sidebar-icon">◉</span> Người dùng</a>
-                <a class="sidebar-link active" href="@Url.Action("Products","Admin")"><span class="sidebar-icon">◫</span> Sản phẩm</a>
+                <a class="sidebar-link" href="@Url.Action("Users", "Admin")"><span class="sidebar-icon">◉</span> Người dùng</a>
+                <a class="sidebar-link active" href="@Url.Action("Products", "Admin")"><span class="sidebar-icon">◫</span> Sản phẩm</a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">◧</span> Danh mục</a>
             </div>
+
             <div class="sidebar-section">
                 <div class="sidebar-label">Hệ thống</div>
-                <a class="sidebar-link" href="@Url.Action("Index","Home")"><span class="sidebar-icon">↗</span> Về cửa hàng</a>
+                <a class="sidebar-link" href="@Url.Action("Index", "Home")"><span class="sidebar-icon">↗</span> Về cửa hàng</a>
             </div>
         </aside>
 
         <main class="admin-content">
             <div class="page-title-row">
-                <div>
-                    <div class="page-eyebrow">Quản lý</div>
-                    <div class="page-title">Sản phẩm</div>
+                <div class="title-group">
+                    <div class="page-eyebrow">Hệ thống quản trị</div>
+                    <h1 class="page-title">Danh mục sản phẩm</h1>
                 </div>
                 <div class="top-actions">
-                    <div class="view-toggle">
-                        <button class="view-btn active" id="btnTable" onclick="setView('table')" title="Bảng">☰</button>
-                        <button class="view-btn" id="btnGrid" onclick="setView('grid')" title="Lưới">⊞</button>
+                    <div class="view-toggle-group">
+                        <button class="view-btn active" id="btnTable" onclick="setView('table')" title="Chế độ bảng">☰</button>
+                        <button class="view-btn" id="btnGrid" onclick="setView('grid')" title="Chế độ lưới">⊞</button>
                     </div>
-                    <button class="btn-primary-admin" onclick="openCreateModal()">＋ Thêm sản phẩm</button>
+                    <button class="btn-primary-admin" onclick="openCreateModal()">
+                        <span class="plus-icon">＋</span> Thêm sản phẩm
+                    </button>
                 </div>
             </div>
 
             <div class="toolbar">
-                <div class="search-input-wrap">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="productSearch" placeholder="Tìm theo tên, thương hiệu..." oninput="filterProducts()">
+                <div class="toolbar-left">
+                    <div class="search-input-wrap">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="productSearch" placeholder="Tìm theo tên, thương hiệu..." oninput="filterProducts()">
+                    </div>
                 </div>
-                <select class="filter-select" id="catFilter" onchange="filterProducts()">
-                    <option value="">Tất cả danh mục</option>
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var cat in ViewBag.Categories)
-                        {
-                            <option value="@cat.Id">@cat.CategoryName</option>
-                        }
-                    }
-                </select>
-                <select class="filter-select" id="priceFilter" onchange="filterProducts()">
-                    <option value="">Tất cả giá</option>
-                    <option value="low">Dưới 500k</option>
-                    <option value="mid">500k – 1.5M</option>
-                    <option value="high">Trên 1.5M</option>
-                </select>
+                <div class="toolbar-right">
+                    <div class="filter-group">
+                        <select class="filter-select" id="catFilter" onchange="filterProducts()">
+                            <option value="">Tất cả danh mục</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var cat in ViewBag.Categories)
+                                {
+                                    <option value="@cat.Id">@cat.CategoryName</option>
+                                }
+                            }
+                        </select>
+                        <select class="filter-select" id="priceFilter" onchange="filterProducts()">
+                            <option value="">Tất cả mức giá</option>
+                            <option value="low">Dưới 500.000đ</option>
+                            <option value="mid">500.000đ – 1.500.000đ</option>
+                            <option value="high">Trên 1.500.000đ</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <!-- Table View -->
-            <div id="tableView" class="panel">
+            <div id="tableView" class="panel content-panel">
                 <div class="panel-header">
-                    <div class="panel-title">Danh sách sản phẩm</div>
-                    <div class="panel-count" id="productCount">—</div>
+                    <div class="panel-title-wrap">
+                        <span class="panel-title">Sản phẩm hiện có</span>
+                        <span class="panel-count" id="productCount">0 sản phẩm</span>
+                    </div>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>Thương hiệu</th>
-                            <th>Danh mục</th>
-                            <th>Giá</th>
-                            <th>Số lượng</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--gray-500);font-family:var(--mono);font-size:0.75rem;">Đang tải...</td></tr>
-                    </tbody>
-                </table>
-                <div class="pagination-row">
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%">Sản phẩm</th>
+                                <th>Thương hiệu</th>
+                                <th>Danh mục</th>
+                                <th>Giá bán</th>
+                                <th>Kho hàng</th>
+                                <th style="text-align: right">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <tr>
+                                <td colspan="6" class="table-loader">
+                                    <div class="loader-text">Đang tải dữ liệu hệ thống...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-footer">
                     <div class="page-info" id="pageInfo">—</div>
-                    <div class="page-btns" id="pageBtns"></div>
+                    <div class="page-btns-wrapper" id="pageBtns"></div>
                 </div>
             </div>
 
-            <!-- Grid View -->
-            <div id="gridView" style="display:none">
+            <div id="gridView" style="display:none" class="grid-panel">
                 <div id="productsGrid" class="product-grid-view"></div>
-                <div class="pagination-row" style="background:#111;border:var(--border);border-radius:6px;margin-top:1rem;">
+                <div class="pagination-footer grid-footer">
                     <div class="page-info" id="pageInfoGrid">—</div>
-                    <div class="page-btns" id="pageBtnsGrid"></div>
+                    <div class="page-btns-wrapper" id="pageBtnsGrid"></div>
                 </div>
             </div>
         </main>
     </div>
 </div>
 
-<!-- Create / Edit Modal -->
 <div class="modal-overlay" id="productModal">
     <div class="modal-box">
-        <div class="modal-title" id="modalTitle">THÊM SẢN PHẨM MỚI</div>
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">THÊM SẢN PHẨM MỚI</div>
+            <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+        </div>
         <form id="productForm" onsubmit="submitProductForm(event)">
             <input type="hidden" id="modalProductId" value="">
-            <div class="form-row">
+            
+            <div class="form-grid">
                 <div class="form-group">
-                    <label class="form-label">Tên sản phẩm *</label>
-                    <input class="form-control-admin" type="text" id="modalName" placeholder="Slim Fit Oxford White" required>
+                    <label class="form-label">Tên sản phẩm <span>*</span></label>
+                    <input class="form-control-admin" type="text" id="modalName" placeholder="Ví dụ: Slim Fit Oxford White" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Thương hiệu *</label>
+                    <label class="form-label">Thương hiệu <span>*</span></label>
                     <input class="form-control-admin" type="text" id="modalBrand" placeholder="MenShop" required>
                 </div>
-            </div>
-            <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Giá (VND) *</label>
+                    <label class="form-label">Giá niêm yết (VND) <span>*</span></label>
                     <input class="form-control-admin" type="number" id="modalPrice" placeholder="890000" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Danh mục *</label>
+                    <label class="form-label">Danh mục <span>*</span></label>
                     <select class="form-control-admin" id="modalCategory">
                         @if (ViewBag.Categories != null)
                         {
@@ -138,43 +159,54 @@
                     </select>
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">URL Hình ảnh</label>
+
+            <div class="form-group full-width">
+                <label class="form-label">Đường dẫn hình ảnh (URL)</label>
                 <input class="form-control-admin" type="text" id="modalImage" placeholder="https://..." oninput="previewImage(this.value)">
-                <img id="imagePreview" class="img-preview" src="" alt="Preview">
+                <div class="preview-container">
+                    <img id="imagePreview" class="img-preview" src="" alt="Preview">
+                </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Kích cỡ & số lượng</label>
-                <div id="sizeArea" class="size-area" aria-label="Kích cỡ"></div>
-                <div id="sizeError" class="size-error" style="display:none;margin-top:6px;font-size:0.85rem;color:var(--red)"></div>
-                <div style="margin-top:6px;font-size:0.8rem;color:var(--gray-500)">Nhấn vào kích cỡ để bật/tắt và nhập số lượng (số lượng 0 sẽ bị bỏ qua khi lưu).</div>
+
+            <div class="form-group full-width">
+                <label class="form-label">Cấu hình kho hàng (Size & Số lượng)</label>
+                <div id="sizeArea" class="size-config-container"></div>
+                <div id="sizeError" class="size-error-msg"></div>
+                <div class="form-help-text">Nhấp vào size để kích hoạt và nhập số lượng tồn kho.</div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeModal('productModal')">Huỷ</button>
-                <button type="submit" class="btn-submit-admin">Lưu sản phẩm</button>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('productModal')">Đóng</button>
+                <button type="submit" class="btn-primary-submit">Xác nhận lưu</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Delete Modal -->
 <div class="modal-overlay" id="deleteModal">
-    <div class="modal-box" style="width:380px">
-        <div class="modal-title">XÁC NHẬN XÓA</div>
-        <p style="color:var(--gray-300);font-size:0.85rem;margin-bottom:0.5rem;">Bạn sắp xóa sản phẩm:</p>
-        <p id="deleteProductName" style="font-family:var(--mono);color:var(--red);font-size:0.85rem;margin-bottom:1rem;"></p>
-        <p style="color:var(--gray-500);font-size:0.78rem;">Hành động này không thể hoàn tác.</p>
-        <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeModal('deleteModal')">Huỷ</button>
-            <button type="button" onclick="confirmDelete()"
-                style="background:var(--red);color:#fff;border:none;border-radius:3px;font-family:var(--mono);font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0.65rem 1.4rem;cursor:pointer;">
-                Xóa
-            </button>
+    <div class="modal-box alert-modal">
+        <div class="alert-icon">⚠️</div>
+        <div class="modal-title">Xác nhận xóa</div>
+        <div class="alert-content">
+            <p>Bạn đang thực hiện xóa sản phẩm:</p>
+            <strong id="deleteProductName" class="delete-target"></strong>
+            <p class="alert-warning">Lưu ý: Hành động này không thể khôi phục sau khi xác nhận.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">Quay lại</button>
+            <button type="button" class="btn-danger-execute" onclick="confirmDelete()">Đồng ý xóa</button>
         </div>
     </div>
 </div>
 
 <div class="admin-toast" id="adminToast"></div>
+
+<script>
+    // Toàn bộ logic JS cũ (loadProducts, filterProducts, submitProductForm, ...)
+    // giữ nguyên 100% để không bị lỗi chức năng.
+</script>
+
+@Html.AntiForgeryToken()
 
 <script>
     let allProducts = [];

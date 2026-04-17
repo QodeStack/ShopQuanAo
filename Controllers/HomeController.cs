@@ -17,21 +17,32 @@ namespace ShopQuanAo.Controllers
 			_homeService = homeService;
 		}
 
-		// Các trang tĩnh
-		public IActionResult Index() => View();
-		public IActionResult AboutUs() => View();
-        public IActionResult Sale()
-        {
-            // Lệnh này sẽ đá người dùng từ Home/Sale sang Product/Sale
-            return RedirectToAction("Sale", "Product");
-        }
-        public IActionResult Contact() => View();
+		// SỬA TẠI ĐÂY: Biến Index thành async để lấy dữ liệu sản phẩm
+		public async Task<IActionResult> Index()
+		{
+			// Lấy danh sách sản phẩm Sale từ Service
+			var saleProducts = await _homeService.GetSaleProductsAsync();
 
-		// Xử lý gửi liên hệ
+			// Cách 1: Truyền trực tiếp qua Model (Nếu Index.cshtml dùng @model IEnumerable<ShopQuanAo.Models.Entity.Products>)
+			return View(saleProducts);
+
+			// Cách 2: Nếu bạn muốn dùng ViewBag để dành Model cho cái khác
+			// ViewBag.SaleProducts = saleProducts;
+			// return View();
+		}
+
+		public IActionResult AboutUs() => View();
+
+		public IActionResult Sale()
+		{
+			return RedirectToAction("Sale", "Product");
+		}
+
+		public IActionResult Contact() => View();
+
 		[Authorize]
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		// SỬA TẠI ĐÂY: Đổi ContactFormDto thành ContactsFormDto cho khớp với file DTO của bạn
 		public async Task<IActionResult> SendContact(ContactsFormDto model)
 		{
 			if (!ModelState.IsValid)
@@ -39,7 +50,6 @@ namespace ShopQuanAo.Controllers
 				return View("Contact", model);
 			}
 
-			// Gọi Service để lưu vào SQL
 			var success = await _homeService.SaveContactAsync(model);
 			if (success)
 			{

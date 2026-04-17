@@ -1,56 +1,213 @@
 ﻿@{
-    ViewData["Title"] = "Về Chúng Tôi";
+    ViewData["Title"] = "Về Chúng Tôi - Menshop";
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<div class="container about-section">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 main-content">
-            <h2 class="about-title">Câu chuyện của chúng tôi</h2>
-            
-            <p class="lead-text">
-                Chào mừng bạn đến với <strong>MenShop</strong> – nơi định hình phong cách bản lĩnh cho phái mạnh.
+<style>
+    :root {
+        --brand-black: #111;
+        --brand-red: #ff0000;
+        --font-main: 'Quicksand', sans-serif;
+        --bg-light: #fbfbfb;
+    }
+
+    body { font-family: var(--font-main); color: #333; line-height: 1.8; }
+
+    /* --- HERO SECTION --- */
+    .about-hero {
+        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/Image/Home_image/Baner1.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed; /* Hiệu ứng cuộn nhẹ */
+        height: 450px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-align: center;
+    }
+    .about-hero h1 { 
+        font-size: 3.5rem; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        letter-spacing: 5px;
+        margin: 0;
+    }
+
+    /* --- SECTION GENERAL --- */
+    .section-padding { padding: 100px 0; }
+    
+    .section-header { margin-bottom: 60px; }
+    .about-title { 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        font-size: 30px; 
+        margin-bottom: 20px; 
+        position: relative;
+        display: inline-block;
+        letter-spacing: 1px;
+    }
+    .about-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--brand-black); /* Gạch chân đen chuẩn Menshop */
+    }
+
+    .lead-text { font-size: 1.25rem; color: #222; font-weight: 600; margin-bottom: 25px; }
+
+    /* --- FOUNDER CARD --- */
+    .team-section { background: var(--bg-light); padding: 90px 0; }
+    .founder-card {
+        background: #fff;
+        padding: 50px;
+        border-radius: 4px;
+        border-bottom: 4px solid var(--brand-black);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.04);
+        transition: 0.3s;
+    }
+    .founder-card:hover { transform: translateY(-5px); }
+
+    /* --- VALUE BOXES --- */
+    .value-box {
+        padding: 50px 30px;
+        transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        border: 1px solid #eee;
+        background: #fff;
+        height: 100%;
+        text-align: center;
+    }
+    .value-box:hover {
+        background: var(--brand-black);
+        color: #fff;
+        border-color: var(--brand-black);
+    }
+    .value-box i { font-size: 45px; margin-bottom: 25px; color: var(--brand-black); transition: 0.3s; }
+    .value-box:hover i { color: #fff; }
+    .value-box h5 { font-weight: 700; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
+    .value-box p { font-size: 0.95rem; opacity: 0.8; margin: 0; }
+
+    /* --- STATS BAR --- */
+    .stats-bar { 
+        background: var(--brand-black); 
+        color: #fff; 
+        padding: 80px 0; 
+        text-align: center; 
+    }
+    .stat-item h2 { font-weight: 700; font-size: 3rem; margin-bottom: 10px; color: #fff; }
+    .stat-item p { text-transform: uppercase; font-size: 0.85rem; letter-spacing: 2px; color: #888; margin: 0; }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .about-hero h1 { font-size: 2rem; }
+        .section-padding { padding: 60px 0; }
+    }
+</style>
+
+<section class="about-hero">
+    <div class="container">
+        <h1>Khẳng định bản lĩnh</h1>
+    </div>
+</section>
+
+<div class="container section-padding">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-5 mb-lg-0">
+            <h2 class="about-title">Câu chuyện thương hiệu</h2>
+            <p class="lead-text">Chào mừng bạn đến với <strong>MenShop</strong> – Biểu tượng thời trang nam giới hiện đại.</p>
+            <p class="text-secondary">
+                Ra đời từ niềm đam mê mãnh liệt, MenShop không chỉ cung cấp những bộ trang phục, mà còn đồng hành cùng phái mạnh trong hành trình xây dựng phong cách cá nhân. Chúng tôi tin rằng mỗi chi tiết nhỏ trên bộ đồ đều phản ánh sự tôn trọng dành cho chính bản thân bạn.
             </p>
-
-            <p>
-                Được thành lập với niềm đam mê mãnh liệt dành cho thời trang nam giới, MenShop không chỉ bán quần áo, 
-                mà còn mang đến cái nhìn mới về sự lịch lãm và tối giản. Chúng tôi tin rằng mỗi bộ trang phục bạn khoác lên mình 
-                đều là một lời khẳng định về bản thân.
+            <p class="text-secondary">
+                Mọi sản phẩm tại hệ thống đều trải qua quy trình tuyển chọn khắt khe, từ chất liệu vải cao cấp đến kỹ thuật may tinh xảo, nhằm đảm bảo sự thoải mái tối đa mà vẫn giữ được phom dáng lịch lãm.
             </p>
-
-            <div class="founder-card my-5">
-                <h4 class="fw-bold mb-3"><i class="fas fa-user-tie me-2"></i> Người sáng lập</h4>
-                <p class="mb-0">
-                    <strong>Dương Danh Quốc</strong> – Với tầm nhìn mang đến những sản phẩm chất lượng, 
-                    phom dáng hiện đại và phù hợp với vóc dáng người đàn ông Việt, Quốc đã xây dựng MenShop 
-                    trở thành điểm đến tin cậy cho những ai tìm kiếm sự chỉn chu và phong cách.
-                </p>
-            </div>
-
-            <p>
-                Tại đây, bạn có thể tìm thấy mọi thứ từ những bộ suit lịch lãm, áo sơ mi tinh tế cho đến trang phục dạo phố năng động. 
-                Mỗi sản phẩm đều được kiểm duyệt kỹ lưỡng về chất liệu vải và từng đường kim mũi chỉ trước khi trao tận tay khách hàng.
-            </p>
-
-            <h2 class="about-title mt-5">Giá trị cốt lõi</h2>
-            <div class="row text-center mt-4">
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-gem fa-2x mb-3"></i>
-                    <h5>Chất lượng</h5>
-                    <p class="small text-muted">Cam kết vải cao cấp, bền đẹp theo thời gian.</p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-bolt fa-2x mb-3"></i>
-                    <h5>Tận tâm</h5>
-                    <p class="small text-muted">Luôn lắng nghe và thấu hiểu nhu cầu khách hàng.</p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <i class="fas fa-shield-alt fa-2x mb-3"></i>
-                    <h5>Uy tín</h5>
-                    <p class="small text-muted">Sự hài lòng của bạn là tôn chỉ hoạt động của Quốc.</p>
-                </div>
+        </div>
+        <div class="col-lg-6 px-lg-5">
+            <div style="position: relative;">
+                <img src="/Image/Home_image/Baner4.jpg" class="img-fluid" alt="About MenShop" style="border-radius: 8px;">
+                <div style="position: absolute; top: 20px; left: 20px; right: -20px; bottom: -20px; border: 2px solid #eee; z-index: -1; border-radius: 8px;"></div>
             </div>
         </div>
     </div>
 </div>
+
+<section class="team-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="founder-card text-center text-md-start">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 mb-4 mb-md-0 text-center">
+                            <div style="width: 80px; height: 80px; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto;">
+                                <i class="fas fa-users-gear fa-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            <h4 class="fw-bold mb-3" style="letter-spacing: 0.5px;">Đội ngũ sáng lập: KQT Team</h4>
+                            <p class="mb-0 text-secondary">
+                                Với tư duy đổi mới và khát khao nâng tầm gu thẩm mỹ cho đàn ông Việt, <strong>KQT Team</strong> tập trung vào những thiết kế tối giản nhưng đầy quyền lực. Chúng tôi cam kết mang lại trải nghiệm thời trang xứng tầm tại địa chỉ <strong>54 Nguyễn Lương Bằng, Đà Nẵng</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container section-padding">
+    <div class="text-center section-header">
+        <h2 class="about-title">Giá trị cốt lõi</h2>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="value-box">
+                <i class="fas fa-gem"></i>
+                <h5>Chất lượng đỉnh cao</h5>
+                <p>Chúng tôi không thỏa hiệp với các sản phẩm kém chất lượng. Từng thước vải đều được kiểm duyệt kỹ càng.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="value-box">
+                <i class="fas fa-hand-holding-heart"></i>
+                <h5>Dịch vụ tận tâm</h5>
+                <p>Hỗ trợ khách hàng 24/7 qua hotline <strong>0865 306 765</strong>, luôn lắng nghe và phục vụ bằng cả trái tim.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="value-box">
+                <i class="fas fa-shield-halved"></i>
+                <h5>Uy tín bền vững</h5>
+                <p>Xây dựng niềm tin thông qua chính sách bảo hành và đổi trả minh bạch, ưu tiên quyền lợi khách hàng.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats-bar">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-6 col-md-3 stat-item">
+                <h2>10K+</h2>
+                <p>Khách hàng</p>
+            </div>
+            <div class="col-6 col-md-3 stat-item">
+                <h2>05+</h2>
+                <p>Năm phát triển</p>
+            </div>
+            <div class="col-6 col-md-3 stat-item">
+                <h2>500+</h2>
+                <p>Mẫu thiết kế</p>
+            </div>
+            <div class="col-6 col-md-3 stat-item">
+                <h2>100%</h2>
+                <p>Hài lòng</p>
+            </div>
+        </div>
+    </div>
+</section>

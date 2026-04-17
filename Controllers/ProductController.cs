@@ -6,120 +6,150 @@ using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
 using ShopQuanAo.Models.Entity;
 using ShopQuanAo.Services;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace ShopQuanAo.Controllers
 {
-    public class ProductController : Controller
-    {
-        private readonly ApplicationDbContext _context;
-        private readonly ProductService _productService;
-        private readonly UserManager<ApplicationUser> _userManager;
+	public class ProductController : Controller
+	{
+		private readonly ApplicationDbContext _context;
+		private readonly ProductService _productService;
+		private readonly UserManager<ApplicationUser> _userManager;
 
-        public ProductController(ApplicationDbContext context,
-                                 ProductService productService,
-                                 UserManager<ApplicationUser> userManager)
-        {
-            _context = context;
-            _productService = productService;
-            _userManager = userManager;
-        }
+		public ProductController(ApplicationDbContext context,
+								 ProductService productService,
+								 UserManager<ApplicationUser> userManager)
+		{
+			_context = context;
+			_productService = productService;
+			_userManager = userManager;
+		}
 
-        // 1. Trang danh sách sản phẩm (Có phân trang, lọc, tìm kiếm)
-        public async Task<IActionResult> Index(int? categoryId, string? search, string? price, int? rating, int page = 1)
-        {
-            int pageSize = 9;
-            var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating);
+		public async Task<IActionResult> Index(int? categoryId, string? categoryName, string? search, string? price, int? rating, string? sort, int page = 1)
+		{
+			int pageSize = 12;
 
-            await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
+			if (!string.IsNullOrEmpty(categoryName) && categoryId == null)
+			{
+				var cat = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryName == categoryName);
+				if (cat != null) categoryId = cat.Id;
+			}
 
-            return View(result.Products);
-        }
+			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, sort: sort);
 
-        // 2. Trang sản phẩm đang giảm giá
-        public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, int page = 1)
-        {
-            int pageSize = 9;
-            // Filter isSaleOnly = true để chỉ lấy sản phẩm có SalePrice > 0
-            var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, isSaleOnly: true);
+			// --- LOGIC BANNER MỚI: TRỎ VÀO Banner_sanpham ---
+			string bannerFileName = "Banner_tatcasanpham.jpg";
+			string currentTitle = "TẤT CẢ SẢN PHẨM";
 
-            await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
+			if (categoryId.HasValue)
+			{
+				var currentCat = await _context.Categories.FindAsync(categoryId);
+				if (currentCat != null)
+				{
+					currentTitle = currentCat.CategoryName.ToUpper();
+					// Chuyển "Áo Thun" -> "aothun"
+					string slug = GenerateSlug(currentCat.CategoryName);
+					// Ghép thành "Banner_aothun.jpg" khớp với ảnh trong thư mục Banner_sanpham
+					bannerFileName = $"Banner_{slug}.jpg";
+				}
+			}
 
-            return View(result.Products);
-        }
+			ViewBag.BannerPath = $"/Image/Banner_sanpham/{bannerFileName}";
+			ViewBag.BannerTitle = currentTitle;
+			ViewBag.CurrentSort = sort;
 
-        // 3. API Tìm kiếm nhanh (Trả về JSON cho chức năng gợi ý search)
-        [HttpGet]
-        public async Task<IActionResult> SearchProducts(string? keyword, int? categoryId)
-        {
-            var result = await _productService.SearchQuickAsync(keyword, categoryId);
-            return Json(result);
-        }
+			await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
 
-        // 4. Chi tiết sản phẩm
-        public async Task<IActionResult> ProductDetail(int id)
-        {
-            var (product, sizes) = await _productService.GetProductDetailAsync(id);
-            if (product == null) return NotFound();
+			// Trả về view kèm sản phẩm
+			return View(result.Products);
+		}
 
-            // Lấy danh sách đánh giá từ database cho sản phẩm này
-            var reviews = await _context.ProductReviews
-                                        .Where(r => r.ProductId == id)
-                                        .OrderByDescending(r => r.CreatedAt)
-                                        .ToListAsync();
+		public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, string? sort, int page = 1)
+		{
+			int pageSize = 12;
+			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, isSaleOnly: true, sort: sort);
 
-            ViewBag.AvailableSizes = sizes;
-            ViewBag.Reviews = reviews;
+			ViewBag.BannerPath = "/Image/Banner_sanpham/Banner_sale.jpg";
+			ViewBag.BannerTitle = "ƯU ĐÃI ĐẶC BIỆT";
+			ViewBag.CurrentSort = sort;
 
-            return View(product);
-        }
+			await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
+			return View("Index", result.Products); // Dùng chung view Index cho đồng nhất giao diện
+		}
 
-        // 5. Gửi đánh giá (Dùng cho cả Form ở trang chi tiết hoặc trang quản lý khách hàng)
-        [HttpPost]
-        [Authorize] // Bắt buộc đăng nhập mới được đánh giá
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitReview(int ProductId, int Rating, string Comment, string ReturnUrl = "ProductDetail")
-        {
-            var userId = _userManager.GetUserId(User);
-            var user = await _userManager.FindByIdAsync(userId);
+		private string GenerateSlug(string phrase)
+		{
+			if (string.IsNullOrEmpty(phrase)) return "";
+			string str = phrase.ToLower();
+			str = Regex.Replace(str, @"[áàảãạâấầẩẫậăắằẳẵặ]", "a");
+			str = Regex.Replace(str, @"[éèẻẽẹêếềểễệ]", "e");
+			str = Regex.Replace(str, @"[íìỉĩị]", "i");
+			str = Regex.Replace(str, @"[óòỏõọôốồổỗộơớờởỡợ]", "o");
+			str = Regex.Replace(str, @"[úùủũụưứừửữự]", "u");
+			str = Regex.Replace(str, @"[ýỳỷỹỵ]", "y");
+			str = str.Replace("đ", "d").Replace(" ", "");
+			return str;
+		}
 
-            if (user == null) return RedirectToAction("Login", "Account");
+		[HttpGet]
+		public async Task<IActionResult> SearchProducts(string? keyword, int? categoryId)
+		{
+			var result = await _productService.SearchQuickAsync(keyword, categoryId);
+			return Json(result);
+		}
 
-            var review = new ProductReview
-            {
-                ProductId = ProductId,
-                Rating = Rating,
-                Comment = Comment,
-                UserId = userId,
-                FullName = User.Identity.Name ?? "Khách hàng",
-                CreatedAt = DateTime.Now
-            };
+		public async Task<IActionResult> ProductDetail(int id)
+		{
+			var (product, sizes) = await _productService.GetProductDetailAsync(id);
+			if (product == null) return NotFound();
 
-            _context.ProductReviews.Add(review);
-            await _context.SaveChangesAsync();
+			var reviews = await _context.ProductReviews
+										.Where(r => r.ProductId == id)
+										.OrderByDescending(r => r.CreatedAt)
+										.ToListAsync();
 
-            // Nếu ReturnUrl là Customer thì về trang cá nhân, ngược lại về trang chi tiết sản phẩm vừa đánh giá
-            if (ReturnUrl == "Customer")
-            {
-                return RedirectToAction("Index", "Customer");
-            }
+			ViewBag.AvailableSizes = sizes;
+			ViewBag.Reviews = reviews;
 
-            return RedirectToAction("ProductDetail", new { id = ProductId });
-        }
+			return View(product);
+		}
 
-        // --- Hàm phụ trợ (Private helper) giúp làm gọn code ---
-        private async Task SetProductViewBagData(dynamic result, int? categoryId, string? search, int? rating, string? price, int pageSize)
-        {
-            ViewBag.Categories = await _context.Categories.ToListAsync();
-            ViewBag.TotalCount = result.TotalCount;
-            ViewBag.CurrentSearch = search;
-            ViewBag.CurrentPage = result.CurrentPage;
-            ViewBag.TotalPages = result.TotalPages;
-            ViewBag.PageSize = pageSize;
-            ViewBag.CurrentRating = rating;
-            ViewBag.CurrentPrice = price;
+		[HttpPost]
+		[Authorize]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> SubmitReview(int ProductId, int Rating, string Comment, string ReturnUrl = "ProductDetail")
+		{
+			var userId = _userManager.GetUserId(User);
+			var user = await _userManager.FindByIdAsync(userId);
+			if (user == null) return RedirectToAction("Login", "Account");
 
-            // Xử lý logic Category ID để hiển thị active trên Sidebar/Menu
-            ViewBag.CurrentCategoryId = categoryId;
-        }
-    }
+			var review = new ProductReview
+			{
+				ProductId = ProductId,
+				Rating = Rating,
+				Comment = Comment,
+				UserId = userId,
+				FullName = User.Identity.Name ?? "Khách hàng",
+				CreatedAt = DateTime.Now
+			};
+
+			_context.ProductReviews.Add(review);
+			await _context.SaveChangesAsync();
+			return RedirectToAction("ProductDetail", new { id = ProductId });
+		}
+
+		private async Task SetProductViewBagData(dynamic result, int? categoryId, string? search, int? rating, string? price, int pageSize)
+		{
+			ViewBag.Categories = await _context.Categories.ToListAsync();
+			ViewBag.TotalCount = result.TotalCount;
+			ViewBag.CurrentSearch = search;
+			ViewBag.CurrentPage = result.CurrentPage;
+			ViewBag.TotalPages = result.TotalPages;
+			ViewBag.PageSize = pageSize;
+			ViewBag.CurrentRating = rating;
+			ViewBag.CurrentPrice = price;
+			ViewBag.CurrentCategoryId = categoryId;
+		}
+	}
 }

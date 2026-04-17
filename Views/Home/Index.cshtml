@@ -1,260 +1,225 @@
-﻿<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.css" integrity="sha512-wR4oNhLBHf7smjy0K4oqzdWumd+r5/+6QO/vDda76MW5iug4PT7v86FoEkySIJft3XA0Ae6axhIvHrqwm793Nw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.css" integrity="sha512-6lLUdeQ5uheMFbWm3CP271l14RsX1xtx+J5x2yeIDkkiBpeVTNhTqijME7GgRKKi6hCqovwCoBTlRBEC20M8Mg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
+﻿@model IEnumerable<ShopQuanAo.Models.Entity.Product>
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Trang Chủ";
 }
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --brand-black: #000000;
+        --brand-red: #ff0000;
+        --font-main: 'Quicksand', sans-serif;
+    }
+
+    body { font-family: var(--font-main); margin: 0; padding: 0; background: #fff; overflow-x: hidden; }
+
+    /* --- BANNER SECTION --- */
+    .hero-slider-wrapper { width: 100%; position: relative; }
+    .hero-slider .slide { outline: none; }
+    .hero-slider img { 
+        width: 100%; 
+        height: auto; 
+        display: block; 
+        filter: brightness(0.95); /* Làm banner hơi trầm để làm nổi bật website */
+    }
+
+    .banner-nav {
+        position: absolute; top: 50%; width: 100%; display: flex; 
+        justify-content: space-between; transform: translateY(-50%); 
+        z-index: 10; padding: 0 30px; pointer-events: none;
+    }
+
+    .banner-btn {
+        width: 50px; height: 50px; background: rgba(255, 255, 255, 0.4); 
+        border: none; border-radius: 50%; color: #000; cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; 
+        transition: 0.3s; pointer-events: auto;
+    }
+    .banner-btn:hover { background: #000; color: #fff; }
+
+    /* --- SLIDER CHUNG --- */
+    .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin: 50px 0 25px; }
+    .section-title { font-weight: 700; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .nav-arrows { display: flex; gap: 12px; }
+    .nav-btn-custom { 
+        width: 40px; height: 40px; border-radius: 50%; border: 1px solid #eee; 
+        background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; 
+        transition: 0.2s;
+    }
+    .nav-btn-custom:hover { background: #000; color: #fff; border-color: #000; }
+
+    .item-wrapper { padding: 0 10px; outline: none; }
+    
+    /* --- DANH MỤC CARD --- */
+    .uniform-card { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #f9f9f9; border-radius: 2px; }
+    .uniform-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.7s ease; }
+    .uniform-card:hover img { transform: scale(1.1); }
+    
+    .cat-label { 
+        position: absolute; bottom: 20px; left: 15px; right: 15px; 
+        background: rgba(255,255,255,0.9); padding: 12px; text-align: center; 
+        font-weight: 700; text-transform: uppercase; font-size: 13px; color: #000;
+        letter-spacing: 1px;
+    }
+
+    /* --- SẢN PHẨM --- */
+    .product-info { padding: 15px 5px; text-align: left; }
+    .p-name { 
+        font-weight: 600; text-transform: uppercase; color: #222; 
+        text-decoration: none; font-size: 13px; display: block; 
+        margin-bottom: 6px; height: 38px; overflow: hidden;
+    }
+    .p-price { font-weight: 700; color: #000; font-size: 15px; margin: 0; }
+    .sale-tag { 
+        position: absolute; top: 12px; left: 12px; 
+        background: var(--brand-red); color: #fff; padding: 4px 10px; 
+        font-size: 10px; font-weight: 800; z-index: 2; 
+    }
+
+    /* Slick Dots Custom */
+    .slick-dots { bottom: 20px; }
+    .slick-dots li button:before { color: #fff; font-size: 12px; opacity: 0.8; }
+    .slick-dots li.slick-active button:before { color: #fff; opacity: 1; }
+</style>
+
 <div class="container-fluid p-0">
-
-    <!-- ══════════ HERO SLIDER ══════════ -->
-    <section class="hero-wrapper">
-    <div class="hero-slider">
-        <div class="slide">
-            <img src="https://res.cloudinary.com/dqklxt0mz/image/upload/pixverse_i2i_ori_f875e47e-209c-45e1-8ff6-3329b9b0afd9_snvgor.jpg" alt="SS2025 Collection">
+    <section class="hero-slider-wrapper">
+        <div class="hero-slider">
+            <div class="slide"><img src="/Image/Home_image/Baner1.jpg"></div>
+            <div class="slide"><img src="/Image/Home_image/Baner2.jpg"></div>
+            <div class="slide"><img src="/Image/Home_image/Baner3.jpg"></div>
+            <div class="slide"><img src="/Image/Home_image/Baner4.jpg"></div>
         </div>
-        <div class="slide">
-            <img src="https://res.cloudinary.com/dqklxt0mz/image/upload/v1774837343/pixverse_i2i_ori_b2e5ae3d-9807-4b79-92a9-f7684e5e5f0c_eefilq.jpg" alt="New Arrivals">
-        </div>
-    </div>
-    </section>
-    <div class="hero-overlay">
-        <div class="hero-tag text-white">Bộ sưu tập 2025</div>
-        <h1 class="hero-title text-white">Định nghĩa<br>phong cách<br>của bạn</h1>
-        <a href="#" class="hero-cta text-white">Khám phá ngay <span class="arrow">→</span></a>
-    </div>
-
-    <section class="best-seller-section container my-5">
-
-        <h2 class="text-center best-title mb-4">Best Seller</h2>
-
-        <div class="row g-4">
-
-            <div class="col-md-3 col-6">
-                <div class="product-card">
-                    <img src="@Url.Content("~/Image/aothun.webp")" alt="">
-                </div>
-            </div>
-
-            <div class="col-md-3 col-6">
-                <div class="product-card">
-                    <img src="@Url.Content("~/Image/quanau.webp")" alt="">
-                </div>
-            </div>
-
-            <div class="col-md-3 col-6">
-                <div class="product-card">
-                    <img src="@Url.Content("~/Image/quankaki.webp")" alt="">
-                </div>
-            </div>
-
-            <div class="col-md-3 col-6">
-                <div class="product-card">
-                    <img src="@Url.Content("~/Image/somi.webp")" alt="">
-                </div>
-            </div>
-
+        <div class="banner-nav">
+            <button class="banner-btn prev-banner"><i class="fa fa-chevron-left"></i></button>
+            <button class="banner-btn next-banner"><i class="fa fa-chevron-right"></i></button>
         </div>
     </section>
 
-    <!-- ══════════ SESSION 3 — Phong Cách Riêng ══════════ -->
-    <section class="Portfolio">
-        <div class="container">
-            <h1>Phong Cách Riêng </h1>
-            <div class="grid-item">
-
-                <div class="item item-1">
-                    <div class="content">
-                        <img src="@Url.Content("~/Image/setthetheoPC.png")" alt="Portfolio 1" />
-                        <div class="overlay">
-                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/setthetheoPC.png")">
-                                <i class="fa fa-plus"></i>
-                            </a>
-                            <h1>Set Thể Thao</h1>
-                            <a href="#" class="btn-detail">Xem chi tiết</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="item item-2">
-                    <div class="content">
-                        <img src="@Url.Content("~/Image/aothunPC.webp")" alt="Portfolio 2" />
-                        <div class="overlay">
-                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/aothunPC.webp")">
-                                <i class="fa fa-plus"></i>
-                            </a>
-                            <h1>Áo Thun</h1>
-                            <a href="#" class="btn-detail">Xem chi tiết</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="item item-3">
-                    <div class="content">
-                        <img src="@Url.Content("~/Image/jackhoodie.jpg")" alt="Portfolio 3" />
-                        <div class="overlay">
-                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/jackhoodie.jpg")">
-                                <i class="fa fa-plus"></i>
-                            </a>
-                            <h1>Áo Khoác Hoodie</h1>
-                            <a href="#" class="btn-detail">Xem chi tiết</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="item item-4">
-                    <div class="content">
-                        <img src="@Url.Content("~/Image/poloPC.webp")" alt="Portfolio 4" />
-                        <div class="overlay">
-                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/poloPC.webp")">
-                                <i class="fa fa-plus"></i>
-                            </a>
-                            <h1>Áo Polo</h1>
-                            <a href="#" class="btn-detail">Xem chi tiết</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="item item-5">
-                    <div class="content">
-                        <img src="@Url.Content("~/Image/sethePC.jpg")" alt="Portfolio 5" />
-                        <div class="overlay">
-                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/sethePC.jgp")">
-                                <i class="fa fa-plus"></i>
-                            </a>
-                            <h1>Set Mùa Hè</h1>
-                            <a href="#" class="btn-detail">Xem chi tiết</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="item item-6">
-                    <div class="content">
-                        <img src="@Url.Content("~/Image/hthsomi.png")" alt="Portfolio 6" />
-                        <div class="overlay">
-                            <a data-fancybox="gallery" data-src="@Url.Content("~/Image/hthsomi.png")">
-                                <i class="fa fa-plus"></i>
-                            </a>
-                            <h1>Áo Sơ Mi</h1>
-                            <a href="#" class="btn-detail">Xem chi tiết</a>
-                        </div>
-                    </div>
-                </div>
-
+    <section class="container">
+        <div class="section-header-flex">
+            <h2 class="section-title">Danh mục nổi bật</h2>
+            <div class="nav-arrows">
+                <button class="nav-btn-custom prev-cat"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="nav-btn-custom next-cat"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
+        </div>
+        <div class="category-slider">
+            @{
+                var cats = new[] {
+                    new { n = "Áo Khoác", i = "Aokhoac.jpg" },
+                    new { n = "Áo Polo", i = "Aopolo.jpg" },
+                    new { n = "Áo Sơ Mi", i = "Aosomi.jpg" },
+                    new { n = "Áo Thun", i = "Aothun.jpg" },
+                    new { n = "Quần Jeans", i = "Quanjeans.jpg" },
+                    new { n = "Quần Kaki", i = "Quankaki.jpg" },
+                    new { n = "Quần Short", i = "Quanshort.jpg" },
+                    new { n = "Quần Tây", i = "Quantay.jpg" }
+                };
+            }
+            @foreach (var c in cats) {
+                <div class="item-wrapper">
+                    <a href="@Url.Action("Index", "Product", new { categoryName = c.n })" class="text-decoration-none">
+                        <div class="uniform-card">
+                            <img src="/Image/Home_image/@c.i">
+                            <div class="cat-label">@c.n</div>
+                        </div>
+                    </a>
+                </div>
+            }
         </div>
     </section>
 
-
-    <!-- ══════════ SESSION 5 — blog-section ══════════ -->
-    <section class="blog-section py-5">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="blog-main-title">OUR BLOG</h2>
-                <p class="blog-sub-title text-uppercase">Đón đầu xu hướng, định hình phong cách</p>
-            </div>
-
-            <div class="row">
-                <div class="col-md-4 mb-4"> 
-                    <div class="blog-card">
-                        <div class="blog-img-wrapper">
-                            <img src="https://mensfolio.vn/wp-content/uploads/2026/01/incollage_save-5.jpeg" class="img-fluid blog-img">
-                                <div class="blog-overlay"></div>
-                            </div>
-                            <div class="blog-content text-center mt-3">
-                                <h5 class="blog-item-title"><a href="#">XU HƯỚNG 2026: SỰ LÊN NGÔI CỦA PHONG CÁCH OLD MONEY</a></h5>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4 mb-4">
-                        <div class="blog-card">
-                            <div class="blog-img-wrapper">
-                            <img src="https://cdn.giaiphap.shopee.vn/ops-shopee-files-live/live/shopee-blog/2025/08/8d96db81-phoi-do-voi-quan-short-nam-2.jpg" class="img-fluid blog-img">
-                                    <div class="blog-overlay"></div>
-                                </div>
-                                <div class="blog-content text-center mt-3">
-                                    <h5 class="blog-item-title"><a href="#">5 CÁCH PHỐI ĐỒ VỚI QUẦN SHORT NAM CHO MÙA HÈ NĂNG ĐỘNG</a></h5>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 mb-4">
-                            <div class="blog-card">
-                                <div class="blog-img-wrapper">
-                            <img src="https://5sfashion.vn/storage/upload/images/ckeditor/dWB0gYamYjN6IQjD7s1pXbYc0eN7CoAW11wyGHGA.jpg" class="img-fluid blog-img">
-                                        <div class="blog-overlay"></div>
-                                    </div>
-                                    <div class="blog-content text-center mt-3">
-                                <h5 class="blog-item-title"><a href="#">3 CÁCH DIỆN SƠ MI ĐẸP NHẤT</a></h5>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-    <!-- ══════════ SESSION 6 — service-policy ══════════ -->
-    <section class="service-policy border-top border-bottom py-4 bg-white">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 d-flex align-items-center mb-3 mb-md-0">
-                    <div class="policy-icon me-3">
-                        <i class="fa-solid fa-box-open fa-2x"></i>
-                    </div>
-                    <div class="policy-text">
-                        <h6 class="fw-bold mb-1">Miễn phí vận chuyển</h6>
-                        <p class="small text-muted mb-0">Áp dụng cho mọi đơn hàng từ 500k</p>
+    <section class="container mt-5">
+        <div class="section-header-flex">
+            <h2 class="section-title">Combo Mix & Match</h2>
+        </div>
+        <div class="row g-3">
+            @for(int i=1; i<=4; i++) {
+                <div class="col-6 col-md-3">
+                    <div class="uniform-card">
+                        <img src="/Image/Home_image/Combomix@(i).jpg">
                     </div>
                 </div>
-
-                <div class="col-md-3 d-flex align-items-center mb-3 mb-md-0">
-                    <div class="policy-icon me-3">
-                        <i class="fa-solid fa-arrow-rotate-left fa-2x"></i>
-                    </div>
-                    <div class="policy-text">
-                        <h6 class="fw-bold mb-1">Đổi hàng dễ dàng</h6>
-                        <p class="small text-muted mb-0">7 ngày đổi hàng vì bất kì lí do gì</p>
-                    </div>
-                </div>
-
-                <div class="col-md-3 d-flex align-items-center mb-3 mb-md-0">
-                    <div class="policy-icon me-3">
-                        <i class="fa-solid fa-headset fa-2x"></i>
-                    </div>
-                    <div class="policy-text">
-                        <h6 class="fw-bold mb-1">Hỗ trợ nhanh chóng</h6>
-                        <p class="small text-muted mb-0">HOTLINE 24/7 : 0964942121</p>
-                    </div>
-                </div>
-
-                <div class="col-md-3 d-flex align-items-center">
-                    <div class="policy-icon me-3">
-                        <i class="fa-solid fa-credit-card fa-2x"></i>
-                    </div>
-                    <div class="policy-text">
-                        <h6 class="fw-bold mb-1">Thanh toán đa dạng</h6>
-                        <p class="small text-muted mb-0">Thanh toán khi nhận hàng, Napas, Visa, Chuyển Khoản</p>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </section>
 
+    <section class="container py-4 my-5" style="background: #fffafa; border-radius: 4px;">
+        <div class="section-header-flex">
+            <h2 class="section-title" style="color: var(--brand-red);"><i class="fa-solid fa-bolt"></i> Deal chớp nhoáng</h2>
+            <div class="nav-arrows">
+                <button class="nav-btn-custom prev-sale"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="nav-btn-custom next-sale"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+        <div class="sale-slider">
+            @if (Model != null) {
+                foreach (var item in Model) {
+                    <div class="item-wrapper">
+                        <div class="uniform-card">
+                            <span class="sale-tag">HOT SALE</span>
+                            <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                            </a>
+                        </div>
+                        <div class="product-info">
+                            <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                            <p class="p-price">@item.Price.ToString("N0")₫</p>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js" integrity="sha512-HGOnQO9+SP1V92SrtZfjqxxtLmVzqZpjFFekvzZVWoiASSQgSr4cw9Kqd2+l8Llp4Gm0G8GIFJ4ddwZilcdb8A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="./js/site.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
 <script>
-    Fancybox.bind('[data-fancybox]', {
-       //
+    $(document).ready(function(){
+        // Banner Slider
+        var $hero = $('.hero-slider').slick({ 
+            autoplay: true, 
+            dots: true, 
+            arrows: false, 
+            fade: true, 
+            speed: 1000,
+            autoplaySpeed: 5000 
         });
+        $('.prev-banner').click(function() { $hero.slick('slickPrev'); });
+        $('.next-banner').click(function() { $hero.slick('slickNext'); });
+
+        // Category Slider (5 items to look better)
+        var $cat = $('.category-slider').slick({
+            slidesToShow: 5, 
+            slidesToScroll: 1, 
+            arrows: false,
+            responsive: [
+                { breakpoint: 1200, settings: { slidesToShow: 4 } },
+                { breakpoint: 992, settings: { slidesToShow: 2 } }
+            ]
+        });
+        $('.prev-cat').click(function() { $cat.slick('slickPrev'); });
+        $('.next-cat').click(function() { $cat.slick('slickNext'); });
+
+        // Sale Slider
+        var $sale = $('.sale-slider').slick({
+            slidesToShow: 5, 
+            slidesToScroll: 1, 
+            arrows: false, 
+            autoplay: true,
+            responsive: [
+                { breakpoint: 1200, settings: { slidesToShow: 4 } },
+                { breakpoint: 992, settings: { slidesToShow: 2 } }
+            ]
+        });
+        $('.prev-sale').click(function() { $sale.slick('slickPrev'); });
+        $('.next-sale').click(function() { $sale.slick('slickNext'); });
+    });
 </script>
