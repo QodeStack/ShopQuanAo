@@ -1,4 +1,4 @@
-﻿@model List<ShopQuanAo.Models.Entity.Product>
+﻿@model List<ShopQuanAo.Models.BEAN.Entity.Product>
 @{
     ViewData["Title"] = "Sale - MENSHOP";
 }
@@ -6,91 +6,186 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
+    /* --- Nền tảng & Font chữ --- */
     body, .sale-page {
         font-family: 'DM Sans', sans-serif !important;
         background-color: #fff;
+        color: #222;
     }
 
-    /* --- BANNER SALE --- */
+    /* --- Banner Sale --- */
     .sale-hero {
         width: 100%;
         overflow: hidden;
         line-height: 0;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
     }
     .sale-hero img {
         width: 100%;
         height: auto;
         display: block;
-        object-fit: contain;
+        object-fit: cover;
     }
 
-    /* Sidebar */
-    .filter-sidebar { border-right: 1px solid #f0f0f0; padding-right: 20px; }
-    .sidebar-label { font-size: 14px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; color: #000; border-bottom: 2px solid #000; padding-bottom: 5px; display: inline-block; }
-    .filter-list { list-style: none; padding: 0; }
-    .filter-list li { margin-bottom: 12px; }
-    .filter-list a { text-decoration: none; color: #666; font-size: 15px; transition: 0.2s; }
-    .filter-list a:hover, .active-cat { color: #000 !important; font-weight: 700; }
+    /* --- Sidebar Danh mục --- */
+    .filter-sidebar { 
+        border-right: 1px solid #f0f0f0; 
+        padding-right: 25px; 
+    }
+    .sidebar-label { 
+        font-size: 14px; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        margin-bottom: 25px; 
+        color: #000; 
+        letter-spacing: 1px;
+        border-bottom: 2px solid #000; 
+        padding-bottom: 8px; 
+        display: inline-block; 
+    }
+    .filter-list { list-style: none; padding: 0; margin: 0; }
+    .filter-list li { margin-bottom: 15px; }
+    .filter-list a { 
+        text-decoration: none; 
+        color: #666; 
+        font-size: 16px; 
+        transition: all 0.2s ease; 
+        display: block; 
+    }
+    .filter-list a:hover, .active-cat { 
+        color: #000 !important; 
+        font-weight: 700 !important; 
+        padding-left: 5px;
+    }
 
-    /* Grid 5 cột */
+    /* --- Header Nội dung --- */
+    .page-eyebrow { font-size: 11px; color: #ff0000; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+    .page-title { font-size: 28px; font-weight: 700; text-transform: uppercase; margin: 5px 0 0 0; }
+    .product-count { font-size: 13px; color: #888; margin-top: 5px; }
+
+    .sort-select {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        border: none;
+        border-bottom: 1px solid #ddd;
+        padding: 5px 10px;
+        cursor: pointer;
+        outline: none;
+        background: transparent;
+    }
+
+    /* --- Lưới sản phẩm (5 Cột) --- */
     .product-grid { 
         display: grid; 
         grid-template-columns: repeat(5, 1fr); 
-        gap: 20px 15px; 
+        gap: 25px 15px; 
     }
 
-    .product-card { border: 1px solid #f0f0f0; position: relative; transition: 0.3s; background: #fff; }
-    .product-img-container { position: relative; overflow: hidden; aspect-ratio: 3/4; }
-    .product-img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
-    .product-card:hover .product-img { transform: scale(1.05); }
+    .product-card { 
+        border: 1px solid #f2f2f2; 
+        position: relative; 
+        transition: transform 0.3s, box-shadow 0.3s; 
+        background: #fff; 
+    }
+    .product-card:hover { 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
 
-    .sale-tag { position: absolute; top: 10px; left: 10px; background: #ff0000; color: #fff; padding: 3px 8px; font-size: 11px; font-weight: 700; z-index: 2; }
+    .product-img-container { 
+        position: relative; 
+        overflow: hidden; 
+        aspect-ratio: 3/4; 
+        background: #f9f9f9;
+    }
+    .product-img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s ease; }
+    .product-card:hover .product-img { transform: scale(1.08); }
 
-    .product-info { padding: 12px; text-align: left; }
-    .product-name a { font-size: 12px; color: #333; font-weight: 500; text-decoration: none; display: block; margin-bottom: 6px; text-transform: uppercase; line-height: 1.4; height: 34px; overflow: hidden; }
+    .sale-tag { 
+        position: absolute; 
+        top: 10px; 
+        left: 10px; 
+        background: #ff0000; 
+        color: #fff; 
+        padding: 4px 10px; 
+        font-size: 11px; 
+        font-weight: 700; 
+        z-index: 2; 
+        border-radius: 2px;
+    }
+
+    .product-info { padding: 15px 10px; text-align: left; }
+    .product-name a { 
+        font-size: 13px; 
+        color: #333; 
+        font-weight: 500; 
+        text-decoration: none; 
+        display: block; 
+        margin-bottom: 8px; 
+        text-transform: uppercase; 
+        line-height: 1.4; 
+        height: 36px; 
+        overflow: hidden; 
+    }
     
-    .price-box { display: flex; gap: 8px; align-items: center; }
-    .price-current { color: #ff0000; font-weight: 700; font-size: 14px; }
-    .price-old { text-decoration: line-through; color: #999; font-size: 11px; }
+    .price-box { display: flex; gap: 10px; align-items: center; }
+    .price-current { color: #ff0000; font-weight: 700; font-size: 15px; }
+    .price-old { text-decoration: line-through; color: #bbb; font-size: 12px; }
 
-    /* Style cho form sắp xếp */
-    .sort-select {
-        font-family: 'DM Sans', sans-serif;
-        font-size: 13px;
-        border: none;
-        border-bottom: 1px solid #ccc;
-        cursor: pointer;
-        padding: 5px;
-        outline: none;
+    /* --- Phân trang --- */
+    .pagination-area { display: flex; justify-content: center; gap: 8px; margin-top: 50px; padding-bottom: 40px; }
+    .page-num { 
+        display: flex; align-items: center; justify-content: center; 
+        min-width: 38px; height: 38px; border: 1px solid #eee; 
+        text-decoration: none; color: #444; font-size: 14px; transition: 0.3s; 
     }
+    .page-num:hover:not(.active) { border-color: #000; color: #000; }
+    .page-num.active { background: #000; color: #fff; border-color: #000; font-weight: 700; }
+
 </style>
 
 <section class="sale-hero">
     <img src="~/Image/Banner_sanpham/Banner_sale.jpg" alt="Outlet Sale Banner">
 </section>
 
-<div class="container-fluid" style="padding: 0 40px;">
+<div class="container-fluid" style="padding: 0 50px;">
     <div class="row">
         <div class="col-lg-2">
             <aside class="filter-sidebar">
                 <div class="sidebar-label">Danh mục sale</div>
                 <ul class="filter-list">
-                    <li><a href="@Url.Action("Sale", "Product")" class="@(ViewBag.CurrentCategoryId == null ? "active-cat" : "")">Tất cả</a></li>
-                    @foreach (var cat in (ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>) ?? new List<ShopQuanAo.Models.Entity.Categories>())
+                    <li>
+                        <a href="@Url.Action("Sale", "Product")" 
+                           class="@(ViewBag.CurrentCategoryId == null ? "active-cat" : "")">Tất cả sản phẩm</a>
+                    </li>
+                    @foreach (var cat in (ViewBag.Categories as List<ShopQuanAo.Models.BEAN.Entity.Categories>) ?? new List<ShopQuanAo.Models.BEAN.Entity.Categories>())
                     {
-                        <li><a href="@Url.Action("Sale", "Product", new { categoryId = cat.Id, price = ViewBag.CurrentPrice })" class="@(ViewBag.CurrentCategoryId != null && (int)ViewBag.CurrentCategoryId == cat.Id ? "active-cat" : "")">@cat.CategoryName</a></li>
+                        <li>
+                            <a href="@Url.Action("Sale", "Product", new { categoryId = cat.Id, price = ViewBag.CurrentPrice })" 
+                               class="@(ViewBag.CurrentCategoryId != null && (int)ViewBag.CurrentCategoryId == cat.Id ? "active-cat" : "")">
+                                @cat.CategoryName
+                            </a>
+                        </li>
                     }
                 </ul>
             </aside>
         </div>
 
         <div class="col-lg-10">
-            <div class="d-flex justify-content-between align-items-end mb-4 pb-2 border-bottom">
+            <div class="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
                 <div>
-                    <span style="font-size: 11px; color: red; font-weight: 700; text-transform: uppercase;">Outlet Sale</span>
-                    <h2 style="font-weight: 700; text-transform: uppercase; margin: 0;">Tất cả đồ sale</h2>
-                    <div style="font-size: 13px; color: #888; margin-top: 5px;">Có @ViewBag.TotalCount sản phẩm</div>
+                    <span class="page-eyebrow">Outlet Sale</span>
+                    <h2 class="page-title">
+                        @if (ViewBag.CurrentCategoryId != null)
+                        {
+                            var categories = ViewBag.Categories as List<ShopQuanAo.Models.BEAN.Entity.Categories>;
+                            @(categories?.FirstOrDefault(c => c.Id == (int)ViewBag.CurrentCategoryId)?.CategoryName ?? "Sản phẩm")
+                        }
+                        else
+                        {
+                            @:Tất cả đồ sale
+                        }
+                    </h2>
+                    <div class="product-count">Hiện có @ViewBag.TotalCount sản phẩm ưu đãi</div>
                 </div>
 
                 <div class="header-right">
@@ -117,7 +212,7 @@
                             <div class="product-img-container">
                                 <span class="sale-tag">-@discount%</span>
                                 <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                    <img src="@item.Image" class="product-img" alt="@item.ProductName">
+                                    <img src="@item.Image" class="product-img" alt="@item.ProductName" loading="lazy">
                                 </a>
                             </div>
                             <div class="product-info">
@@ -132,7 +227,38 @@
                         </div>
                     }
                 }
+                else
+                {
+                    <div style="grid-column: 1/-1; text-align: center; padding: 80px 0; color: #999;">
+                        <p>Không có sản phẩm nào phù hợp với bộ lọc.</p>
+                    </div>
+                }
             </div>
+
+            @if (ViewBag.TotalPages > 1)
+            {
+                <div class="pagination-area">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <a class="page-num" href="@Url.Action("Sale", "Product", new { page = ViewBag.CurrentPage - 1, categoryId = ViewBag.CurrentCategoryId, price = ViewBag.CurrentPrice })">
+                            &lt;
+                        </a>
+                    }
+
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <a href="@Url.Action("Sale", "Product", new { page = i, categoryId = ViewBag.CurrentCategoryId, price = ViewBag.CurrentPrice })" 
+                           class="page-num @(ViewBag.CurrentPage == i ? "active" : "")">@i</a>
+                    }
+
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <a class="page-num" href="@Url.Action("Sale", "Product", new { page = ViewBag.CurrentPage + 1, categoryId = ViewBag.CurrentCategoryId, price = ViewBag.CurrentPrice })">
+                            &gt;
+                        </a>
+                    }
+                </div>
+            }
         </div>
     </div>
 </div>

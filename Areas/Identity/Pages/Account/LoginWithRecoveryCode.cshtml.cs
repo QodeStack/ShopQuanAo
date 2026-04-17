@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using ShopQuanAo.Models.Entity;
+using ShopQuanAo.Models.BEAN.Entity;
+
 namespace ShopQuanAo.Areas.Identity.Pages.Account
 {
     public class LoginWithRecoveryCodeModel : PageModel

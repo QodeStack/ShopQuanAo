@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using ShopQuanAo.Models.Entity; // Quan trọng để dùng ApplicationUser
+using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account
 {

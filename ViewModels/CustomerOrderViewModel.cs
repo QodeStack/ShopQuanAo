@@ -1,4 +1,4 @@
-﻿using ShopQuanAo.Models.Entity;
+﻿using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.ViewModels
 {

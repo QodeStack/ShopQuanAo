@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using ShopQuanAo.Const;
-using ShopQuanAo.Models.Entity; // Thêm namespace chứa ApplicationUser
+using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.Data
 {

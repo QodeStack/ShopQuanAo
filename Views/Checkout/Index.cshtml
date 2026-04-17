@@ -1,10 +1,10 @@
-﻿@model ShopQuanAo.Models.DTO.PlaceOrderDto
+﻿@model ShopQuanAo.Models.BEAN.DTO.PlaceOrderDto
 @{
     ViewData["Title"] = "Thanh toán";
     
     // Lấy thông tin giỏ hàng và tổng tiền từ ViewBag (Giữ nguyên logic của mày)
-    var cart = ViewBag.Cart as ShopQuanAo.Models.Entity.ShoppingCart;
-    var totalAmount = ViewBag.TotalAmount != null ? Convert.ToDouble(ViewBag.TotalAmount) : 0; 
+    var cart = ViewBag.Cart as ShopQuanAo.Models.BEAN.Entity.ShoppingCart;
+    var totalAmount = ViewBag.TotalAmount != null ? Convert.ToDouble(ViewBag.TotalAmount) : 0;
 }
 
 <div class="container mt-4 mb-5">
@@ -91,9 +91,9 @@
                             {
                                 <div class="d-flex mb-3 align-items-center">
                                     <div class="me-3">
-                                        <img src="@(string.IsNullOrEmpty(item.Product.Image) ? "/images/no-image.png" : item.Product.Image)" 
-                                             alt="@item.Product.ProductName" 
-                                             class="rounded" 
+                                        <img src="@(string.IsNullOrEmpty(item.Product.Image) ? "/images/no-image.png" : item.Product.Image)"
+                                             alt="@item.Product.ProductName"
+                                             class="rounded"
                                              style="width: 70px; height: 90px; object-fit: cover; border: 1px solid #eee;"
                                              onerror="this.src='/images/no-image.png'">
                                     </div>
@@ -101,7 +101,6 @@
                                     <div class="flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <h6 class="mb-1 fw-bold text-uppercase" style="font-size: 0.9rem;">@item.Product.ProductName</h6>
-                                            @* Icon rác ở đây chỉ để trang trí vì đây là trang checkout *@
                                             <span class="text-muted"><i class="bi bi-bag-check"></i></span>
                                         </div>
                                         <div class="text-muted small mb-2 bg-light d-inline-block px-2 py-1 rounded">
@@ -157,6 +156,13 @@
                             <span class="fw-bold fs-5 text-dark">@totalAmount.ToString("N0")đ</span>
                         </div>
                         
+                        @if (cart != null && cart.CartDetails != null)
+                        {
+                            foreach (var item in cart.CartDetails)
+                            {
+                                <input type="hidden" name="SelectedIds" value="@item.Id" />
+                            }
+                        }
                         <button type="submit" class="btn btn-dark w-100 py-3 fw-bold rounded-3">Đặt hàng</button>
                     </div>
                 </div>
@@ -167,7 +173,9 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <style>
@@ -175,6 +183,7 @@
             box-shadow: none;
             border-color: #1a2b4c;
         }
+
         .form-check-input:checked {
             background-color: #1a2b4c;
             border-color: #1a2b4c;

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using ShopQuanAo.Models.Entity; // THÊM DÒNG NÀY để nhận diện ApplicationUser
+using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account
 {

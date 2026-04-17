@@ -155,7 +155,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ApplicationUser", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -226,7 +226,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.CartDetail", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.CartDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -260,7 +260,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("CartDetails");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Categories", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Categories", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -278,7 +278,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Contacts", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Contacts", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -315,7 +315,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("Contacts");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Order", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -370,7 +370,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("Order");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.OrderDetail", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.OrderDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -404,7 +404,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("OrderDetail");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.OrderStatus", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.OrderStatus", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -422,7 +422,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("OrderStatus");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Product", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -459,7 +459,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductReview", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ProductReview", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -494,7 +494,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("ProductReviews", (string)null);
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductSize", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ProductSize", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -520,7 +520,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("ProductSize");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ShoppingCart", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ShoppingCart", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -540,7 +540,7 @@ namespace ShopQuanAo.Migrations
                     b.ToTable("ShoppingCart");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Size", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Size", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -568,7 +568,7 @@ namespace ShopQuanAo.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.ApplicationUser", null)
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -577,7 +577,7 @@ namespace ShopQuanAo.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.ApplicationUser", null)
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -592,7 +592,7 @@ namespace ShopQuanAo.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopQuanAo.Models.Entity.ApplicationUser", null)
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -601,22 +601,22 @@ namespace ShopQuanAo.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.ApplicationUser", null)
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.CartDetail", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.CartDetail", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.Product", "Product")
                         .WithMany("CartDetail")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopQuanAo.Models.Entity.ShoppingCart", "ShoppingCart")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.ShoppingCart", "ShoppingCart")
                         .WithMany("CartDetails")
                         .HasForeignKey("ShoppingCartId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -627,9 +627,9 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("ShoppingCart");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Order", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Order", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.OrderStatus", "OrderStatus")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.OrderStatus", "OrderStatus")
                         .WithMany()
                         .HasForeignKey("OrderStatusId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -638,15 +638,15 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("OrderStatus");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.OrderDetail", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.OrderDetail", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.Order", "Order")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.Order", "Order")
                         .WithMany("OrderDetails")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.Product", "Product")
                         .WithMany("OrderDetail")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -657,9 +657,9 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Product", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Product", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.Categories", "Category")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.Categories", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -668,9 +668,9 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductReview", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ProductReview", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.Product", "Product")
                         .WithMany("ProductReviews")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -679,15 +679,15 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ProductSize", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ProductSize", b =>
                 {
-                    b.HasOne("ShopQuanAo.Models.Entity.Product", "Product")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.Product", "Product")
                         .WithMany("ProductSizes")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopQuanAo.Models.Entity.Size", "Size")
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.Size", "Size")
                         .WithMany("ProductSizes")
                         .HasForeignKey("SizeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -698,17 +698,17 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("Size");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Categories", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Categories", b =>
                 {
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Order", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Order", b =>
                 {
                     b.Navigation("OrderDetails");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Product", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Product", b =>
                 {
                     b.Navigation("CartDetail");
 
@@ -719,12 +719,12 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("ProductSizes");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.ShoppingCart", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ShoppingCart", b =>
                 {
                     b.Navigation("CartDetails");
                 });
 
-            modelBuilder.Entity("ShopQuanAo.Models.Entity.Size", b =>
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.Size", b =>
                 {
                     b.Navigation("ProductSizes");
                 });

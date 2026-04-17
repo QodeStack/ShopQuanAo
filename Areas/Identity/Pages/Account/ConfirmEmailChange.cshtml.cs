@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using ShopQuanAo.Models.Entity;
+using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.Areas.Identity.Pages.Account
 {

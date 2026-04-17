@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using ShopQuanAo.Models.Entity;
-using ShopQuanAo.Models.DTO;
-using ShopQuanAo.Services;
+using ShopQuanAo.Models.BEAN.DTO;
+using ShopQuanAo.BO;
+using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.Controllers
 {

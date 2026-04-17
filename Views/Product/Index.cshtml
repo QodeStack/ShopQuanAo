@@ -1,17 +1,15 @@
-﻿@model IEnumerable<ShopQuanAo.Models.Entity.Product>
-@using ShopQuanAo.Models.Entity
+﻿@model List<ShopQuanAo.Models.BEAN.Entity.Product>
+@using ShopQuanAo.Models.BEAN.Entity
 
 @{
-    ViewData["Title"] = "Danh sách sản phẩm";
-    
-    // SỬA LỖI TẠI ĐÂY: Ép kiểu chính xác theo Namespace và Class Entity
-    // Nếu vẫn lỗi gạch đỏ, hãy đổi 'Categories' thành 'Category' tùy theo file trong folder Entity của bạn
-    var categories = ViewBag.Categories as List<ShopQuanAo.Models.Entity.Categories>; 
+    ViewData["Title"] = "Cửa Hàng - ShopQuanAo";
+    var categories = ViewBag.Categories as List<Categories>;
     var currentCatId = ViewBag.CurrentCategoryId as int?;
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
 <style>
     :root {
@@ -132,10 +130,8 @@
     @@media (max-width: 992px) { .cat-nav-grid { grid-template-columns: repeat(3, 1fr); } }
     @@media (max-width: 576px) { .cat-nav-grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
-
 <section class="shop-hero" id="shopHero">
-    @* Ảnh banner sẽ load từ ViewBag.BannerPath của Controller *@
-    <img src="@ViewBag.BannerPath" alt="Banner Menshop">
+    <img src="@(ViewBag.BannerPath ?? "/images/default-banner.jpg")" alt="Banner">
 </section>
 
 <div class="cat-nav-wrapper">

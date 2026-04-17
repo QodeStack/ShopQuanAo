@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
-using ShopQuanAo.Models.Entity;
-using ShopQuanAo.Services;
+using ShopQuanAo.Models.BEAN.Entity;
+using ShopQuanAo.BO;
 using System.Text.RegularExpressions;
 using System.Text;
 
@@ -36,7 +36,7 @@ namespace ShopQuanAo.Controllers
 				if (cat != null) categoryId = cat.Id;
 			}
 
-			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, sort: sort);
+			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating);
 
 			// --- LOGIC BANNER MỚI: TRỎ VÀO Banner_sanpham ---
 			string bannerFileName = "Banner_tatcasanpham.jpg";
@@ -68,7 +68,7 @@ namespace ShopQuanAo.Controllers
 		public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, string? sort, int page = 1)
 		{
 			int pageSize = 12;
-			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, isSaleOnly: true, sort: sort);
+			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, isSaleOnly: true);
 
 			// Không dùng ViewBag.BannerPath ở đây để tránh ảnh hưởng giao diện Index
 			ViewBag.CurrentSort = sort;
