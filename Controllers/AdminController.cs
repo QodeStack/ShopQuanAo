@@ -219,12 +219,51 @@ namespace ShopQuanAo.Controllers
             var results = await productService.SearchQuickAsync(keyword, null);
             return Json(results);
         }
+        // Hiển thị giao diện Quản lý Voucher
+        public async Task<IActionResult> Vouchers()
+        {
+            var vouchers = await _service.GetAllVouchersAsync();
+            return View(vouchers);
+        }
+
+        // Thêm mã mới
+        [HttpPost]
+        public async Task<IActionResult> AddVoucher(Voucher voucher)
+        {
+            if (ModelState.IsValid)
+            {
+                await _service.AddVoucherAsync(voucher);
+            }
+            return RedirectToAction("Vouchers");
+        }
+
+        // Bật/Tắt mã
+        [HttpPost]
+        public async Task<IActionResult> ToggleVoucher(int id)
+        {
+            await _service.ToggleVoucherStatusAsync(id);
+            return RedirectToAction("Vouchers");
+        }
+
+        // Xóa mã
+        [HttpPost]
+        public async Task<IActionResult> DeleteVoucher(int id)
+        {
+            await _service.DeleteVoucherAsync(id);
+            return RedirectToAction("Vouchers");
+        }
+        [HttpPost]
+        public async Task<IActionResult> EditVoucher(Voucher voucher)
+        {
+            if (ModelState.IsValid)
+            {
+                await _service.EditVoucherAsync(voucher);
+            }
+            return RedirectToAction("Vouchers");
+        }
+
     }
 
     // --- DTO: BẠN CÓ THỂ ĐỂ TẠM Ở ĐÂY HOẶC CẮT SANG FILE RIÊNG (SaleRequestDto.cs) ---
-    public class SaleRequestDto
-    {
-        public int ProductId { get; set; }
-        public int SalePrice { get; set; }
-    }
+    
 }

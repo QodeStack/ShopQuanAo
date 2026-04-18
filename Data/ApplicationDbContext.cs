@@ -22,8 +22,9 @@ namespace ShopQuanAo.Data
 		public DbSet<ProductSize> ProductSizes { get; set; }
 		public DbSet<Contacts> Contacts { get; set; }
 		public DbSet<ProductReview> ProductReviews { get; set; } // Đã có, rất tốt!
+		public DbSet<Voucher> Vouchers { get; set; }
 
-		protected override void OnModelCreating(ModelBuilder builder)
+        protected override void OnModelCreating(ModelBuilder builder)
 		{
 			base.OnModelCreating(builder);
 

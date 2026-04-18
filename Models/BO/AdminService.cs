@@ -318,7 +318,57 @@ namespace ShopQuanAo.BO
         {
             return await _adminDAO.DeleteContactAsync(id);
         }
+        public async Task<List<Voucher>> GetAllVouchersAsync()
+        {
+            return await _adminDAO.GetAllVouchersAsync();
+        }
 
+        public async Task AddVoucherAsync(Voucher voucher)
+        {
+            // Tự động viết hoa mã Code trước khi lưu cho chuẩn
+            voucher.Code = voucher.Code.ToUpper();
+            await _adminDAO.AddVoucherAsync(voucher);
+        }
+
+        public async Task<bool> ToggleVoucherStatusAsync(int id)
+        {
+            var voucher = await _adminDAO.GetVoucherByIdAsync(id);
+            if (voucher == null) return false;
+
+            // Đảo ngược trạng thái (Đang bật -> Tắt, Đang tắt -> Bật)
+            voucher.IsActive = !voucher.IsActive;
+            await _adminDAO.UpdateVoucherAsync(voucher);
+            return true;
+        }
+
+        public async Task<bool> DeleteVoucherAsync(int id)
+        {
+            var voucher = await _adminDAO.GetVoucherByIdAsync(id);
+            if (voucher == null) return false;
+
+            await _adminDAO.DeleteVoucherAsync(voucher);
+            return true;
+        }
+        public async Task<(bool Success, string Message)> EditVoucherAsync(Voucher updatedVoucher)
+        {
+            var voucher = await _adminDAO.GetVoucherByIdAsync(updatedVoucher.Id);
+            if (voucher == null) return (false, "Không tìm thấy mã.");
+
+            // Cập nhật các trường dữ liệu
+            voucher.Code = updatedVoucher.Code.ToUpper();
+            voucher.DiscountAmount = updatedVoucher.DiscountAmount;
+            voucher.MinOrderAmount = updatedVoucher.MinOrderAmount;
+            voucher.Quantity = updatedVoucher.Quantity;
+            voucher.IsActive = updatedVoucher.IsActive;
+            voucher.IsPublic = updatedVoucher.IsPublic;
+
+            await _adminDAO.UpdateVoucherAsync(voucher);
+            return (true, "Thành công");
+        }
+        public async Task<List<Voucher>> GetActiveVouchersAsync()
+        {
+            return await _adminDAO.GetActiveVouchersAsync();
+        }
         public async Task SendReplyContactEmailAsync(string toEmail, string fullName, string replyMessage)
         {
             string finalMessage = string.IsNullOrWhiteSpace(replyMessage) ? "Cảm ơn bạn đã liên hệ với chúng tôi." : replyMessage;

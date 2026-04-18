@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
 using ShopQuanAo.Models.BEAN.Entity;
+using System.Diagnostics.Metrics;
 
 namespace ShopQuanAo.DAO
 {
@@ -61,6 +62,24 @@ namespace ShopQuanAo.DAO
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+        // --- THÊM 2 HÀM NÀY VÀO TRONG CHECKOUT_DAO ---
+
+        // 1. Tìm mã giảm giá theo tên Code
+        public async Task<Voucher?> GetVoucherByCodeAsync(string code)
+        {
+            return await _context.Vouchers
+                .FirstOrDefaultAsync(v => v.Code.ToLower() == code.ToLower());
+        }
+
+        // 2. Cập nhật lại Voucher (Dùng để trừ đi 1 lượt sử dụng)
+        public void UpdateVoucher(Voucher voucher)
+        {
+            _context.Vouchers.Update(voucher);
+        }
+        public async Task<List<Voucher>> GetActiveVouchersAsync()
+        {
+            return await _context.Vouchers.Where(p => p.IsActive && p.Quantity > 0  ).ToListAsync();
         }
     }
 }

@@ -155,7 +155,42 @@ namespace ShopQuanAo.DAO
         {
             await _context.SaveChangesAsync();
         }
+        // Lấy danh sách tất cả mã giảm giá
+        public async Task<List<Voucher>> GetAllVouchersAsync()
+        {
+            return await _context.Vouchers.OrderByDescending(v => v.Id).ToListAsync();
+        }
 
+        // Thêm mã mới
+        public async Task AddVoucherAsync(Voucher voucher)
+        {
+            _context.Vouchers.Add(voucher);
+            await _context.SaveChangesAsync();
+        }
+
+        // Lấy 1 mã theo ID
+        public async Task<Voucher?> GetVoucherByIdAsync(int id)
+        {
+            return await _context.Vouchers.FindAsync(id);
+        }
+
+        // Cập nhật mã (Dùng để bật/tắt)
+        public async Task UpdateVoucherAsync(Voucher voucher)
+        {
+            _context.Vouchers.Update(voucher);
+            await _context.SaveChangesAsync();
+        }
+
+        // Xóa mã
+        public async Task DeleteVoucherAsync(Voucher voucher)
+        {
+            _context.Vouchers.Remove(voucher);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<List<Voucher>> GetActiveVouchersAsync()
+        {
+            return await _context.Vouchers.Where(p => p.IsActive && p.Quantity > 0 && p.IsPublic ).ToListAsync();
+        }
         public async Task<bool> DeleteContactAsync(int id)
         {
             try
