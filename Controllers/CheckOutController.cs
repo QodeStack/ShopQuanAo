@@ -33,6 +33,8 @@ namespace ShopQuanAo.Controllers
 
             ViewBag.Cart = cart;
             ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
+            // Đổ danh sách mã đang hoạt động ra ViewBag để hiển thị trên Popup
+            ViewBag.Vouchers = await _checkoutService.GetActiveVouchersAsync();
 
             // Khởi tạo DTO và nhét sẵn danh sách ID
             var dto = new PlaceOrderDto { SelectedIds = selectedIds };
@@ -70,6 +72,35 @@ namespace ShopQuanAo.Controllers
             if (!result.Success) return RedirectToAction("Index", "Cart");
 
             return RedirectToAction("OrderSuccess", new { orderId = result.OrderId });
+        }
+        [HttpPost]
+        public async Task<IActionResult> ApplyVoucher([FromBody] ApplyVoucherDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Code))
+                return Json(new { success = false, message = "Vui lòng nhập mã khuyến mãi." });
+
+            // Gọi DAO để lấy mã
+            var voucher = await _checkoutService.GetVoucherByCodeAsync(dto.Code); // Nhớ viết thêm hàm trung gian này trong Service nhé
+
+            if (voucher == null)
+                return Json(new { success = false, message = "Mã khuyến mãi không tồn tại." });
+
+            if (!voucher.IsActive)
+                return Json(new { success = false, message = "Mã khuyến mãi này đã bị vô hiệu hóa." });
+
+            if (voucher.Quantity <= 0)
+                return Json(new { success = false, message = "Mã khuyến mãi đã hết lượt sử dụng." });
+
+            if (dto.OrderTotal < voucher.MinOrderAmount)
+                return Json(new { success = false, message = $"Đơn hàng tối thiểu phải từ {voucher.MinOrderAmount.ToString("N0")}đ để áp mã." });
+
+            return Json(new
+            {
+                success = true,
+                message = "Áp dụng mã thành công!",
+                discountAmount = voucher.DiscountAmount,
+                voucherCode = voucher.Code // Trả về mã chuẩn hóa để giao diện lưu lại
+            });
         }
 
         public IActionResult OrderSuccess(int orderId)

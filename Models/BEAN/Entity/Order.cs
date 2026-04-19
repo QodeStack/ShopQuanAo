@@ -35,15 +35,16 @@ namespace ShopQuanAo.Models.BEAN.Entity
         public string PaymentMethod { get; set; } = "";
 
         public bool IsPaid { get; set; }
+        
+        [Required]
+        public double TotalAmount { get; set; }
 
         public int OrderStatusId { get; set; }
+        // Thêm vào Entity Order
+        public string? VoucherCode { get; set; } // Lưu mã khách đã dùng (VD: GIAM50K)
+        public double DiscountAmount { get; set; } = 0; // Lưu số tiền đã trừ (VD: 50000)
         public OrderStatus OrderStatus { get; set; }
-
         public List<OrderDetail> OrderDetails { get; set; }
-
-
-
-
     }
 }
  

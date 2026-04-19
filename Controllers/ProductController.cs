@@ -26,46 +26,57 @@ namespace ShopQuanAo.Controllers
 			_userManager = userManager;
 		}
 
-		public async Task<IActionResult> Index(int? categoryId, string? categoryName, string? search, string? price, int? rating, string? sort, int page = 1)
-		{
-			int pageSize = 12;
+        public async Task<IActionResult> Index(int? categoryId, string? categoryName, string? search, string? price, int? rating, string? sort, int page = 1)
+        {
+            int pageSize = 12;
 
-			if (!string.IsNullOrEmpty(categoryName) && categoryId == null)
-			{
-				var cat = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryName == categoryName);
-				if (cat != null) categoryId = cat.Id;
-			}
+            // 1. Xử lý lấy CategoryId từ Name nếu cần
+            if (!string.IsNullOrEmpty(categoryName) && categoryId == null)
+            {
+                var cat = await _context.Categories.FirstOrDefaultAsync(c => c.CategoryName == categoryName);
+                if (cat != null) categoryId = cat.Id;
+            }
 
-			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating);
+            // 2. Gọi Service với đầy đủ tham số lọc và SẮP XẾP (sort)
+            var result = await _productService.GetPagedProductsAsync(
+                categoryId?.ToString(),
+                search,
+                page,
+                pageSize,
+                price,
+                rating,
+                isSaleOnly: false,
+                sort: sort);
 
-			// --- LOGIC BANNER MỚI: TRỎ VÀO Banner_sanpham ---
-			string bannerFileName = "Banner_tatcasanpham.jpg";
-			string currentTitle = "TẤT CẢ SẢN PHẨM";
+            // 3. Logic xử lý Banner (Giữ nguyên logic của bạn)
+            string bannerFileName = "Banner_tatcasanpham.jpg";
+            string currentTitle = "TẤT CẢ SẢN PHẨM";
 
-			if (categoryId.HasValue)
-			{
-				var currentCat = await _context.Categories.FindAsync(categoryId);
-				if (currentCat != null)
-				{
-					currentTitle = currentCat.CategoryName.ToUpper();
-					// Chuyển "Áo Thun" -> "aothun"
-					string slug = GenerateSlug(currentCat.CategoryName);
-					// Ghép thành "Banner_aothun.jpg" khớp với ảnh trong thư mục Banner_sanpham
-					bannerFileName = $"Banner_{slug}.jpg";
-				}
-			}
+            if (categoryId.HasValue)
+            {
+                var currentCat = await _context.Categories.FindAsync(categoryId);
+                if (currentCat != null)
+                {
+                    currentTitle = currentCat.CategoryName.ToUpper();
+                    string slug = GenerateSlug(currentCat.CategoryName);
+                    bannerFileName = $"Banner_{slug}.jpg";
+                }
+            }
 
-			ViewBag.BannerPath = $"/Image/Banner_sanpham/{bannerFileName}";
-			ViewBag.BannerTitle = currentTitle;
-			ViewBag.CurrentSort = sort;
+            // 4. Thiết lập ViewBag để hiển thị giao diện
+            ViewBag.BannerPath = $"/Image/Banner_sanpham/{bannerFileName}";
+            ViewBag.BannerTitle = currentTitle;
+            ViewBag.CurrentSort = sort; // Quan trọng: Để Select Box không bị reset
 
-			await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
+            await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
 
-			// Trả về view kèm sản phẩm
-			return View(result.Products);
-		}
+            // 5. Kiểm tra nếu là yêu cầu AJAX thì trả về toàn bộ View (hoặc PartialView nếu bạn đã tách)
+            // Script AJAX của bạn đang dùng $(response).find('#productGridContainer'), 
+            // nên ta trả về View() như bình thường nhưng có thể thêm logic kiểm tra isAjax nếu muốn tối ưu.
+            return View(result.Products);
+        }
 
-		public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, string? sort, int page = 1)
+        public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, string? sort, int page = 1)
 		{
 			int pageSize = 12;
 			var result = await _productService.GetPagedProductsAsync(categoryId?.ToString(), search, page, pageSize, price, rating, isSaleOnly: true);

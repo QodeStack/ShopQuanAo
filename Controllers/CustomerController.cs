@@ -31,10 +31,10 @@ namespace ShopQuanAo.Controllers
             var result = await _customerService.GetOrdersAsync(userId, status, page);
 
             // Lấy danh sách ID các sản phẩm mà người dùng này đã đánh giá
-            var reviewedProductIds = _context.ProductReviews
-                .Where(r => r.UserId == userId)
-                .Select(r => r.ProductId)
-                .ToList();
+            var reviewedProductIds = await _context.ProductReviews
+    .Where(r => r.UserId == userId)
+    .Select(r => r.ProductId)
+    .ToListAsync();
 
             var vm = new CustomerOrderViewModel
             {

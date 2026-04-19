@@ -127,11 +127,29 @@
                                     <span class="paid-badge">Đã thanh toán</span>
                                 }
                             </div>
-                            <div class="order-total-area">
-                                <span class="order-total-label">Thành tiền:</span>
-                                <span class="order-total-amount">
-                                    @order.OrderDetails.Sum(d => d.UnitPrice * d.Quantity).ToString("N0")₫
-                                </span>
+                            <div class="order-card-footer" style="padding: 15px; border-top: 1px rgba(0,0,0,0.05) dashed;">
+                                <div class="order-total-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+        
+                                    @if (order.DiscountAmount > 0)
+                                    {
+                                        <div class="discount-row" style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-size: 0.9rem; color: #757575;">
+                                                <i class="bi bi-ticket-perforated"></i> Giảm giá (@order.VoucherCode)
+                                            </span>
+                                            <span style="font-size: 0.9rem; color: #757575;">
+                                                -@order.DiscountAmount.ToString("N0")₫
+                                            </span>
+                                        </div>
+                                    }
+
+                                    <div class="final-total-row" style="display: flex; align-items: baseline; gap: 12px;">
+                                        <span class="order-total-label" style="font-size: 1rem; color: #212121;">Thành tiền:</span>
+                                        <span class="order-total-amount" style="color: #ee4d2d; font-size: 1.5rem; font-weight: 500;">
+                                            @((order.TotalAmount > 0 ? order.TotalAmount : (order.OrderDetails.Sum(d => d.UnitPrice * d.Quantity) - order.DiscountAmount)).ToString("N0"))₫
+                                        </span>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
 

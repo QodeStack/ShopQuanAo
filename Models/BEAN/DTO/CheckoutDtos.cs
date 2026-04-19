@@ -8,6 +8,7 @@
         public string Address { get; set; } = "";
         public string? Note { get; set; }
         public string PaymentMethod { get; set; } = "COD";
+        public string? VoucherCode { get; set; }
         public List<int> SelectedIds { get; set; } = new List<int>();
     }
 }

@@ -262,43 +262,54 @@
         }
 
         function fetchProductAjax() {
-            const grid = $('#productGridContainer');
-            const sortOrder = $('#sortOrder').val();
+    const grid = $('#productGridContainer');
+    const sortOrder = $('#sortOrder').val();
             
-            grid.addClass('loading-fade');
-            $('#shopHero img').css('opacity', '0.5');
+    grid.addClass('loading-fade');
+    $('#shopHero img').css('opacity', '0.5');
 
-            $.ajax({
-                url: '@Url.Action("Index", "Product")',
-                type: 'GET',
-                data: {
-                    categoryId: currentCategoryId,
-                    search: currentSearch,
-                    page: currentPage,
-                    sort: sortOrder,
-                    isAjax: true 
-                },
-                success: function(response) {
-                    // 1. Cập nhật Grid sản phẩm
-                    const newGridHtml = $(response).find('#productGridContainer').html();
-                    grid.html(newGridHtml);
+    // Gom dữ liệu gửi đi
+    const requestData = {
+        categoryId: currentCategoryId,
+        search: currentSearch,
+        page: currentPage,
+        sort: sortOrder,
+        isAjax: true 
+    };
 
-                    // 2. Cập nhật Banner dựa trên categoryId mới
-                    const newBannerPath = $(response).find('#shopHero img').attr('src');
-                    $('#shopHero img').attr('src', newBannerPath).css('opacity', '1');
+    $.ajax({
+        url: '@Url.Action("Index", "Product")',
+        type: 'GET',
+        data: requestData,
+        success: function(response) {
+            // 1. Cập nhật Grid sản phẩm
+            const newGridHtml = $(response).find('#productGridContainer').html();
+            grid.html(newGridHtml);
 
-                    // 3. Cập nhật tổng số lượng
-                    const newCount = $(response).find('#totalCount').text();
-                    $('#totalCount').text(newCount);
+            // 2. Cập nhật Banner dựa trên categoryId mới
+            const newBannerPath = $(response).find('#shopHero img').attr('src');
+            $('#shopHero img').attr('src', newBannerPath).css('opacity', '1');
 
-                    grid.removeClass('loading-fade');
-                },
-                error: function() {
-                    grid.removeClass('loading-fade');
-                    $('#shopHero img').css('opacity', '1');
-                    console.error("Lỗi tải AJAX");
-                }
-            });
+            // 3. Cập nhật tổng số lượng
+            const newCount = $(response).find('#totalCount').text();
+            $('#totalCount').text(newCount);
+
+            // 4. CẬP NHẬT URL (History API) - Tăng trải nghiệm người dùng
+            // Loại bỏ 'isAjax' để URL trông đẹp hơn
+            const cleanParams = { ...requestData };
+            delete cleanParams.isAjax;
+            
+            const newUrl = window.location.pathname + '?' + $.param(cleanParams);
+            window.history.pushState({ path: newUrl }, '', newUrl);
+
+            grid.removeClass('loading-fade');
+        },
+        error: function() {
+            grid.removeClass('loading-fade');
+            $('#shopHero img').css('opacity', '1');
+            console.error("Lỗi tải AJAX");
         }
+    });
+}
     </script>
 }

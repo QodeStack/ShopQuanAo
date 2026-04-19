@@ -42,7 +42,6 @@ namespace ShopQuanAo.BO
 
             if (order == null) return (false, "Không tìm thấy đơn hàng.");
 
-            // Áp dụng luật kinh doanh: Chỉ cho hủy nếu đang chờ xác nhận
             if (order.OrderStatus?.StatusName == "Chờ xác nhận")
             {
                 var cancelStatus = await _customerDAO.GetOrderStatusByNameAsync("Đã hủy");
@@ -50,7 +49,19 @@ namespace ShopQuanAo.BO
 
                 order.OrderStatusId = cancelStatus.Id;
 
-                // Hoàn lại số lượng vào kho khi hủy
+                // --- PHẦN BỔ SUNG: Hoàn lại Voucher ---
+                if (!string.IsNullOrEmpty(order.VoucherCode))
+                {
+                    // Bạn cần viết thêm hàm GetVoucherByCodeAsync trong CustomerDAO nếu chưa có
+                    var voucher = await _customerDAO.GetVoucherByCodeAsync(order.VoucherCode);
+                    if (voucher != null)
+                    {
+                        voucher.Quantity += 1; // Cộng lại 1 lượt sử dụng
+                    }
+                }
+                // --------------------------------------
+
+                // Hoàn lại số lượng vào kho (Giữ nguyên logic tốt của bạn)
                 foreach (var detail in order.OrderDetails)
                 {
                     var productSize = await _customerDAO.GetProductSizeAsync(detail.ProductId, detail.Size);
@@ -61,7 +72,7 @@ namespace ShopQuanAo.BO
                 }
 
                 await _customerDAO.SaveChangesAsync();
-                return (true, "Đã hủy đơn hàng thành công.");
+                return (true, "Đã hủy đơn hàng thành công và hoàn trả khuyến mãi.");
             }
 
             return (false, "Không thể hủy đơn hàng ở trạng thái hiện tại.");

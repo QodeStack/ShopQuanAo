@@ -69,5 +69,9 @@ namespace ShopQuanAo.DAO
         {
             await _context.SaveChangesAsync();
         }
+        public async Task<Voucher?> GetVoucherByCodeAsync(string code)
+        {
+            return await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == code);
+        }
     }
 }

@@ -79,6 +79,8 @@
                 <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
                     <span class="sidebar-icon">📊</span> Dashboard
                 </a>
+                
+                @* Đoạn thay đổi ở đây *@
                 <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
                     <span class="sidebar-icon">💰</span> Doanh thu
                 </a>
@@ -99,11 +101,13 @@
                     <span class="sidebar-icon">📁</span> Danh mục
                 </a>
                 
-                @* --- ĐOẠN CODE THÊM QUẢN LÝ SALE MỚI --- *@
                 <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@Url.Action("Sales", "Admin")">
                     <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
                 </a>
-                @* --------------------------------------- *@
+                
+                <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@Url.Action("Vouchers", "Admin")">
+                    <span class="sidebar-icon">🎫</span> Mã giảm giá
+                </a>
 
                 <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
                     <span class="sidebar-icon">📩</span> Phản hồi

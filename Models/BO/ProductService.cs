@@ -15,25 +15,40 @@ namespace ShopQuanAo.BO
 
         // 1. Phân trang và điều phối luồng dữ liệu
         public async Task<ProductPagedDto> GetPagedProductsAsync(
-            string? category, string? search, int page, int pageSize, string? price = null, int? rating = null, bool isSaleOnly = false)
+    string? category,
+    string? search,
+    int page,
+    int pageSize,
+    string? price = null,
+    int? rating = null,
+    bool isSaleOnly = false,
+    string? sort = null) // Thêm tham số sort ở đây
         {
-            // Bước 1: Yêu cầu DAO lấy danh sách ID tương ứng với các bộ lọc
-            var (total, pagedIds, clampedPage) = await _productDAO.GetPagedProductIdsAsync(category, search, price, rating, isSaleOnly, page, pageSize);
+            // Bước 1: Truyền thêm tham số 'sort' xuống DAO để xử lý sắp xếp ở mức SQL
+            var (total, pagedIds, clampedPage) = await _productDAO.GetPagedProductIdsAsync(
+                category, search, price, rating, isSaleOnly, page, pageSize, sort);
 
             if (!pagedIds.Any())
             {
-                return new ProductPagedDto { Products = new List<Product>(), TotalCount = total, TotalPages = 0, CurrentPage = 1 };
+                return new ProductPagedDto
+                {
+                    Products = new List<Product>(),
+                    TotalCount = total,
+                    TotalPages = 0,
+                    CurrentPage = 1
+                };
             }
 
-            // Bước 2: Kéo dữ liệu thực tế lên
+            // Bước 2: Kéo dữ liệu thực tế lên từ danh sách IDs đã được sắp xếp
             var products = await _productDAO.GetProductsByIdsAsync(pagedIds);
 
-            // Bước 3: BO Sắp xếp lại thứ tự sản phẩm đúng với thứ tự mảng IDs (Bắt buộc vì EF Where IN không giữ thứ tự)
+            // Bước 3: Sắp xếp lại danh sách object 'products' theo đúng thứ tự của 'pagedIds'
+            // Lưu ý quan trọng: EF Core 'Where IN' không bảo toàn thứ tự, nên bước này là bắt buộc
             var sortedProducts = pagedIds
                 .Select(id => products.First(p => p.Id == id))
                 .ToList();
 
-            // Bước 4: Tính toán nghiệp vụ TotalQuantity
+            // Bước 4: Tính toán nghiệp vụ TotalQuantity (Tồn kho)
             foreach (var p in sortedProducts)
             {
                 p.TotalQuantity = p.ProductSizes?.Sum(ps => ps.Quantity) ?? 0;

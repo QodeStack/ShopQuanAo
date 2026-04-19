@@ -219,12 +219,83 @@ namespace ShopQuanAo.Controllers
             var results = await productService.SearchQuickAsync(keyword, null);
             return Json(results);
         }
+        // Hiển thị giao diện Quản lý Voucher
+        public async Task<IActionResult> Vouchers()
+        {
+            var vouchers = await _service.GetAllVouchersAsync();
+            return View(vouchers);
+        }
+
+        // Thêm mã mới
+        [HttpPost]
+        public async Task<IActionResult> AddVoucher(Voucher voucher)
+        {
+            if (ModelState.IsValid)
+            {
+                await _service.AddVoucherAsync(voucher);
+            }
+            return RedirectToAction("Vouchers");
+        }
+
+        // Bật/Tắt mã
+        [HttpPost]
+        public async Task<IActionResult> ToggleVoucher(int id)
+        {
+            await _service.ToggleVoucherStatusAsync(id);
+            return RedirectToAction("Vouchers");
+        }
+
+        // Xóa mã
+        [HttpPost]
+        public async Task<IActionResult> DeleteVoucher(int id)
+        {
+            await _service.DeleteVoucherAsync(id);
+            return RedirectToAction("Vouchers");
+        }
+        [HttpPost]
+        public async Task<IActionResult> EditVoucher(Voucher voucher)
+        {
+            if (ModelState.IsValid)
+            {
+                await _service.EditVoucherAsync(voucher);
+            }
+            return RedirectToAction("Vouchers");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return Json(new { success = false, message = "Không có file nào được chọn." });
+
+            try
+            {
+                // 1. Tạo đường dẫn thư mục lưu trữ
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                // 2. Tạo tên file duy nhất để tránh trùng lặp
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // 3. Lưu file vào thư mục
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // 4. Trả về đường dẫn tương đối để lưu vào Database
+                var url = "/images/products/" + fileName;
+                return Json(new { success = true, url = url });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+
     }
 
     // --- DTO: BẠN CÓ THỂ ĐỂ TẠM Ở ĐÂY HOẶC CẮT SANG FILE RIÊNG (SaleRequestDto.cs) ---
-    public class SaleRequestDto
-    {
-        public int ProductId { get; set; }
-        public int SalePrice { get; set; }
-    }
+    
 }

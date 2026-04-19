@@ -16,23 +16,25 @@ namespace ShopQuanAo.DAO
 
         // Lấy tổng số lượng và danh sách ID sản phẩm đã được phân trang
         public async Task<(int Total, List<int> PagedIds, int ClampedPage)> GetPagedProductIdsAsync(
-            string? category, string? search, string? price, int? rating, bool isSaleOnly, int page, int pageSize)
+    string? category, string? search, string? price, int? rating, bool isSaleOnly,
+    int page, int pageSize, string? sort)
         {
             var query = _context.Products.Include(p => p.Category).AsQueryable();
 
-            if (isSaleOnly) query = query.Where(p => p.SalePrice > 0 && p.Price > p.SalePrice);
-
+            // 1. Lọc theo Category
             if (!string.IsNullOrWhiteSpace(category))
             {
-                if (int.TryParse(category, out int id))
-                    query = query.Where(p => p.CategoryId == id);
+                if (int.TryParse(category, out int catId))
+                    query = query.Where(p => p.CategoryId == catId);
                 else
                     query = query.Where(p => p.Category.CategoryName.Contains(category));
             }
 
+            // 2. Lọc theo Search keyword
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(p => p.ProductName.Contains(search) || p.BrandName.Contains(search));
 
+            // 3. Lọc theo Price
             query = price switch
             {
                 "under500" => query.Where(p => (isSaleOnly ? p.SalePrice : p.Price) < 500000),
@@ -42,24 +44,32 @@ namespace ShopQuanAo.DAO
                 _ => query
             };
 
-            if (rating.HasValue)
-            {
-                query = query.Where(p => p.ProductReviews.Any() &&
-                                         p.ProductReviews.Average(r => r.Rating) >= rating.Value);
-            }
+            // 4. Lọc theo Sale (Nếu trang Sale gọi)
+            if (isSaleOnly) query = query.Where(p => p.SalePrice > 0 && p.Price > p.SalePrice);
 
+            // 5. GroupBy để lấy thông tin tổng hợp cho Sắp xếp
             var groupedQuery = query
                 .GroupBy(p => p.ProductName)
                 .Select(g => new
                 {
                     Id = g.Max(p => p.Id),
-                    TotalStock = g.SelectMany(p => p.ProductSizes).Sum(ps => ps.Quantity)
-                })
-                .OrderByDescending(x => x.TotalStock);
+                    TotalStock = g.SelectMany(p => p.ProductSizes).Sum(ps => ps.Quantity),
+                    MaxPrice = g.Max(p => p.Price),
+                    AvgRating = g.SelectMany(p => p.ProductReviews).Any() ? g.SelectMany(p => p.ProductReviews).Average(r => r.Rating) : 0,
+                    CreatedAt = g.Max(p => p.Id)
+                });
+
+            // 6. Thực hiện Sort (Quan trọng để chạy được trên giao diện)
+            groupedQuery = sort switch
+            {
+                "price_asc" => groupedQuery.OrderBy(x => x.MaxPrice),
+                "price_desc" => groupedQuery.OrderByDescending(x => x.MaxPrice),
+                "rating" => groupedQuery.OrderByDescending(x => x.AvgRating),
+                "newest" => groupedQuery.OrderByDescending(x => x.CreatedAt),
+                _ => groupedQuery.OrderByDescending(x => x.TotalStock) // Mặc định xếp theo tồn kho/phổ biến
+            };
 
             int total = await groupedQuery.CountAsync();
-
-            // Tính toán Clamp page tại DAO để áp dụng Skip/Take chính xác
             int totalPages = (int)Math.Ceiling((double)total / pageSize);
             page = Math.Clamp(page, 1, Math.Max(1, totalPages));
 
