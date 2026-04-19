@@ -1,97 +1,190 @@
-﻿﻿@using ShopQuanAo.Models
+﻿@using ShopQuanAo.Models
 @model IEnumerable<ShopQuanAo.Models.BEAN.Entity.Contacts>
 
 @{
-    ViewData["Title"] = "Quản lý phản hồi";
+    ViewData["Title"] = "Quản lý Phản hồi";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
 }
 
 @Html.AntiForgeryToken()
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono&family=Syne:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="~/css/Admin_Index.css" asp-append-version="true" />
+<link href="~/css/Admin/Admin_Contact.css" asp-append-version="true" rel="stylesheet" />
 
-<div class="admin-wrap" style="background: #0a0a0a; min-height: 100vh; padding: 30px; color: #f5f5f0;">
-    <div class="page-header" style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-        <div>
-            <h1 style="font-family: 'Syne'; font-size: 2.5rem; text-transform: uppercase; margin: 0;">Quản lý liên hệ</h1>
-        </div>
-        <div id="totalBadge" style="font-family: 'Space Mono'; color: #c8ff00; border: 1px solid #c8ff00; padding: 5px 15px; font-size: 0.8rem;">
-            TỔNG: @Model.Count() TIN NHẮN
-        </div>
-    </div>
+<div class="admin-wrap">
+    <div class="admin-body">
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Tổng quan</div>
+                <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
+                    <span class="sidebar-icon">📊</span> Dashboard
+                </a>
+                <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
+                    <span class="sidebar-icon">💰</span> Doanh thu
+                </a>
+                <a class="sidebar-link @(currentAction == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")">
+                    <span class="sidebar-icon">📦</span> Đơn hàng
+                </a>
+            </div>
 
-    <div class="panel" style="background: #141414; border: 1px solid #222; padding: 0;">
-        <table class="data-table" style="width: 100%; border-collapse: collapse; font-family: 'Space Mono';">
-            <thead>
-                <tr style="border-bottom: 1px solid #222; text-align: left; color: #6e6e68; font-size: 0.7rem; text-transform: uppercase;">
-                    <th style="padding: 20px;">Khách hàng</th>
-                    <th style="padding: 20px; width: 40%;">Nội dung gửi</th>
-                    <th style="padding: 20px;">Ngày gửi</th>
-                    <th style="padding: 20px;">Trạng thái</th>
-                    <th style="padding: 20px; text-align: right;">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr id="row-@item.Id" style="border-bottom: 1px solid #1a1a1a; transition: 0.3s;">
-                        <td style="padding: 20px; vertical-align: top;">
-                            <div style="color: #c8ff00; font-weight: bold;">@item.FullName</div>
-                            <div style="font-size: 0.75rem; color: #6e6e68;">@item.Email</div>
-                        </td>
-                        
-                        <td style="padding: 20px; font-size: 0.85rem; vertical-align: top;">
-                            <div class="msg-content"
-                                 style="cursor: pointer; transition: all 0.3s ease; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; line-height: 1.5;"
-                                 onclick="toggleMessage(this)"
-                                 title="Click để xem đầy đủ hoặc thu gọn">
-                                @item.Message
-                            </div>
-                        </td>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Quản lý</div>
+                <a class="sidebar-link @(currentAction == "Users" ? "active" : "")" href="@Url.Action("Users", "Admin")">
+                    <span class="sidebar-icon">👥</span> Người dùng
+                </a>
+                <a class="sidebar-link @(currentAction == "Products" ? "active" : "")" href="@Url.Action("Products", "Admin")">
+                    <span class="sidebar-icon">👕</span> Sản phẩm
+                </a>
+                <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@Url.Action("Categories", "Admin")">
+                    <span class="sidebar-icon">📁</span> Danh mục
+                </a>
+                <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@Url.Action("Sales", "Admin")">
+                    <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
+                </a>
+                <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@Url.Action("Vouchers", "Admin")">
+                    <span class="sidebar-icon">🎫</span> Mã giảm giá
+                </a>
+                <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
+                    <span class="sidebar-icon">📩</span> Phản hồi
+                </a>
+            </div>
 
-                        <td style="padding: 20px; font-size: 0.8rem; color: #6e6e68; vertical-align: top;">@item.CreatedDate.ToString("dd/MM/yyyy")</td>
-                        <td style="padding: 20px; vertical-align: top;">
-                            @if (item.IsRead)
+            <div class="sidebar-section">
+                <div class="sidebar-label">Hệ thống</div>
+                <a class="sidebar-link" href="@Url.Action("Index", "Home")">
+                    <span class="sidebar-icon">🏠</span> Về cửa hàng
+                </a>
+                <a class="sidebar-link" href="/Identity/Account/Manage">
+                    <span class="sidebar-icon">⚙️</span> Tài khoản
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-content">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Quản lý Phản hồi</h1>
+                </div>
+                <div class="total-badge" id="totalBadge">
+                    TỔNG: @Model.Count() TIN NHẮN
+                </div>
+            </div>
+
+            <!-- TABLE PANEL -->
+            <div class="panel">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Khách hàng</th>
+                            <th>Nội dung</th>
+                            <th>Ngày gửi</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: right;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var item in Model)
                             {
-                                <span style="color: #3b82ff; font-size: 0.7rem; border: 1px solid #3b82ff; padding: 2px 8px;">ĐÃ XỬ LÝ</span>
+                                <tr id="row-@item.Id">
+                                    <td>
+                                        <div class="customer-name">@item.FullName</div>
+                                        <div class="customer-email">@item.Email</div>
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="msg-content"
+                                             onclick="toggleMessage(this)"
+                                             title="Click để xem đầy đủ hoặc thu gọn">
+                                            @item.Message
+                                        </div>
+                                    </td>
+
+                                    <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
+                                    
+                                    <td>
+                                        @if (item.IsRead)
+                                        {
+                                            <span class="status-badge processed">✓ Đã xử lý</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge pending">⏳ Chưa xử lý</span>
+                                        }
+                                    </td>
+                                    
+                                    <td style="text-align: right;">
+                                        <button class="btn-action btn-reply"
+                                                data-id="@item.Id"
+                                                data-msg="@item.Message"
+                                                data-email="@item.Email"
+                                                data-name="@item.FullName"
+                                                title="Phản hồi">
+                                            💬 Trả lời
+                                        </button>
+                                        <button class="btn-action btn-delete"
+                                                onclick="deleteMsg(@item.Id)"
+                                                title="Xóa">
+                                            🗑️ Xóa
+                                        </button>
+                                    </td>
+                                </tr>
                             }
-                            else
-                            {
-                                <span style="color: #ff3b3b; font-size: 0.7rem; border: 1px solid #ff3b3b; padding: 2px 8px;">CHƯA XỬ LÝ</span>
-                            }
-                        </td>
-                        <td style="padding: 20px; text-align: right; vertical-align: top;">
-                            <button class="btn-reply"
-                                    data-id="@item.Id"
-                                    data-msg="@item.Message"
-                                    style="background:none; border:none; color:#f5f5f0; cursor:pointer; margin-right:10px;">
-                                Reply
-                            </button>
-                            <button onclick="deleteMsg(@item.Id)" style="background:none; border:none; color:#ff3b3b; cursor:pointer;">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px;">
+                                    <div class="empty-state">
+                                        <div class="empty-state-icon">📭</div>
+                                        <p class="empty-state-text">Chưa có phản hồi nào từ khách hàng</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </main>
     </div>
 </div>
 
-@* Modal phản hồi *@
-<div id="modalReply" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:999; align-items:center; justify-content:center;">
-    <div style="background:#141414; border:1px solid #c8ff00; width:600px; padding:30px; font-family:'Space Mono';">
-        <h3 style="color:#c8ff00; margin-top:0; border-bottom:1px solid #222; padding-bottom:10px;">PHẢN HỒI LIÊN HỆ</h3>
-        <div style="margin-bottom: 15px;">
-            <label style="color:#6e6e68; font-size:0.7rem; text-transform:uppercase; display:block; margin-bottom:5px;">Tin nhắn khách:</label>
-            <div id="txtCustomerMsg" style="color:#fff; font-size:0.85rem; background:#0a0a0a; border-left:2px solid #c8ff00; padding:15px; max-height:180px; overflow-y:auto; white-space: pre-wrap; word-break: break-all;"></div>
+<!-- REPLY MODAL -->
+<div class="modal-overlay" id="replyModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Phản hồi liên hệ</div>
+                <h2 class="modal-title">Gửi tin nhắn trả lời</h2>
+            </div>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
-        <div style="margin-bottom: 20px;">
-            <label style="color:#6e6e68; font-size:0.7rem; text-transform:uppercase; display:block; margin-bottom:5px;">Phản hồi:</label>
-            <textarea id="adminReply" style="width:100%; background:#0a0a0a; border:1px solid #222; color:#fff; padding:10px;" rows="5" placeholder="Gõ phản hồi..."></textarea>
+
+        <div class="modal-body">
+            <!-- Customer Message Display -->
+            <div class="form-group">
+                <label>Tin nhắn từ khách hàng</label>
+                <div class="form-display" id="txtCustomerMsg"></div>
+            </div>
+
+            <!-- Reply Message -->
+            <div class="form-group">
+                <label>Phản hồi của bạn</label>
+                <textarea class="form-control"
+                          id="adminReply"
+                          rows="6"
+                          placeholder="Nhập nội dung phản hồi của bạn..."></textarea>
+            </div>
         </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <button onclick="closeModal()" style="background:none; border:1px solid #6e6e68; color:#6e6e68; padding:8px 20px; cursor:pointer;">ĐÓNG</button>
-            <button id="btnSend" style="background:#c8ff00; border:none; color:#000; padding:8px 20px; font-weight:bold; cursor:pointer;">GỬI PHẢN HỒI</button>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Hủy bỏ</button>
+            <button class="btn btn-primary" id="btnSend" onclick="sendReply()">Gửi phản hồi</button>
         </div>
+
         <input type="hidden" id="hdnId" />
     </div>
 </div>
@@ -99,74 +192,114 @@
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Toggle message expansion
         function toggleMessage(element) {
-        const el = $(element);
-        if (el.css('-webkit-line-clamp') === '2') {
-        el.css({ '-webkit-line-clamp': 'unset', 'display': 'block', 'background': '#1a1a1a', 'padding': '10px', 'border-radius': '4px' });
-        } else {
-        el.css({ '-webkit-line-clamp': '2', 'display': '-webkit-box', 'background': 'transparent', 'padding': '0' });
-        }
+        $(element).toggleClass('expanded');
         }
 
+        // Open reply modal
         $(document).on('click', '.btn-reply', function() {
         const id = $(this).data('id');
         const msg = $(this).data('msg');
+            
         $('#hdnId').val(id);
         $('#txtCustomerMsg').text(msg);
-        $('#adminReply').val('');
-        $('#modalReply').css('display', 'flex');
+        $('#adminReply').val('').focus();
+        $('#replyModal').addClass('show');
         });
 
-        function closeModal() { $('#modalReply').hide(); }
+        // Close modal
+        function closeModal() {
+        $('#replyModal').removeClass('show');
+        }
 
-        $('#btnSend').click(function() {
+        // Close modal when clicking overlay
+        $('#replyModal').on('click', function(e) {
+        if ($(e.target).is('#replyModal')) {
+        closeModal();
+        }
+        });
+
+        // Send reply
+        function sendReply() {
         const id = $('#hdnId').val();
-        const reply = $('#adminReply').val();
-        if (!reply.trim()) return alert("Nhập nội dung!");
+        const reply = $('#adminReply').val().trim();
             
-        $(this).prop('disabled', true).text('ĐANG GỬI...');
+        if (!reply) {
+        alert('Vui lòng nhập nội dung phản hồi!');
+        return;
+        }
+
+        const $btn = $('#btnSend');
+        $btn.prop('disabled', true).text('Đang gửi...');
+
         $.ajax({
         url: '/Admin/ReplyContact',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ Id: parseInt(id), AdminReply: reply }),
-        success: function(res) {
-        if (res.success) { alert("Thành công!"); location.reload(); }
-        else { alert(res.message); $('#btnSend').prop('disabled', false).text('GỬI PHẢN HỒI'); }
-        }
-        });
-        });
-
-        // --- HÀM XÓA ĐÃ SỬA LẠI ---
-        function deleteMsg(id) {
-        if (confirm("Xóa tin nhắn này?")) {
-        const token = $('input[name="__RequestVerificationToken"]').val();
-                
-        $.ajax({
-        url: '/Admin/DeleteContact',
-        type: 'POST',
-        contentType: 'application/json', // Bắt buộc phải có để Controller nhận [FromBody]
-        headers: {
-        "RequestVerificationToken": token // Gửi token lên Header
-        },
-        data: JSON.stringify({ id: id.toString() }), // Chuyển sang JSON string
+        data: JSON.stringify({
+        Id: parseInt(id),
+        AdminReply: reply
+        }),
         success: function(res) {
         if (res.success) {
-        $('#row-' + id).fadeOut(400, function() {
-        $(this).remove();
-        let countText = $('#totalBadge').text();
-        let count = parseInt(countText.replace(/[^0-9]/g, ''));
-        $('#totalBadge').text('TỔNG: ' + (count > 0 ? count - 1 : 0) + ' TIN NHẮN');
-        });
+        alert('✓ Gửi phản hồi thành công!');
+        closeModal();
+        location.reload();
         } else {
-        alert(res.message || "Lỗi khi xóa!");
+        alert('✕ ' + (res.message || 'Lỗi không xác định'));
+        $btn.prop('disabled', false).text('Gửi phản hồi');
         }
         },
         error: function() {
-        alert("Lỗi hệ thống hoặc chưa đăng nhập!");
+        alert('✕ Lỗi kết nối với máy chủ');
+        $btn.prop('disabled', false).text('Gửi phản hồi');
         }
         });
         }
+
+        // Delete message
+        function deleteMsg(id) {
+        if (!confirm('Bạn có chắc chắn muốn xóa tin nhắn này không?')) {
+        return;
         }
+
+        const token = $('input[name="__RequestVerificationToken"]').val();
+            
+        $.ajax({
+        url: '/Admin/DeleteContact',
+        type: 'POST',
+        contentType: 'application/json',
+        headers: {
+        'RequestVerificationToken': token
+        },
+        data: JSON.stringify({ id: id.toString() }),
+        success: function(res) {
+        if (res.success) {
+        $('#row-' + id).fadeOut(300, function() {
+        $(this).remove();
+                            
+        // Update badge
+        let countText = $('#totalBadge').text();
+        let count = parseInt(countText.replace(/[^0-9]/g, ''));
+        count = Math.max(0, count - 1);
+        $('#totalBadge').text('TỔNG: ' + count + ' TIN NHẮN');
+        });
+        } else {
+        alert('✕ ' + (res.message || 'Lỗi khi xóa'));
+        }
+        },
+        error: function() {
+        alert('✕ Lỗi kết nối hoặc chưa đăng nhập');
+        }
+        });
+        }
+
+        // Close modal with Escape key
+        $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#replyModal').hasClass('show')) {
+        closeModal();
+        }
+        });
     </script>
 }

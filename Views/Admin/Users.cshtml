@@ -2,10 +2,12 @@
 @{
     ViewData["Title"] = "Quản lý Người dùng";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+
 }
 
 @* <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"> *@
-<link href="~/css/Admin_Users.css" asp-append-version="true" rel="stylesheet"/>
+<link href="~/css/Admin/Admin_Users.css" asp-append-version="true" rel="stylesheet"/>
 
 @Html.AntiForgeryToken()
 
@@ -14,19 +16,52 @@
         <aside class="admin-sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-label">Tổng quan</div>
-                <a class="sidebar-link" href="@Url.Action("Index", "Admin")"><span class="sidebar-icon">▣</span> Dashboard</a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">◈</span> Doanh thu</a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">◎</span> Đơn hàng</a>
+                <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
+                    <span class="sidebar-icon">📊</span> Dashboard
+                </a>
+                
+                @* Đoạn thay đổi ở đây *@
+                <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
+                    <span class="sidebar-icon">💰</span> Doanh thu
+                </a>
+                <a class="sidebar-link @(currentAction == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")">
+                    <span class="sidebar-icon">📦</span> Đơn hàng
+                </a>
             </div>
+
             <div class="sidebar-section">
                 <div class="sidebar-label">Quản lý</div>
-                <a class="sidebar-link active" href="@Url.Action("Users", "Admin")"><span class="sidebar-icon">◉</span> Người dùng</a>
-                <a class="sidebar-link" href="@Url.Action("Products", "Admin")"><span class="sidebar-icon">◫</span> Sản phẩm</a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">◧</span> Danh mục</a>
+                <a class="sidebar-link @(currentAction == "Users" ? "active" : "")" href="@Url.Action("Users", "Admin")">
+                    <span class="sidebar-icon">👥</span> Người dùng
+                </a>
+                <a class="sidebar-link @(currentAction == "Products" ? "active" : "")" href="@Url.Action("Products", "Admin")">
+                    <span class="sidebar-icon">👕</span> Sản phẩm
+                </a>
+                <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@Url.Action("Categories", "Admin")">
+                    <span class="sidebar-icon">📁</span> Danh mục
+                </a>
+                
+                <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@Url.Action("Sales", "Admin")">
+                    <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
+                </a>
+                
+                <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@Url.Action("Vouchers", "Admin")">
+                    <span class="sidebar-icon">🎫</span> Mã giảm giá
+                </a>
+
+                <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
+                    <span class="sidebar-icon">📩</span> Phản hồi
+                </a>
             </div>
+
             <div class="sidebar-section">
                 <div class="sidebar-label">Hệ thống</div>
-                <a class="sidebar-link" href="@Url.Action("Index", "Home")"><span class="sidebar-icon">↗</span> Về cửa hàng</a>
+                <a class="sidebar-link" href="@Url.Action("Index", "Home")">
+                    <span class="sidebar-icon">🏠</span> Về cửa hàng
+                </a>
+                <a class="sidebar-link" href="/Identity/Account/Manage">
+                    <span class="sidebar-icon">⚙️</span> Tài khoản
+                </a>
             </div>
         </aside>
 
