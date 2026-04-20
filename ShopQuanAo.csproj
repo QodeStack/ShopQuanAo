@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="MailKit" Version="4.16.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.3" />
@@ -33,5 +34,11 @@
     <PackageReference Include="NuGet.Packaging" Version="7.3.1" />
     <PackageReference Include="NuGet.Protocol" Version="7.3.1" />
   </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="MenShopBot\**" />
+		<Content Remove="MenShopBot\**" />
+		<EmbeddedResource Remove="MenShopBot\**" />
+		<None Remove="MenShopBot\**" />
+	</ItemGroup>
 
 </Project>

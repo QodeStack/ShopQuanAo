@@ -19,7 +19,6 @@ namespace ShopQuanAo.Controllers
             _checkoutService = checkoutService;
         }
 
-        // ĐÃ SỬA: Hứng selectedIds từ thanh URL
         [HttpGet]
         public async Task<IActionResult> Index([FromQuery] List<int> selectedIds)
         {
@@ -33,23 +32,19 @@ namespace ShopQuanAo.Controllers
 
             ViewBag.Cart = cart;
             ViewBag.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
-            // Đổ danh sách mã đang hoạt động ra ViewBag để hiển thị trên Popup
             ViewBag.Vouchers = await _checkoutService.GetActiveVouchersAsync();
 
-            // Khởi tạo DTO và nhét sẵn danh sách ID
             var dto = new PlaceOrderDto { SelectedIds = selectedIds };
 
-            // TÍNH NĂNG MỚI: Tự động điền thông tin từ đơn hàng cũ (nếu có)
             var lastOrder = await _checkoutService.GetLatestOrderAsync(userId);
             if (lastOrder != null)
             {
                 dto.Name = lastOrder.Name;
                 dto.MobileNumber = lastOrder.MobileNumber;
                 dto.Address = lastOrder.Address;
-                dto.Email = lastOrder.Email; // Thêm dòng này nếu Order của bạn có lưu Email
+                dto.Email = lastOrder.Email;
             }
 
-            // Truyền dto đã có sẵn data sang View
             return View(dto);
         }
 
@@ -59,7 +54,6 @@ namespace ShopQuanAo.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // ĐÃ SỬA: Truyền dto.SelectedIds vào để load lại đúng giỏ hàng nếu nhập sai form
                 var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User), dto.SelectedIds);
                 ViewBag.Cart = cart;
                 ViewBag.TotalAmount = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
@@ -67,20 +61,25 @@ namespace ShopQuanAo.Controllers
                 return View("Index", dto);
             }
 
-            // ĐÃ SỬA: Gọi hàm đã được dọn dẹp bên Service
             var result = await _checkoutService.PlaceOrderAsync(_userManager.GetUserId(User), dto);
             if (!result.Success) return RedirectToAction("Index", "Cart");
 
+            // KIỂM TRA PHƯƠNG THỨC THANH TOÁN ĐỂ CHUYỂN HƯỚNG
+            if (dto.PaymentMethod == "ChuyenKhoan")
+            {
+                return RedirectToAction("Payment", new { orderId = result.OrderId });
+            }
+
             return RedirectToAction("OrderSuccess", new { orderId = result.OrderId });
         }
+
         [HttpPost]
         public async Task<IActionResult> ApplyVoucher([FromBody] ApplyVoucherDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Code))
                 return Json(new { success = false, message = "Vui lòng nhập mã khuyến mãi." });
 
-            // Gọi DAO để lấy mã
-            var voucher = await _checkoutService.GetVoucherByCodeAsync(dto.Code); // Nhớ viết thêm hàm trung gian này trong Service nhé
+            var voucher = await _checkoutService.GetVoucherByCodeAsync(dto.Code);
 
             if (voucher == null)
                 return Json(new { success = false, message = "Mã khuyến mãi không tồn tại." });
@@ -99,13 +98,57 @@ namespace ShopQuanAo.Controllers
                 success = true,
                 message = "Áp dụng mã thành công!",
                 discountAmount = voucher.DiscountAmount,
-                voucherCode = voucher.Code // Trả về mã chuẩn hóa để giao diện lưu lại
+                voucherCode = voucher.Code
             });
         }
 
-        public IActionResult OrderSuccess(int orderId)
+        // TẠO GIAO DIỆN QUÉT MÃ QR RIÊNG BẰNG HÀM NÀY
+        [HttpGet]
+        public async Task<IActionResult> Payment(int orderId)
         {
-            ViewBag.OrderId = orderId;
+            var userId = _userManager.GetUserId(User);
+            var order = await _checkoutService.GetLatestOrderAsync(userId);
+
+            if (order == null || order.Id != orderId) return RedirectToAction("Index", "Home");
+
+            // Nếu đơn đã thanh toán rồi (ấn f5 lại) thì cho sang trang Success luôn
+            if (order.IsPaid) return RedirectToAction("OrderSuccess", new { orderId = order.Id });
+
+            ViewBag.OrderId = order.Id;
+            ViewBag.TotalAmount = order.TotalAmount;
+            return View();
+        }
+
+        // API TRẢ VỀ TRẠNG THÁI THANH TOÁN CHO JAVASCRIPT HỎI THĂM
+        [HttpGet]
+        public async Task<IActionResult> CheckPaymentStatus(int orderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            var order = await _checkoutService.GetLatestOrderAsync(userId);
+
+            if (order != null && order.Id == orderId)
+            {
+                return Json(new { isPaid = order.IsPaid });
+            }
+            return Json(new { isPaid = false });
+        }
+
+        // TRANG THÀNH CÔNG THUẦN TÚY (LỜI CẢM ƠN)
+        [HttpGet]
+        public async Task<IActionResult> OrderSuccess(int orderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            var order = await _checkoutService.GetLatestOrderAsync(userId);
+
+            if (order != null && order.Id == orderId)
+            {
+                ViewBag.OrderId = order.Id;
+            }
+            else
+            {
+                ViewBag.OrderId = orderId;
+            }
+
             return View();
         }
     }

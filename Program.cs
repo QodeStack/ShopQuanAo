@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ShopQuanAo.Data;
 using ShopQuanAo.Models.BEAN.Entity;
 using ShopQuanAo.BO;
-using ShopQuanAo.DAO; // BẮT BUỘC THÊM DÒNG NÀY ĐỂ GỌI TẦNG DAO
+using ShopQuanAo.DAO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,9 +18,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // 2. Cấu hình Identity với ApplicationUser
-// Chỉnh RequireConfirmedAccount = false để dễ test đồ án Quốc nhé
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
-    options.SignIn.RequireConfirmedAccount = false; // Chỉnh thành false ở đây
+    options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
@@ -30,16 +29,24 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultUI()
     .AddDefaultTokenProviders();
-//// ========== THÊM GOOGLE AUTHENTICATION ==========
-//// Lấy cấu hình Google từ appsettings.json
-//var googleSettings = builder.Configuration.GetSection("Authentication:Google");
-//builder.Services.AddAuthentication()
-//    .AddGoogle(options =>
-//    {
-//        options.ClientId = googleSettings["ClientId"];
-//        options.ClientSecret = googleSettings["ClientSecret"];
-//    });
-//// =============================================
+
+// ========== THÊM GOOGLE AUTHENTICATION ==========
+// Lấy cấu hình Google từ appsettings.json
+var google = builder.Configuration.GetSection("Authentication:Google");
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = google["ClientId"]!;
+        options.ClientSecret = google["ClientSecret"]!;
+        options.CallbackPath = "/signin-google";
+        // Để mặc định, ASP.NET Core sẽ tự xử lý callback path
+        options.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+            return Task.CompletedTask;
+        };
+    });
+// =============================================
 
 // 3. Cấu hình Cookie
 builder.Services.ConfigureApplicationCookie(options => {
@@ -86,7 +93,6 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        // Tránh app bị sập nếu DataSeed có lỗi
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Lỗi khi khởi tạo dữ liệu mẫu.");
     }
@@ -106,6 +112,7 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// QUAN TRỌNG: Thứ tự này không được sai
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapStaticAssets();

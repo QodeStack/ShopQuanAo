@@ -81,5 +81,11 @@ namespace ShopQuanAo.DAO
         {
             return await _context.Vouchers.Where(p => p.IsActive && p.Quantity > 0  ).ToListAsync();
         }
+        public async Task<Order?> GetOrderByIdAsync(int orderId)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+        }
     }
 }

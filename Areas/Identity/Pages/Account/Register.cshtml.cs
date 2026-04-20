@@ -182,6 +182,18 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 			catch { throw new InvalidOperationException($"Không thể tạo instance của '{nameof(ApplicationUser)}'."); }
 		}
 
-		private IUserEmailStore<ApplicationUser> GetEmailStore() => (IUserEmailStore<ApplicationUser>)_userStore;
+        // Thêm hàm này để xử lý nút bấm Google từ trang Register
+        public IActionResult OnPostExternalLogin(string provider, string returnUrl = null)
+        {
+            // Đường dẫn sau khi Google xác thực xong sẽ quay về trang ExternalLogin để xử lý tiếp
+            var redirectUrl = Url.Page("./ExternalLogin", pageHandler: "Callback", new { returnUrl });
+
+            // Cấu hình các thuộc tính để chuyển hướng sang Google
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+
+            return new ChallengeResult(provider, properties);
+        }
+
+        private IUserEmailStore<ApplicationUser> GetEmailStore() => (IUserEmailStore<ApplicationUser>)_userStore;
 	}
 }

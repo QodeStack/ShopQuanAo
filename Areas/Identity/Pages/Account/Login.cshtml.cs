@@ -118,5 +118,13 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 
 			return Page();
 		}
-	}
+
+        public IActionResult OnPostExternalLogin(string provider, string returnUrl = null)
+        {
+            // Yêu cầu chuyển hướng đến nhà cung cấp dịch vụ bên ngoài (Google)
+            var redirectUrl = Url.Page("./ExternalLogin", pageHandler: "Callback", new { returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);
+        }
+    }
 }
