@@ -75,9 +75,20 @@
                                 - Khách hàng được kiểm tra hàng trước khi nhận hàng.<br>
                                 - Freeship đơn từ 399K
                             </div>
+                            
+                            <div class="p-3 border-top d-flex align-items-center bg-white">
+                                <input class="form-check-input me-3 fs-5 m-0" type="radio" asp-for="PaymentMethod" value="ChuyenKhoan" id="payBank">
+                                <label class="form-check-label w-100 d-flex align-items-center mb-0" for="payBank" style="cursor: pointer;">
+                                    <span class="badge me-2 py-2 px-2 text-white" style="background-color: #0d6efd; font-size: 0.9rem;">
+                                        <i class="bi bi-qr-code-scan"></i> QR
+                                    </span>
+                                    <span class="fw-normal">Chuyển khoản ngân hàng (Quét mã tự động)</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <div class="col-lg-5">
@@ -195,12 +206,8 @@
                     {
                         foreach (var v in voucherList)
                         {
-                            // ==========================================
-                            // BỎ QUA CÁC MÃ BỊ ẨN (Chỉ hiện mã Public)
-                            // ==========================================
                             if (!v.IsPublic) continue;
 
-                            // Xử lý class an toàn để tránh lỗi Razor Parser
                             bool isEligible = totalAmount >= v.MinOrderAmount;
                             string opacityClass = isEligible ? "" : "opacity-50";
                       
@@ -261,9 +268,8 @@
     </style>
 
     <script>
-        // Lấy tiền từ C# (ép kiểu sang số nguyên để JS dễ đọc)
         const originalTotal = @Convert.ToInt32(totalAmount);
-
+        
         function selectVoucher(code) {
             var modalEl = document.getElementById('voucherModal');
             var modal = bootstrap.Modal.getInstance(modalEl);
@@ -295,10 +301,9 @@
                 });
 
                 const data = await response.json();
-
+                
                 if (data.success) {
                     messageEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> ' + data.message + '</span>';
-                    
                     const discount = data.discountAmount;
                     let newTotal = originalTotal - discount;
                     if (newTotal < 0) newTotal = 0;

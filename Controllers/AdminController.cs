@@ -293,6 +293,48 @@ namespace ShopQuanAo.Controllers
                 return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
         }
+        [HttpGet]
+        public async Task<IActionResult> GetCategories()
+        {
+            var categories = await _context.Categories.ToListAsync();
+            return Json(categories);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken] // Đừng quên gửi RequestVerificationToken từ View nếu dùng cái này
+        public async Task<IActionResult> AddCategory([FromBody] Categories category)
+        {
+            if (category == null) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+            var res = await _service.AddCategoryAsync(category);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCategory([FromBody] Categories category)
+        {
+            if (category == null || category.Id <= 0) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+            var res = await _service.UpdateCategoryAsync(category);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+        public IActionResult Categories()
+        {
+            return View();
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCategory([FromBody] DeleteDto dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.Id))
+                return Json(new { success = false, message = "ID trống." });
+
+            if (int.TryParse(dto.Id, out int categoryId))
+            {
+                var res = await _service.DeleteCategoryAsync(categoryId);
+                return Json(new { success = res.Success, message = res.Message });
+            }
+            return Json(new { success = false, message = "Định dạng ID không đúng." });
+        }
 
     }
     

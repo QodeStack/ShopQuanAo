@@ -33,5 +33,11 @@
     <PackageReference Include="NuGet.Packaging" Version="7.3.1" />
     <PackageReference Include="NuGet.Protocol" Version="7.3.1" />
   </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="MenShopBot\**" />
+		<Content Remove="MenShopBot\**" />
+		<EmbeddedResource Remove="MenShopBot\**" />
+		<None Remove="MenShopBot\**" />
+	</ItemGroup>
 
 </Project>
