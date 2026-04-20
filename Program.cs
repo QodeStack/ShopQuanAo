@@ -30,6 +30,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultUI()
     .AddDefaultTokenProviders();
+//// ========== THÊM GOOGLE AUTHENTICATION ==========
+//// Lấy cấu hình Google từ appsettings.json
+//var googleSettings = builder.Configuration.GetSection("Authentication:Google");
+//builder.Services.AddAuthentication()
+//    .AddGoogle(options =>
+//    {
+//        options.ClientId = googleSettings["ClientId"];
+//        options.ClientSecret = googleSettings["ClientSecret"];
+//    });
+//// =============================================
 
 // 3. Cấu hình Cookie
 builder.Services.ConfigureApplicationCookie(options => {

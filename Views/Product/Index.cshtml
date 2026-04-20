@@ -10,126 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
-
-<style>
-    :root {
-        --brand-black: #111;
-        --font-main: 'Quicksand', sans-serif;
-    }
-
-    body { font-family: var(--font-main); background-color: #fff; color: #333; margin: 0; padding: 0; }
-
-    /* --- BANNER --- */
-    .shop-hero {
-        width: 100%;
-        overflow: hidden;
-        line-height: 0;
-        background: #f4f4f4;
-    }
-    .shop-hero img {
-        width: 100%;
-        height: auto;
-        display: block;
-        object-fit: contain;
-        transition: opacity 0.4s ease-in-out;
-    }
-
-    /* --- DANH MỤC --- */
-    .cat-nav-wrapper {
-        background: #fff;
-        padding: 25px 0;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    .cat-nav-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr); 
-        gap: 10px;
-        max-width: 1100px;
-        margin: 0 auto;
-    }
-    .cat-tab-item {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-        border: 1px solid #eee;
-        text-decoration: none;
-        color: #444;
-        font-weight: 700;
-        font-size: 11px;
-        transition: 0.2s ease;
-        text-transform: uppercase;
-        cursor: pointer;
-    }
-    .cat-tab-item i { margin-right: 6px; font-size: 13px; }
-    .cat-tab-item:hover, .cat-tab-item.active {
-        background: var(--brand-black);
-        color: #fff;
-        border-color: var(--brand-black);
-    }
-
-    /* --- FILTER & SEARCH BAR --- */
-    .filter-select-custom {
-        border: none;
-        border-bottom: 1px solid #ccc;
-        font-size: 12px;
-        color: #666;
-        outline: none;
-        padding: 5px 0;
-        margin-right: 20px;
-        background: transparent;
-        cursor: pointer;
-        font-family: var(--font-main);
-    }
-
-    /* --- GRID SẢN PHẨM --- */
-    .product-grid-layout {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr); 
-        gap: 25px 15px;
-        margin-top: 30px;
-    }
-    .product-card-item { position: relative; transition: 0.3s; }
-    .image-container { 
-        position: relative; 
-        aspect-ratio: 3/4; 
-        overflow: hidden; 
-        background: #f9f9f9; 
-        margin-bottom: 10px; 
-    }
-    .image-container img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s ease; }
-    .product-card-item:hover img { transform: scale(1.05); }
-
-    .badge-out-stock {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.8); color: white; padding: 6px 12px;
-        font-size: 9px; font-weight: 700; z-index: 5;
-    }
-
-    .product-name-link {
-        font-size: 11px;
-        text-transform: uppercase; font-weight: 700;
-        margin-bottom: 4px; display: block; text-decoration: none; color: #222;
-        line-height: 1.4;
-        height: 32px;
-        overflow: hidden;
-    }
-    .price-display { font-weight: 700; font-size: 13px; color: #000; }
-
-    /* --- PHÂN TRANG --- */
-    .pagination-container { margin: 50px 0; display: flex; justify-content: center; gap: 5px; }
-    .page-btn {
-        width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
-        border: 1px solid #eee; text-decoration: none; color: #666; font-weight: 600; font-size: 12px;
-    }
-    .page-btn.active { background: #000; color: #fff; border-color: #000; }
-
-    .loading-fade { opacity: 0.4; pointer-events: none; transition: 0.2s; }
-
-    /* RESPONSIVE */
-    @@media (max-width: 992px) { .cat-nav-grid { grid-template-columns: repeat(3, 1fr); } }
-    @@media (max-width: 576px) { .cat-nav-grid { grid-template-columns: repeat(2, 1fr); } }
-</style>
+<link href="~/css/Product/Product_Index.css" asp-append-version="true" rel="stylesheet" />
 <section class="shop-hero" id="shopHero">
     <img src="@(ViewBag.BannerPath ?? "/images/default-banner.jpg")" alt="Banner">
 </section>
@@ -192,16 +73,83 @@
                 foreach (var item in Model)
                 {
                     bool isSoldOut = item.TotalQuantity <= 0;
+                    bool hasSale = item.SalePrice > 0 && item.Price > item.SalePrice;
+                    int discountPercent = hasSale ? (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100) : 0;
+                    
                     <div class="product-card-item">
                         <div class="image-container">
-                            @if (isSoldOut) { <div class="badge-out-stock">HẾT HÀNG</div> }
+                            @if (hasSale)
+                            {
+                                <span class="sale-badge">-@discountPercent%</span>
+                            }
+                            @if (isSoldOut) 
+                            { 
+                                <div class="badge-out-stock">HẾT HÀNG</div> 
+                            }
                             <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
                                 <img src="@item.Image" alt="@item.ProductName" style="@(isSoldOut ? "opacity:0.5" : "")">
                             </a>
                         </div>
                         <div class="product-meta">
                             <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="product-name-link">@item.ProductName</a>
-                            <div class="price-display">@item.Price.ToString("N0")₫</div>
+                            
+                            <!-- Rating Section -->
+                            @{
+                                var reviews = ViewBag.AllReviews as Dictionary<int, List<ProductReview>>;
+                                double avgRating = 0;
+                                int reviewCount = 0;
+                                
+                                if (reviews != null && reviews.ContainsKey(item.Id))
+                                {
+                                    var productReviews = reviews[item.Id];
+                                    if (productReviews.Any())
+                                    {
+                                        avgRating = productReviews.Average(r => r.Rating);
+                                        reviewCount = productReviews.Count;
+                                    }
+                                }
+                            }
+                            
+                            <div class="product-rating">
+                                <div class="stars">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        @if (i <= avgRating)
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else if (i - avgRating < 1 && i - avgRating > 0)
+                                        {
+                                            <i class="bi bi-star-half"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star"></i>
+                                        }
+                                    }
+                                </div>
+                                @if (reviewCount > 0)
+                                {
+                                    <span class="rating-value">@avgRating.ToString("0.0")</span>
+                                    <span class="rating-count">(@reviewCount)</span>
+                                }
+                                else
+                                {
+                                    <span class="rating-count">(Chưa có đánh giá)</span>
+                                }
+                            </div>
+                            
+                            <div class="price-display">
+    @if (hasSale)
+    {
+        <span class="price-current is-sale">@item.SalePrice.ToString("N0")₫</span>
+        <span class="price-old">@item.Price.ToString("N0")₫</span>
+    }
+    else
+    {
+        <span class="price-current">@item.Price.ToString("N0")₫</span>
+    }
+</div>
                         </div>
                     </div>
                 }
@@ -262,54 +210,48 @@
         }
 
         function fetchProductAjax() {
-    const grid = $('#productGridContainer');
-    const sortOrder = $('#sortOrder').val();
+            const grid = $('#productGridContainer');
+            const sortOrder = $('#sortOrder').val();
             
-    grid.addClass('loading-fade');
-    $('#shopHero img').css('opacity', '0.5');
+            grid.addClass('loading-fade');
+            $('#shopHero img').css('opacity', '0.5');
 
-    // Gom dữ liệu gửi đi
-    const requestData = {
-        categoryId: currentCategoryId,
-        search: currentSearch,
-        page: currentPage,
-        sort: sortOrder,
-        isAjax: true 
-    };
+            const requestData = {
+                categoryId: currentCategoryId,
+                search: currentSearch,
+                page: currentPage,
+                sort: sortOrder,
+                isAjax: true 
+            };
 
-    $.ajax({
-        url: '@Url.Action("Index", "Product")',
-        type: 'GET',
-        data: requestData,
-        success: function(response) {
-            // 1. Cập nhật Grid sản phẩm
-            const newGridHtml = $(response).find('#productGridContainer').html();
-            grid.html(newGridHtml);
+            $.ajax({
+                url: '@Url.Action("Index", "Product")',
+                type: 'GET',
+                data: requestData,
+                success: function(response) {
+                    const newGridHtml = $(response).find('#productGridContainer').html();
+                    grid.html(newGridHtml);
 
-            // 2. Cập nhật Banner dựa trên categoryId mới
-            const newBannerPath = $(response).find('#shopHero img').attr('src');
-            $('#shopHero img').attr('src', newBannerPath).css('opacity', '1');
+                    const newBannerPath = $(response).find('#shopHero img').attr('src');
+                    $('#shopHero img').attr('src', newBannerPath).css('opacity', '1');
 
-            // 3. Cập nhật tổng số lượng
-            const newCount = $(response).find('#totalCount').text();
-            $('#totalCount').text(newCount);
+                    const newCount = $(response).find('#totalCount').text();
+                    $('#totalCount').text(newCount);
 
-            // 4. CẬP NHẬT URL (History API) - Tăng trải nghiệm người dùng
-            // Loại bỏ 'isAjax' để URL trông đẹp hơn
-            const cleanParams = { ...requestData };
-            delete cleanParams.isAjax;
-            
-            const newUrl = window.location.pathname + '?' + $.param(cleanParams);
-            window.history.pushState({ path: newUrl }, '', newUrl);
+                    const cleanParams = { ...requestData };
+                    delete cleanParams.isAjax;
+                    
+                    const newUrl = window.location.pathname + '?' + $.param(cleanParams);
+                    window.history.pushState({ path: newUrl }, '', newUrl);
 
-            grid.removeClass('loading-fade');
-        },
-        error: function() {
-            grid.removeClass('loading-fade');
-            $('#shopHero img').css('opacity', '1');
-            console.error("Lỗi tải AJAX");
+                    grid.removeClass('loading-fade');
+                },
+                error: function() {
+                    grid.removeClass('loading-fade');
+                    $('#shopHero img').css('opacity', '1');
+                    console.error("Lỗi tải AJAX");
+                }
+            });
         }
-    });
-}
     </script>
 }

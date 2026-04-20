@@ -295,7 +295,5 @@ namespace ShopQuanAo.Controllers
         }
 
     }
-
-    // --- DTO: BẠN CÓ THỂ ĐỂ TẠM Ở ĐÂY HOẶC CẮT SANG FILE RIÊNG (SaleRequestDto.cs) ---
     
 }

@@ -4,144 +4,9 @@
 }
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link href="~/css/Product/Product_Sale.css" asp-append-version="true" rel="stylesheet" />
 
-<style>
-    /* --- Nền tảng & Font chữ --- */
-    body, .sale-page {
-        font-family: 'DM Sans', sans-serif !important;
-        background-color: #fff;
-        color: #222;
-    }
 
-    /* --- Banner Sale --- */
-    .sale-hero {
-        width: 100%;
-        overflow: hidden;
-        line-height: 0;
-        margin-bottom: 40px;
-    }
-    .sale-hero img {
-        width: 100%;
-        height: auto;
-        display: block;
-        object-fit: cover;
-    }
-
-    /* --- Sidebar Danh mục --- */
-    .filter-sidebar { 
-        border-right: 1px solid #f0f0f0; 
-        padding-right: 25px; 
-    }
-    .sidebar-label { 
-        font-size: 14px; 
-        font-weight: 700; 
-        text-transform: uppercase; 
-        margin-bottom: 25px; 
-        color: #000; 
-        letter-spacing: 1px;
-        border-bottom: 2px solid #000; 
-        padding-bottom: 8px; 
-        display: inline-block; 
-    }
-    .filter-list { list-style: none; padding: 0; margin: 0; }
-    .filter-list li { margin-bottom: 15px; }
-    .filter-list a { 
-        text-decoration: none; 
-        color: #666; 
-        font-size: 16px; 
-        transition: all 0.2s ease; 
-        display: block; 
-    }
-    .filter-list a:hover, .active-cat { 
-        color: #000 !important; 
-        font-weight: 700 !important; 
-        padding-left: 5px;
-    }
-
-    /* --- Header Nội dung --- */
-    .page-eyebrow { font-size: 11px; color: #ff0000; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
-    .page-title { font-size: 28px; font-weight: 700; text-transform: uppercase; margin: 5px 0 0 0; }
-    .product-count { font-size: 13px; color: #888; margin-top: 5px; }
-
-    .sort-select {
-        font-family: 'DM Sans', sans-serif;
-        font-size: 14px;
-        border: none;
-        border-bottom: 1px solid #ddd;
-        padding: 5px 10px;
-        cursor: pointer;
-        outline: none;
-        background: transparent;
-    }
-
-    /* --- Lưới sản phẩm (5 Cột) --- */
-    .product-grid { 
-        display: grid; 
-        grid-template-columns: repeat(5, 1fr); 
-        gap: 25px 15px; 
-    }
-
-    .product-card { 
-        border: 1px solid #f2f2f2; 
-        position: relative; 
-        transition: transform 0.3s, box-shadow 0.3s; 
-        background: #fff; 
-    }
-    .product-card:hover { 
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    }
-
-    .product-img-container { 
-        position: relative; 
-        overflow: hidden; 
-        aspect-ratio: 3/4; 
-        background: #f9f9f9;
-    }
-    .product-img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s ease; }
-    .product-card:hover .product-img { transform: scale(1.08); }
-
-    .sale-tag { 
-        position: absolute; 
-        top: 10px; 
-        left: 10px; 
-        background: #ff0000; 
-        color: #fff; 
-        padding: 4px 10px; 
-        font-size: 11px; 
-        font-weight: 700; 
-        z-index: 2; 
-        border-radius: 2px;
-    }
-
-    .product-info { padding: 15px 10px; text-align: left; }
-    .product-name a { 
-        font-size: 13px; 
-        color: #333; 
-        font-weight: 500; 
-        text-decoration: none; 
-        display: block; 
-        margin-bottom: 8px; 
-        text-transform: uppercase; 
-        line-height: 1.4; 
-        height: 36px; 
-        overflow: hidden; 
-    }
-    
-    .price-box { display: flex; gap: 10px; align-items: center; }
-    .price-current { color: #ff0000; font-weight: 700; font-size: 15px; }
-    .price-old { text-decoration: line-through; color: #bbb; font-size: 12px; }
-
-    /* --- Phân trang --- */
-    .pagination-area { display: flex; justify-content: center; gap: 8px; margin-top: 50px; padding-bottom: 40px; }
-    .page-num { 
-        display: flex; align-items: center; justify-content: center; 
-        min-width: 38px; height: 38px; border: 1px solid #eee; 
-        text-decoration: none; color: #444; font-size: 14px; transition: 0.3s; 
-    }
-    .page-num:hover:not(.active) { border-color: #000; color: #000; }
-    .page-num.active { background: #000; color: #fff; border-color: #000; font-weight: 700; }
-
-</style>
 
 <section class="sale-hero">
     <img src="~/Image/Banner_sanpham/Banner_sale.jpg" alt="Outlet Sale Banner">
@@ -219,6 +84,51 @@
                                 <div class="product-name">
                                     <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">@item.ProductName</a>
                                 </div>
+                                <!-- Rating Section -->
+                            @{
+                                var reviews = ViewBag.AllReviews as Dictionary<int, List<ProductReview>>;
+                                double avgRating = 0;
+                                int reviewCount = 0;
+                                
+                                if (reviews != null && reviews.ContainsKey(item.Id))
+                                {
+                                    var productReviews = reviews[item.Id];
+                                    if (productReviews.Any())
+                                    {
+                                        avgRating = productReviews.Average(r => r.Rating);
+                                        reviewCount = productReviews.Count;
+                                    }
+                                }
+                            }
+                            
+                            <div class="product-rating">
+                                <div class="stars">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        @if (i <= avgRating)
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else if (i - avgRating < 1 && i - avgRating > 0)
+                                        {
+                                            <i class="bi bi-star-half"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star"></i>
+                                        }
+                                    }
+                                </div>
+                                @if (reviewCount > 0)
+                                {
+                                    <span class="rating-value">@avgRating.ToString("0.0")</span>
+                                    <span class="rating-count">(@reviewCount)</span>
+                                }
+                                else
+                                {
+                                    <span class="rating-count">(Chưa có đánh giá)</span>
+                                }
+                            </div>
                                 <div class="price-box">
                                     <span class="price-current">@item.SalePrice.ToString("N0")₫</span>
                                     <span class="price-old">@item.Price.ToString("N0")₫</span>

@@ -69,604 +69,130 @@ body {
     .navbar-nav .nav-link:hover::after {
         width: 50%;
     }
-
-/* --- PHẦN MEGA MENU ĐÃ TÍCH HỢP --- */
-.dropdown-mega {
-    position: static !important; /* Bắt buộc để menu rộng 100% màn hình */
+    /* ----------------------FOOTER------------------*/
+/* Toàn bộ khu vực Footer */
+.footer-custom {
+    background-color: #ffffff; /* Nền trắng */
+    color: #333333; /* Chữ xám đen để dịu mắt */
+    padding: 60px 0 40px;
+    border-top: 1px solid #eeeeee; /* Đường kẻ mảnh bên trên */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.mega-menu-wrapper {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    width: 100%;
-    background: #ffffff;
-    z-index: 9999;
-    visibility: hidden;
-    opacity: 0;
-    transform: translateY(15px);
-    transition: all 0.3s ease-in-out;
-    border-top: 1px solid #f1f1f1;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+/* Tiêu đề các cột (H5) */
+.footer-title {
+    color: #000000;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
 }
 
-.dropdown-mega:hover .mega-menu-wrapper {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
+/* Tiêu đề nhỏ (H6) */
+.footer-subtitle {
+    color: #000000;
+    font-weight: 600;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    text-transform: none;
 }
 
-.mega-links li {
-    margin-bottom: 8px;
-    text-align: left;
+/* Nội dung văn bản và List */
+.footer-text {
+    color: #666666;
+    line-height: 1.8;
+    font-size: 0.95rem;
+}
+
+.footer-links {
+    padding-left: 0;
     list-style: none;
 }
 
-    .mega-links li a {
-        color: #666 !important;
-        text-decoration: none;
-        font-size: 14px;
-        transition: 0.3s;
-        display: block;
+    .footer-links li {
+        margin-bottom: 12px;
     }
 
-        .mega-links li a:hover {
-            color: #000 !important;
+    .footer-links a {
+        color: #666666;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .footer-links a:hover {
+            color: #dc3545; /* Màu đỏ khi hover */
             padding-left: 5px;
         }
 
-/* ───── SESSION : HERO SLIDER ───── */
-.hero-wrapper {
-    padding: 20px;
-}
-
-.hero-slider {
-    position: relative;
-    height: 100vh;
-    overflow: hidden;
-    margin: 20px;
-    border-radius: 25px;
-}
-
-    .hero-slider .slide {
-        position: relative;
-        height: 100vh;
-    }
-
-        .hero-slider .slide img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center top;
-            filter: brightness(.38);
-        }
-
-        .hero-slider .slide::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient( to bottom, rgba(0,0,0,.15) 0%, rgba(0,0,0,.05) 30%, rgba(0,0,0,.45) 70%, rgba(0,0,0,.75) 100% );
-            z-index: 1;
-        }
-
-    .hero-slider .slick-prev,
-    .hero-slider .slick-next {
-        z-index: 10;
-        width: 56px;
-        height: 56px;
-        border: 1px solid rgba(247,245,242,.35);
-        border-radius: 50%;
-        background: rgba(10,10,10,.25);
-        backdrop-filter: blur(8px);
-        transition: background .3s, border-color .3s, transform .3s;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-        .hero-slider .slick-prev:hover,
-        .hero-slider .slick-next:hover {
-            background: rgba(247,245,242,.18);
-            border-color: rgba(247,245,242,.8);
-            transform: translateY(-50%) scale(1.08);
-        }
-
-    .hero-slider .slick-prev {
-        left: 20px;
-    }
-
-    .hero-slider .slick-next {
-        right: 20px;
-    }
-
-        .hero-slider .slick-prev:before,
-        .hero-slider .slick-next:before {
-            content: '';
-            display: block;
-            width: 8px;
-            height: 8px;
-            border-top: 1.5px solid rgba(247,245,242,.9);
-            border-right: 1.5px solid rgba(247,245,242,.9);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-        }
-
-    .hero-slider .slick-prev:before {
-        transform: translate(-30%, -50%) rotate(-135deg);
-    }
-
-    .hero-slider .slick-next:before {
-        transform: translate(-70%, -50%) rotate(45deg);
-    }
-
-.hero-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0 64px 72px 120px;
-    pointer-events: none;
-}
-
-.hero-tag {
-    display: inline-block;
-    font-family: var(--font-body);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--gray-300);
-    margin-bottom: 18px;
-    border-left: 2px solid var(--gray-300);
-    padding-left: 12px;
-}
-
-.hero-title {
-    font-family: var(--font-display);
-    font-size: clamp(64px, 9vw, 130px);
-    font-weight: 300;
-    line-height: 1.0;
-    color: var(--white);
-    letter-spacing: -.02em;
-    margin-bottom: 28px;
-    text-shadow: 0 2px 32px rgba(0,0,0,.5);
-}
-
-.hero-cta {
-    pointer-events: all;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    color: var(--white);
-    text-decoration: none;
-    border-bottom: 1px solid rgba(247,245,242,.4);
-    padding-bottom: 6px;
-    transition: border-color .3s, gap .3s;
-}
-
-    .hero-cta:hover {
-        color: var(--white);
-        border-color: var(--white);
-        gap: 20px;
-    }
-
-    .hero-cta .arrow {
-        font-size: 18px;
-    }
-
-/* ───── SESSION 2 — BEST SELLER ───── */
-.best-title {
-    font-size: 50px;
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-.product-card {
-    position: relative;
-    overflow: hidden;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transition: 0.3s;
-}
-
-    .product-card img {
-        width: 100%;
-        height: 420px;
-        object-fit: cover;
-        transition: transform 0.5s ease;
-    }
-
-    .product-card:hover img {
-        transform: scale(1.05);
-    }
-
-@media (max-width: 768px) {
-    .product-card img {
-        height: 280px;
-    }
-}
-
-/* ───── SESSION 3 — PHONG CÁCH RIÊNG ───── */
-.Portfolio {
-    margin-top: 150px;
-    padding-bottom: 60px;
-}
-
-    .Portfolio .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-
-        .Portfolio .container h1 {
-            color: black;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 50px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        .Portfolio .container .grid-item {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 400px);
-            gap: 16px;
-            width: 100%;
-        }
-
-            .Portfolio .container .grid-item .item-1 {
-                grid-column: 1 / span 2;
-            }
-
-            .Portfolio .container .grid-item .item-5 {
-                grid-column: 1 / span 2;
-            }
-
-            .Portfolio .container .grid-item .item-6 {
-                grid-column: 3 / span 1;
-                grid-row: 2 / span 2;
-            }
-
-            .Portfolio .container .grid-item .content {
-                position: relative;
-                height: 100%;
-                width: 100%;
-                overflow: hidden;
-                border-radius: 8px;
-            }
-
-            .Portfolio .container .grid-item .item img {
-                height: 100%;
-                width: 100%;
-                object-fit: cover;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                display: block;
-            }
-
-            .Portfolio .container .grid-item .overlay {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                height: 100%;
-                width: 100%;
-                opacity: 0;
-                transition: opacity 0.5s;
-            }
-
-            .Portfolio .container .grid-item .item:hover .overlay {
-                opacity: 1;
-                background-color: #00000056;
-            }
-
-            .Portfolio .container .grid-item .overlay i {
-                position: absolute;
-                right: 16px;
-                top: 16px;
-                padding: 14px;
-                color: #fff;
-                font-size: 20px;
-                border-radius: 12px;
-                background-image: linear-gradient(to right, #f55f8d 0, #f8ae56 51%, #f55f8d 100%);
-            }
-
-            .Portfolio .container .grid-item .item:hover .overlay i {
-                animation: cross 0.8s;
-            }
-
-            .Portfolio .container .grid-item .overlay h1 {
-                position: absolute;
-                left: 16px;
-                bottom: 65px;
-                color: #fff;
-                font-size: 20px;
-                font-weight: bold;
-                margin: 0;
-            }
-
-            .Portfolio .container .grid-item .item:hover .overlay h1 {
-                animation: bot_to_top 0.8s;
-            }
-
-            .Portfolio .container .grid-item .overlay .btn-detail {
-                position: absolute;
-                left: 16px;
-                bottom: 20px;
-                color: #fff;
-                font-size: 13px;
-                font-weight: 600;
-                text-transform: uppercase;
-                text-decoration: none;
-                letter-spacing: 1px;
-                padding: 8px 18px;
-                border: 1px solid rgba(255, 255, 255, 0.5);
-                border-radius: 4px;
-                background-color: rgba(0, 0, 0, 0.2);
-                transition: all 0.3s ease;
-            }
-
-                .Portfolio .container .grid-item .overlay .btn-detail:hover {
-                    background-color: #fff;
-                    color: #000;
-                    border-color: #fff;
-                }
-
-            .Portfolio .container .grid-item .item:hover .overlay .btn-detail {
-                animation: bot_to_top 0.8s forwards;
-            }
-
-    .Portfolio .grid-item .content::before {
-        content: "";
-        width: 50%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: -100%;
-        display: block;
-        background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 100%);
-        transform: skewX(-25deg);
-        transition: all 0.75s;
-        z-index: 1;
-    }
-
-    .Portfolio .grid-item .content:hover::before {
-        left: 125%;
-    }
-
-@keyframes bot_to_top {
-    from {
-        transform: translateY(200px);
-    }
-
-    to {
-        transform: translateY(0px);
-    }
-}
-
-@keyframes cross {
-    from {
-        transform: translateX(100px) translateY(-100px);
-    }
-
-    to {
-        transform: translateX(0px) translateY(0px);
-    }
-}
-
-/* ───── SESSION 4 — OUR BLOG ───── */
-.blog-section {
-    background-color: #fff;
-}
-
-.blog-main-title {
-    font-size: 28px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    margin-bottom: 5px;
-    color: #000;
-}
-
-.blog-sub-title {
-    font-size: 14px;
-    color: #666;
-    letter-spacing: 1px;
-}
-
-.blog-img-wrapper {
-    position: relative;
-    overflow: hidden;
-    aspect-ratio: 16 / 9;
-}
-
-.blog-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-    transition: transform 0.6s ease;
-}
-
-.blog-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.05);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.blog-card:hover .blog-img {
-    transform: scale(1.05);
-}
-
-.blog-card:hover .blog-overlay {
-    opacity: 1;
-}
-
-.blog-item-title {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-    .blog-item-title a {
-        text-decoration: none;
-        color: #000;
-        transition: color 0.3s;
-    }
-
-        .blog-item-title a:hover {
-            color: #ce0000;
-        }
-
-@media (max-width: 768px) {
-    .blog-main-title {
-        font-size: 22px;
-    }
-}
-
-/* ───── SESSION 5 — Service-policy ───── */
-.service-policy {
-    border-color: #f1f1f1 !important;
-}
-
-.policy-icon i {
-    color: #333;
-    width: 45px;
-    text-align: center;
-}
-
-.policy-text h6 {
-    font-size: 15px;
-    margin-bottom: 2px;
-    color: #222;
-}
-
-.policy-text p {
-    font-size: 13px;
-    color: #666;
-    line-height: 1.4;
-}
-
-.service-policy .col-md-3:hover .policy-icon i {
-    color: #ce0000;
-    transition: 0.3s;
-}
-
-/* -----------------------FOOTER---------------------------- */
-.footer-custom {
-    background-color: #f8f9fa;
-    padding: 50px 0;
-    color: #333;
-    font-size: 0.9rem;
-    border-top: 1px solid #eee;
-}
-
-.footer-title {
-    color: #ce0000;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 1.1rem;
-    margin-bottom: 20px;
-}
-
-.footer-subtitle {
-    font-weight: bold;
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-.footer-text {
-    line-height: 1.6;
-    margin-bottom: 15px;
-}
-
-.footer-links li {
-    margin-bottom: 8px;
-}
-
-    .footer-links li a {
-        text-decoration: none;
-        color: #333;
-        transition: color 0.3s;
-    }
-
-        .footer-links li a:hover {
-            color: #ce0000;
-        }
-
+/* Icon mạng xã hội */
 .social-icons a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    border: 1px solid #ddd;
-    color: #333;
-    margin-right: 5px;
-    border-radius: 4px;
-    text-decoration: none;
+    color: #333333;
+    font-size: 1.3rem;
+    margin-right: 18px;
+    transition: transform 0.3s ease, color 0.3s ease;
+    display: inline-block;
 }
 
     .social-icons a:hover {
-        background-color: #ce0000;
-        color: white;
-        border-color: #ce0000;
+        color: #dc3545;
+        transform: translateY(-3px);
     }
+
+/* --- Style cho phần CHỮ thay vì HÌNH ẢNH --- */
+.payment-methods-text,
+.shipping-methods-text {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.payment-badge,
+.shipping-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border: 1px solid #dddddd; /* Viền xám nhạt */
+    color: #444444;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 4px;
+    background-color: #fdfdfd;
+    transition: all 0.2s ease;
+}
+
+    .payment-badge:hover,
+    .shipping-badge:hover {
+        border-color: #000000;
+        background-color: #000000;
+        color: #ffffff;
+    }
+
+/* Form đăng ký nhận tin */
+.subscribe-form .input-group {
+    border-radius: 0;
+}
 
 .subscribe-form .form-control {
+    border: 1px solid #dddddd;
     border-radius: 0;
-    border-color: #ddd;
+    padding: 10px 15px;
+    box-shadow: none;
 }
 
-.subscribe-form .btn-danger {
-    background-color: #ce0000;
-    border-color: #ce0000;
-    border-radius: 0;
-    padding: 0 20px;
-    font-weight: bold;
-}
-
-.payment-methods img, .shipping-methods img {
-    max-height: 40px;
-    margin-top: 5px;
-}
-
-/* KHUNG LIÊN HỆ */
-.contact-container {
-    background: #ffffff;
-    border: none !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.form-control {
-    border: 1px solid #e1e1e1 !important;
-    background-color: #fdfdfd;
-    padding: 12px 15px;
-    transition: all 0.3s;
-}
-
-    .form-control:focus {
-        border-color: #000 !important;
-        background-color: #fff;
-        box-shadow: none;
+    .subscribe-form .form-control:focus {
+        border-color: #333;
     }
 
-.btn-black {
-    background: #000;
-    color: #fff;
-    letter-spacing: 2px;
+.subscribe-form .btn-danger {
+    border-radius: 0;
+    background-color: #000000; /* Đổi nút đăng ký sang đen cho ton-sur-ton */
+    border: none;
     font-weight: 600;
-    border-radius: 4px;
-    padding: 15px 30px;
+    padding: 0 25px;
 }
+
+    .subscribe-form .btn-danger:hover {
+        background-color: #dc3545; /* Di chuột vào mới hiện màu đỏ nhấn mạnh */
+    }
