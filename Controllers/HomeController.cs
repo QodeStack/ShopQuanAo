@@ -17,9 +17,31 @@ namespace ShopQuanAo.Controllers
             _homeService = homeService;
         }
 
-        // Các trang tĩnh
-        public IActionResult Index() => View();
-        public IActionResult AboutUs() => View();
+		// Các trang tĩnh
+		public async Task<IActionResult> Index()
+		{
+			// 1. Lấy sản phẩm Sale (Giữ nguyên)
+			var saleProducts = await _homeService.GetSaleProductsAsync();
+			ViewBag.SaleProducts = saleProducts;
+
+			// 2. Lấy sản phẩm mới (Thêm mới)
+			var newArrivals = await _homeService.GetNewArrivalsAsync();
+			ViewBag.NewArrivals = newArrivals;
+
+			// 3. Lấy sản phẩm bán chạy (Thêm mới)
+			var bestSellers = await _homeService.GetBestSellersAsync();
+			ViewBag.BestSellers = bestSellers;
+
+			// --- PHẦN SỬA MỚI: Lấy dữ liệu cho 4 Showcase danh mục ---
+			// Lưu ý: Tên danh mục truyền vào phải khớp chính xác với DB
+			ViewBag.AoThun = await _homeService.GetProductsByCategoryAsync("Áo Thun");
+			ViewBag.AoSomi = await _homeService.GetProductsByCategoryAsync("Áo Sơ Mi");
+			ViewBag.QuanJean = await _homeService.GetProductsByCategoryAsync("Quần Jean");
+			ViewBag.QuanTay = await _homeService.GetProductsByCategoryAsync("Quần Tây");
+
+			return View();
+		}
+		public IActionResult AboutUs() => View();
         public IActionResult Sale()
         {
             // Lệnh này sẽ đá người dùng từ Home/Sale sang Product/Sale
