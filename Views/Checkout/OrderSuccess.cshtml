@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Đặt hàng thành công";
+    int orderId = ViewBag.OrderId ?? 0;
 }
 
 <div class="container my-5 text-center">
@@ -16,29 +17,21 @@
                 <h1 class="fw-bolder mb-3 order-title" style="color: #1a2b4c;">ĐẶT HÀNG THÀNH CÔNG!</h1>
                 
                 <div class="order-info-text mb-4">
-                    <p class="fs-5 text-muted mb-1">Cảm ơn Kiệt đã mua sắm tại cửa hàng của chúng tôi.</p>
+                    <p class="fs-5 text-muted mb-1">Cảm ơn bạn đã mua sắm tại cửa hàng của chúng tôi.</p>
                     <p class="fs-5 text-muted mb-0">Mã đơn hàng của bạn là:</p>
                     <div class="mt-3">
-                        @if (ViewBag.OrderId != null)
-                        {
-                            <strong class="order-id-badge bg-dark text-white px-4 py-2 rounded-pill fs-3 shadow-sm">
-                                #@ViewBag.OrderId
-                            </strong>
-                        }
-                        else
-                        {
-                            <strong class="order-id-badge bg-dark text-white px-4 py-2 rounded-pill fs-3 shadow-sm">
-                                #[Unknown]
-                            </strong>
-                        }
+                        <strong class="order-id-badge bg-dark text-white px-4 py-2 rounded-pill fs-3 shadow-sm">
+                            #@orderId
+                        </strong>
                     </div>
                 </div>
-                
-                <p class="text-secondary mb-5 note-text w-75 mx-auto fs-6">
+
+                <p class="text-secondary mt-3 mb-5 note-text w-75 mx-auto fs-6">
+                    Hệ thống đã ghi nhận đơn hàng của bạn.<br/>
                     Chúng tôi sẽ sớm liên hệ với bạn để xác nhận đơn hàng và tiến hành giao hàng trong thời gian sớm nhất.
                 </p>
                 
-                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center action-buttons mt-2">
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center action-buttons mt-4">
                     <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark btn-lg px-5 py-3 rounded-pill fw-semibold shadow-sm transition-hover">
                         Về trang chủ
                     </a>
@@ -55,29 +48,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <style>
-        /* Bo góc 4 theo chuẩn Bootstrap 5 */
         .rounded-4 { border-radius: 1rem !important; }
         .rounded-pill { border-radius: 50rem !important; }
-
-        /* Hiệu ứng hover cho nút Đầy màu đen */
-        .shadow-hover {
-            transition: all 0.3s ease;
-        }
-        .shadow-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
-        }
-
-        /* Hiệu ứng hover cho nút Outline */
-        .transition-hover {
-            transition: all 0.3s ease;
-        }
-        .transition-hover:hover {
-            transform: translateY(-2px);
-            background-color: #f8f9fa;
-        }
-
-        /* Responsive font size cho mobile */
+        .shadow-hover { transition: all 0.3s ease; }
+        .shadow-hover:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important; }
+        .transition-hover { transition: all 0.3s ease; }
+        .transition-hover:hover { transform: translateY(-2px); background-color: #f8f9fa; }
         @@media (max-width: 576px) {
             .order-title { font-size: 2rem; }
             .order-id-badge { font-size: 1.5rem !important; }

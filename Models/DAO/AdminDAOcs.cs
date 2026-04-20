@@ -208,5 +208,39 @@ namespace ShopQuanAo.DAO
             }
         }
         #endregion
+        #region Category Management
+        // Lấy 1 danh mục theo ID
+        public async Task<Categories?> GetCategoryByIdAsync(int id)
+        {
+            return await _context.Categories.FindAsync(id);
+        }
+
+        // Thêm danh mục mới
+        public async Task AddCategoryAsync(Categories category)
+        {
+            _context.Categories.Add(category);
+            await _context.SaveChangesAsync();
+        }
+
+        // Cập nhật danh mục
+        public async Task UpdateCategoryAsync(Categories category)
+        {
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
+        }
+
+        // KIỂM TRA: Xem có sản phẩm nào đang thuộc danh mục này không?
+        public async Task<bool> HasProductsInCategoryAsync(int categoryId)
+        {
+            return await _context.Products.AnyAsync(p => p.CategoryId == categoryId);
+        }
+
+        // Xóa danh mục
+        public async Task DeleteCategoryAsync(Categories category)
+        {
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+        }
+        #endregion
     }
 }

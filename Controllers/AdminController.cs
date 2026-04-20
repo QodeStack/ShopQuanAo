@@ -262,6 +262,88 @@ namespace ShopQuanAo.Controllers
             return RedirectToAction("Vouchers");
         }
 
+<<<<<<< Updated upstream
+=======
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return Json(new { success = false, message = "Không có file nào được chọn." });
+
+            try
+            {
+                // 1. Tạo đường dẫn thư mục lưu trữ
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                // 2. Tạo tên file duy nhất để tránh trùng lặp
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // 3. Lưu file vào thư mục
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // 4. Trả về đường dẫn tương đối để lưu vào Database
+                var url = "/images/products/" + fileName;
+                return Json(new { success = true, url = url });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+        // ==========================================================
+        // --- KHU VỰC QUẢN LÝ DANH MỤC (CATEGORY) ---
+        // ==========================================================
+        public IActionResult Categories()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCategories()
+        {
+            var categories = await _context.Categories.ToListAsync();
+            return Json(categories);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken] // Đừng quên gửi RequestVerificationToken từ View nếu dùng cái này
+        public async Task<IActionResult> AddCategory([FromBody] Categories category)
+        {
+            if (category == null) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+            var res = await _service.AddCategoryAsync(category);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCategory([FromBody] Categories category)
+        {
+            if (category == null || category.Id <= 0) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+            var res = await _service.UpdateCategoryAsync(category);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCategory([FromBody] DeleteDto dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.Id))
+                return Json(new { success = false, message = "ID trống." });
+
+            if (int.TryParse(dto.Id, out int categoryId))
+            {
+                var res = await _service.DeleteCategoryAsync(categoryId);
+                return Json(new { success = res.Success, message = res.Message });
+            }
+            return Json(new { success = false, message = "Định dạng ID không đúng." });
+        }
+
+>>>>>>> Stashed changes
     }
 
     // --- DTO: BẠN CÓ THỂ ĐỂ TẠM Ở ĐÂY HOẶC CẮT SANG FILE RIÊNG (SaleRequestDto.cs) ---

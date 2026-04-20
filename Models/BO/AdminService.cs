@@ -385,5 +385,45 @@ namespace ShopQuanAo.BO
             await SendEmailAsync(toEmail, subject, body);
         }
         #endregion
+        #region Category Management
+        public async Task<(bool Success, string Message)> AddCategoryAsync(Categories category)
+        {
+            if (string.IsNullOrWhiteSpace(category.CategoryName))
+                return (false, "Tên danh mục không được để trống.");
+
+            await _adminDAO.AddCategoryAsync(category);
+            return (true, "Thêm danh mục thành công.");
+        }
+
+        public async Task<(bool Success, string Message)> UpdateCategoryAsync(Categories updatedCategory)
+        {
+            var category = await _adminDAO.GetCategoryByIdAsync(updatedCategory.Id);
+            if (category == null) return (false, "Không tìm thấy danh mục.");
+
+            // Cập nhật dữ liệu
+            category.CategoryName = updatedCategory.CategoryName;
+            // Nếu bảng Categories của bạn có thêm trường Mô tả, hãy mở comment bên dưới:
+            // category.Description = updatedCategory.Description; 
+
+            await _adminDAO.UpdateCategoryAsync(category);
+            return (true, "Cập nhật danh mục thành công.");
+        }
+
+        public async Task<(bool Success, string Message)> DeleteCategoryAsync(int id)
+        {
+            var category = await _adminDAO.GetCategoryByIdAsync(id);
+            if (category == null) return (false, "Không tìm thấy danh mục.");
+
+            // ĐIỀU KIỆN RÀNG BUỘC: Kiểm tra sản phẩm trước khi xóa
+            bool hasProducts = await _adminDAO.HasProductsInCategoryAsync(id);
+            if (hasProducts)
+            {
+                return (false, "Không thể xóa danh mục này vì vẫn còn sản phẩm thuộc danh mục. Vui lòng xóa hoặc chuyển các sản phẩm sang danh mục khác trước!");
+            }
+
+            await _adminDAO.DeleteCategoryAsync(category);
+            return (true, "Đã xóa danh mục thành công.");
+        }
+        #endregion
     }
 }

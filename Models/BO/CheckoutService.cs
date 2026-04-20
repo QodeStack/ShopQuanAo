@@ -124,5 +124,9 @@ namespace ShopQuanAo.BO
         {
             return await _checkoutDAO.GetActiveVouchersAsync();
         }
+        public async Task<Order?> GetOrderByIdAsync(int orderId)
+        {
+            return await _checkoutDAO.GetOrderByIdAsync(orderId);
+        }
     }
 }
