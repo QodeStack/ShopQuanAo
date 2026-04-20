@@ -22,21 +22,29 @@
 
         <div class="detail-info">
             <div class="detail-eyebrow">MENSHOP EXCLUSIVE</div>
+    
             <h1 class="detail-name">@Model.ProductName</h1>
-            <h6 class="brand-title">Thương hiệu : <span>@Model.BrandName</span></h6>
-
-            <div class="product-rating-summary" style="margin: 10px 0; color: #ffb400;">
-                @{
-                    var reviews = ViewBag.Reviews as List<ProductReview> ?? new List<ProductReview>();
-                    double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
-                    int reviewCount = reviews.Count();
-                }
-                @for (int i = 1; i <= 5; i++)
-                {
-                    <i class="bi @(i <= avgRating ? "bi-star-fill" : (i - avgRating < 1 && i - avgRating > 0 ? "bi-star-half" : "bi-star"))"></i>
-                }
-                <span style="color: #666; font-size: 14px; margin-left: 8px;">(@reviewCount đánh giá)</span>
-            </div> 
+    
+            <div class="product-meta-header">
+                <div class="brand-wrapper">
+                    Thương hiệu: <span>@Model.BrandName</span>
+                </div>
+                <div class="divider">|</div>
+                <div class="product-rating-summary">
+                    @{
+                        var reviews = ViewBag.Reviews as List<ProductReview> ?? new List<ProductReview>();
+                        double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+                        int reviewCount = reviews.Count();
+                    }
+                    <div class="stars-gold">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <i class="bi @(i <= avgRating ? "bi-star-fill" : (i - avgRating < 1 && i - avgRating > 0 ? "bi-star-half" : "bi-star"))"></i>
+                        }
+                    </div>
+                    <span class="review-count">(@reviewCount đánh giá)</span>
+                </div>
+            </div>
 
             @* PHẦN GIÁ CẢ ĐÃ ĐƯỢC TÍCH HỢP SALE GIÁ *@
             <div class="detail-price">
@@ -62,8 +70,21 @@
             <div class="promo-container">
                 <div class="promo-header"><i class="bi bi-gift-fill"></i> KHUYẾN MÃI - ONLY ONLINE</div>
                 <ul class="promo-list">
-                    <li class="promo-item" onclick="copyCode('APR20')">🎫 Nhập mã <b>APR20</b> GIẢM 20K đơn từ 499K</li>
-                    <li class="promo-item" onclick="copyCode('APR150')">🎫 Nhập mã <b>APR150</b> GIẢM 150K đơn từ 1599K</li>
+                    @if (ViewBag.Coupons != null && ((List<ShopQuanAo.Models.BEAN.Entity.Voucher>)ViewBag.Coupons).Any())
+                    {
+                        foreach (var cp in (List<ShopQuanAo.Models.BEAN.Entity.Voucher>)ViewBag.Coupons)
+                        {
+                            <li class="promo-item" onclick="copyCode('@cp.Code')">
+                                🎫 Nhập mã <b class="voucher-code">@cp.Code</b>
+                                GIẢM <b>@cp.DiscountAmount.ToString("N0")₫</b>
+                                đơn từ @cp.MinOrderAmount.ToString("N0")₫
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="promo-item">Chưa có mã giảm giá nào khả dụng.</li>
+                    }
                     <li class="promo-item promo-freeship">🚚 <b>FREESHIP</b> đơn từ 399K</li>
                 </ul>
             </div>
