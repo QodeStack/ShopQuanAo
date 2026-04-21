@@ -9,50 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="~/css/Home/Index.css" asp-append-version="true" rel="stylesheet" />
 
-<style>
-    /* CSS bổ sung để hiển thị chữ đè lên banner danh mục */
-    .category-banner {
-        position: relative;
-        overflow: hidden;
-        border-radius: 8px;
-    }
-
-        .category-banner .banner-label {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: #fff;
-            width: 100%;
-            pointer-events: none; /* Để click xuyên qua chữ vào link */
-        }
-
-            .category-banner .banner-label h3 {
-                font-size: 28px;
-                font-weight: 700;
-                text-transform: uppercase;
-                margin-bottom: 10px;
-                text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-            }
-
-        .category-banner .btn-show-now {
-            background: #fff;
-            color: #000;
-            padding: 6px 20px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 700;
-            display: inline-block;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-    /* Tinh chỉnh khoảng cách cho các section */
-    .category-showcase-wrapper {
-        margin-bottom: 60px !important;
-    }
-</style>
-
 <div class="container-fluid p-0">
     <section class="hero-slider-wrapper">
         <div class="hero-slider">
@@ -142,54 +98,126 @@
         </div>
 
         <div id="new-arrivals" class="tab-content">
-            <div class="row">
-                @if (ViewBag.NewArrivals != null)
+    <div class="row g-3">
+        @if (ViewBag.NewArrivals != null)
+        {
+            foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.NewArrivals)
+            {
+                var allReviews = ViewBag.AllReviews as Dictionary<int, List<ShopQuanAo.Models.BEAN.Entity.ProductReview>>;
+                double avg = 0; int cnt = 0;
+                if (allReviews != null && allReviews.ContainsKey(item.Id))
                 {
-                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.NewArrivals)
-                    {
-                        <div class="col-6 col-md-3 mb-4">
-                            <div class="item-wrapper p-0">
-                                <div class="uniform-card">
-                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                        <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
-                                    </a>
-                                </div>
-                                <div class="product-info">
-                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
-                                    <p class="p-price">@item.Price.ToString("N0")₫</p>
-                                </div>
+                    var rv = allReviews[item.Id];
+                    if (rv.Any()) { avg = rv.Average(r => r.Rating); cnt = rv.Count; }
+                }
+                bool hasSale = item.SalePrice > 0 && item.Price > item.SalePrice;
+
+                <div class="col-6 col-md-3">
+                    <div class="unified-card">
+                        <div class="img-wrap">
+                            @if (hasSale)
+                            {
+                                int pct = (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100);
+                                <span class="badge-sale">-@pct%</span>
+                            }
+                            else { <span class="badge-new">MỚI</span> }
+                            <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                <img src="@item.Image" alt="@item.ProductName" onerror="this.src='/Image/no-image.jpg'">
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="card-name">@item.ProductName</a>
+                            <div class="card-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= avg) { <i class="bi bi-star-fill"></i> }
+                                    else if (i - avg < 1 && i - avg > 0) { <i class="bi bi-star-half"></i> }
+                                    else { <i class="bi bi-star"></i> }
+                                }
+                                @if (cnt > 0)
+                                {
+                                    <span class="rating-val">@avg.ToString("0.0")</span>
+                                    <span class="rating-count">(@cnt)</span>
+                                }
+                                else { <span class="rating-count">(Chưa có đánh giá)</span> }
+                            </div>
+                            <div class="card-price">
+                                @if (hasSale)
+                                {
+                                    <span class="price-now is-sale">@item.SalePrice.ToString("N0")₫</span>
+                                    <span class="price-ori">@item.Price.ToString("N0")₫</span>
+                                }
+                                else { <span class="price-now">@item.Price.ToString("N0")₫</span> }
                             </div>
                         </div>
-                    }
-                }
-            </div>
-        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    </div>
 
         <div id="best-sellers" class="tab-content" style="display:none;">
-            <div class="row">
-                @if (ViewBag.BestSellers != null)
+    <div class="row g-3">
+        @if (ViewBag.BestSellers != null)
+        {
+            foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.BestSellers)
+            {
+                var allReviews = ViewBag.AllReviews as Dictionary<int, List<ShopQuanAo.Models.BEAN.Entity.ProductReview>>;
+                double avg = 0; int cnt = 0;
+                if (allReviews != null && allReviews.ContainsKey(item.Id))
                 {
-                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.BestSellers)
-                    {
-                        <div class="col-6 col-md-3 mb-4">
-                            <div class="item-wrapper p-0">
-                                <div class="uniform-card">
-                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                        <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
-                                    </a>
-                                </div>
-                                <div class="product-info">
-                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
-                                    <p class="p-price">@item.Price.ToString("N0")₫</p>
-                                </div>
+                    var rv = allReviews[item.Id];
+                    if (rv.Any()) { avg = rv.Average(r => r.Rating); cnt = rv.Count; }
+                }
+                bool hasSale = item.SalePrice > 0 && item.Price > item.SalePrice;
+
+                <div class="col-6 col-md-3">
+                    <div class="unified-card">
+                        <div class="img-wrap">
+                            @if (hasSale)
+                            {
+                                int pct = (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100);
+                                <span class="badge-sale">-@pct%</span>
+                            }
+                            <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                <img src="@item.Image" alt="@item.ProductName" onerror="this.src='/Image/no-image.jpg'">
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="card-name">@item.ProductName</a>
+                            <div class="card-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= avg) { <i class="bi bi-star-fill"></i> }
+                                    else if (i - avg < 1 && i - avg > 0) { <i class="bi bi-star-half"></i> }
+                                    else { <i class="bi bi-star"></i> }
+                                }
+                                @if (cnt > 0)
+                                {
+                                    <span class="rating-val">@avg.ToString("0.0")</span>
+                                    <span class="rating-count">(@cnt)</span>
+                                }
+                                else { <span class="rating-count">(Chưa có đánh giá)</span> }
+                            </div>
+                            <div class="card-price">
+                                @if (hasSale)
+                                {
+                                    <span class="price-now is-sale">@item.SalePrice.ToString("N0")₫</span>
+                                    <span class="price-ori">@item.Price.ToString("N0")₫</span>
+                                }
+                                else { <span class="price-now">@item.Price.ToString("N0")₫</span> }
                             </div>
                         </div>
-                    }
-                }
-            </div>
-        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+    
     </section>
-    <section class="container my-5">
+<section class="container my-5">
         <div class="section-header-flex mb-4">
             <h2 class="section-title">Gợi ý phối đồ theo phong cách</h2>
         </div>
@@ -224,25 +252,62 @@
                 </a>
             </div>
             <div class="category-product-slider product-items-slick">
-                @if (ViewBag.AoThun != null)
-                {
-                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoThun)
-                    {
-                        <div class="item-wrapper">
-                            <div class="uniform-card">
-                                <span class="sale-tag new-badge">HÀNG MỚI</span>
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
-                                </a>
-                            </div>
-                            <div class="product-info">
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
-                                <p class="p-price">@item.Price.ToString("N0")₫</p>
-                            </div>
+    @if (ViewBag.AoThun != null)
+    {
+        foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoThun)
+        {
+            var allReviews = ViewBag.AllReviews as Dictionary<int, List<ShopQuanAo.Models.BEAN.Entity.ProductReview>>;
+            double avg = 0; int cnt = 0;
+            if (allReviews != null && allReviews.ContainsKey(item.Id))
+            {
+                var rv = allReviews[item.Id];
+                if (rv.Any()) { avg = rv.Average(r => r.Rating); cnt = rv.Count; }
+            }
+            bool hasSale = item.SalePrice > 0 && item.Price > item.SalePrice;
+
+            <div class="item-wrapper">
+                <div class="unified-card">
+                    <div class="img-wrap">
+                        @if (hasSale)
+                        {
+                            int pct = (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100);
+                            <span class="badge-sale">-@pct%</span>
+                        }
+                        else { <span class="badge-new">MỚI</span> }
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                            <img src="@item.Image" alt="@item.ProductName" onerror="this.src='/Image/no-image.jpg'">
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="card-name">@item.ProductName</a>
+                        <div class="card-rating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= avg) { <i class="bi bi-star-fill"></i> }
+                                else if (i - avg < 1 && i - avg > 0) { <i class="bi bi-star-half"></i> }
+                                else { <i class="bi bi-star"></i> }
+                            }
+                            @if (cnt > 0)
+                            {
+                                <span class="rating-val">@avg.ToString("0.0")</span>
+                                <span class="rating-count">(@cnt)</span>
+                            }
+                            else { <span class="rating-count">(Chưa có đánh giá)</span> }
                         </div>
-                    }
-                }
+                        <div class="card-price">
+                            @if (hasSale)
+                            {
+                                <span class="price-now is-sale">@item.SalePrice.ToString("N0")₫</span>
+                                <span class="price-ori">@item.Price.ToString("N0")₫</span>
+                            }
+                            else { <span class="price-now">@item.Price.ToString("N0")₫</span> }
+                        </div>
+                    </div>
+                </div>
             </div>
+        }
+    }
+</div>
         </div>
 
     </section>
@@ -260,25 +325,62 @@
                 </a>
             </div>
             <div class="category-product-slider product-items-slick">
-                @if (ViewBag.AoSomi != null)
-                {
-                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoSomi)
-                    {
-                        <div class="item-wrapper">
-                            <div class="uniform-card">
-                                <span class="sale-tag new-badge">HÀNG MỚI</span>
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
-                                </a>
-                            </div>
-                            <div class="product-info">
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
-                                <p class="p-price">@item.Price.ToString("N0")₫</p>
-                            </div>
+    @if (ViewBag.AoSomi!= null)
+    {
+        foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoSomi)
+        {
+            var allReviews = ViewBag.AllReviews as Dictionary<int, List<ShopQuanAo.Models.BEAN.Entity.ProductReview>>;
+            double avg = 0; int cnt = 0;
+            if (allReviews != null && allReviews.ContainsKey(item.Id))
+            {
+                var rv = allReviews[item.Id];
+                if (rv.Any()) { avg = rv.Average(r => r.Rating); cnt = rv.Count; }
+            }
+            bool hasSale = item.SalePrice > 0 && item.Price > item.SalePrice;
+
+            <div class="item-wrapper">
+                <div class="unified-card">
+                    <div class="img-wrap">
+                        @if (hasSale)
+                        {
+                            int pct = (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100);
+                            <span class="badge-sale">-@pct%</span>
+                        }
+                        else { <span class="badge-new">MỚI</span> }
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                            <img src="@item.Image" alt="@item.ProductName" onerror="this.src='/Image/no-image.jpg'">
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="card-name">@item.ProductName</a>
+                        <div class="card-rating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= avg) { <i class="bi bi-star-fill"></i> }
+                                else if (i - avg < 1 && i - avg > 0) { <i class="bi bi-star-half"></i> }
+                                else { <i class="bi bi-star"></i> }
+                            }
+                            @if (cnt > 0)
+                            {
+                                <span class="rating-val">@avg.ToString("0.0")</span>
+                                <span class="rating-count">(@cnt)</span>
+                            }
+                            else { <span class="rating-count">(Chưa có đánh giá)</span> }
                         </div>
-                    }
-                }
+                        <div class="card-price">
+                            @if (hasSale)
+                            {
+                                <span class="price-now is-sale">@item.SalePrice.ToString("N0")₫</span>
+                                <span class="price-ori">@item.Price.ToString("N0")₫</span>
+                            }
+                            else { <span class="price-now">@item.Price.ToString("N0")₫</span> }
+                        </div>
+                    </div>
+                </div>
             </div>
+        }
+    }
+</div>
         </div>
     </section>
 
@@ -294,25 +396,62 @@
                 </a>
             </div>
             <div class="category-product-slider product-items-slick">
-                @if (ViewBag.QuanJean != null)
-                {
-                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanJean)
-                    {
-                        <div class="item-wrapper">
-                            <div class="uniform-card">
-                                <span class="sale-tag new-badge">HÀNG MỚI</span>
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
-                                </a>
-                            </div>
-                            <div class="product-info">
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
-                                <p class="p-price">@item.Price.ToString("N0")₫</p>
-                            </div>
+    @if (ViewBag.QuanJean != null)
+    {
+        foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanJean)
+        {
+            var allReviews = ViewBag.AllReviews as Dictionary<int, List<ShopQuanAo.Models.BEAN.Entity.ProductReview>>;
+            double avg = 0; int cnt = 0;
+            if (allReviews != null && allReviews.ContainsKey(item.Id))
+            {
+                var rv = allReviews[item.Id];
+                if (rv.Any()) { avg = rv.Average(r => r.Rating); cnt = rv.Count; }
+            }
+            bool hasSale = item.SalePrice > 0 && item.Price > item.SalePrice;
+
+            <div class="item-wrapper">
+                <div class="unified-card">
+                    <div class="img-wrap">
+                        @if (hasSale)
+                        {
+                            int pct = (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100);
+                            <span class="badge-sale">-@pct%</span>
+                        }
+                        else { <span class="badge-new">MỚI</span> }
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                            <img src="@item.Image" alt="@item.ProductName" onerror="this.src='/Image/no-image.jpg'">
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="card-name">@item.ProductName</a>
+                        <div class="card-rating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= avg) { <i class="bi bi-star-fill"></i> }
+                                else if (i - avg < 1 && i - avg > 0) { <i class="bi bi-star-half"></i> }
+                                else { <i class="bi bi-star"></i> }
+                            }
+                            @if (cnt > 0)
+                            {
+                                <span class="rating-val">@avg.ToString("0.0")</span>
+                                <span class="rating-count">(@cnt)</span>
+                            }
+                            else { <span class="rating-count">(Chưa có đánh giá)</span> }
                         </div>
-                    }
-                }
+                        <div class="card-price">
+                            @if (hasSale)
+                            {
+                                <span class="price-now is-sale">@item.SalePrice.ToString("N0")₫</span>
+                                <span class="price-ori">@item.Price.ToString("N0")₫</span>
+                            }
+                            else { <span class="price-now">@item.Price.ToString("N0")₫</span> }
+                        </div>
+                    </div>
+                </div>
             </div>
+        }
+    }
+</div>
         </div>
     </section>
 
@@ -328,25 +467,62 @@
                 </a>
             </div>
             <div class="category-product-slider product-items-slick">
-                @if (ViewBag.QuanTay != null)
-                {
-                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanTay)
-                    {
-                        <div class="item-wrapper">
-                            <div class="uniform-card">
-                                <span class="sale-tag new-badge">HÀNG MỚI</span>
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
-                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
-                                </a>
-                            </div>
-                            <div class="product-info">
-                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
-                                <p class="p-price">@item.Price.ToString("N0")₫</p>
-                            </div>
+    @if (ViewBag.QuanTay != null)
+    {
+        foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanTay)
+        {
+            var allReviews = ViewBag.AllReviews as Dictionary<int, List<ShopQuanAo.Models.BEAN.Entity.ProductReview>>;
+            double avg = 0; int cnt = 0;
+            if (allReviews != null && allReviews.ContainsKey(item.Id))
+            {
+                var rv = allReviews[item.Id];
+                if (rv.Any()) { avg = rv.Average(r => r.Rating); cnt = rv.Count; }
+            }
+            bool hasSale = item.SalePrice > 0 && item.Price > item.SalePrice;
+
+            <div class="item-wrapper">
+                <div class="unified-card">
+                    <div class="img-wrap">
+                        @if (hasSale)
+                        {
+                            int pct = (int)Math.Round((1 - (double)item.SalePrice / item.Price) * 100);
+                            <span class="badge-sale">-@pct%</span>
+                        }
+                        else { <span class="badge-new">MỚI</span> }
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                            <img src="@item.Image" alt="@item.ProductName" onerror="this.src='/Image/no-image.jpg'">
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="card-name">@item.ProductName</a>
+                        <div class="card-rating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= avg) { <i class="bi bi-star-fill"></i> }
+                                else if (i - avg < 1 && i - avg > 0) { <i class="bi bi-star-half"></i> }
+                                else { <i class="bi bi-star"></i> }
+                            }
+                            @if (cnt > 0)
+                            {
+                                <span class="rating-val">@avg.ToString("0.0")</span>
+                                <span class="rating-count">(@cnt)</span>
+                            }
+                            else { <span class="rating-count">(Chưa có đánh giá)</span> }
                         </div>
-                    }
-                }
+                        <div class="card-price">
+                            @if (hasSale)
+                            {
+                                <span class="price-now is-sale">@item.SalePrice.ToString("N0")₫</span>
+                                <span class="price-ori">@item.Price.ToString("N0")₫</span>
+                            }
+                            else { <span class="price-now">@item.Price.ToString("N0")₫</span> }
+                        </div>
+                    </div>
+                </div>
             </div>
+        }
+    }
+</div>
         </div>
     </section>
 

@@ -11,7 +11,7 @@ namespace MenShopBot
     class Program
     {
         // Chuỗi kết nối Database chuẩn của bạn
-        private static readonly string connectionString = "Server=kietne;Database=DatHangPbl;Trusted_Connection=True;TrustServerCertificate=True;";
+        private static readonly string connectionString = "Server=localhost\\MSSQLSERVER01;Database=ShopQuanA;Trusted_Connection=True;TrustServerCertificate=True;";
 
         static async Task Main(string[] args)
         {

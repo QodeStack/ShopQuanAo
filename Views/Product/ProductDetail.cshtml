@@ -29,7 +29,6 @@
                 <div class="brand-wrapper">
                     Thương hiệu: <span>@Model.BrandName</span>
                 </div>
-                <div class="divider">|</div>
                 <div class="product-rating-summary">
                     @{
                         var reviews = ViewBag.Reviews as List<ProductReview> ?? new List<ProductReview>();
@@ -126,7 +125,6 @@
                 </div>
             </form>
             
-            <button class="btn-wishlist w-100 mt-3 border py-2 bg-white rounded"><i class="bi bi-heart"></i> YÊU THÍCH</button>
         </div>
     </div>
 
@@ -195,6 +193,53 @@
                 }
             }
         </div>
+        @* --- BẮT ĐẦU PHẦN SẢN PHẨM LIÊN QUAN --- *@
+        <div class="container mt-5 pt-4 border-top">
+            <div class="related-products-section">
+                <h3 class="related-title text-center mb-4" style="font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
+                    Sản phẩm liên quan
+                </h3>
+        
+                <div class="related-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                    @if (ViewBag.RelatedProducts != null && ((List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.RelatedProducts).Any())
+                    {
+                        foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.RelatedProducts)
+                        {
+                            <div class="related-item">
+                                <div class="related-img-box" style="aspect-ratio: 3/4; overflow: hidden; background: #f8f8f8; border-radius: 4px;">
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                        <img src="@item.Image" alt="@item.ProductName" style="width: 100%; height: 100%; object-fit: cover; transition: 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
+                                    </a>
+                                </div>
+                                <div class="related-info mt-2">
+                                    <h4 style="font-size: 13px; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; height: 32px; overflow: hidden;">
+                                        <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" style="text-decoration: none; color: #333;">@item.ProductName</a>
+                                    </h4>
+                                    <div class="related-price" style="font-weight: 700; color: #000;">
+                                        @if (item.SalePrice > 0)
+                                        {
+                                            <span style="color: red;">@(((double)item.SalePrice).ToString("N0"))₫</span>
+                                            <span style="text-decoration: line-through; color: #999; font-size: 12px; font-weight: 400; margin-left: 5px;">@item.Price.ToString("N0")₫</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@item.Price.ToString("N0")₫</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <p class="text-center text-muted">Chưa có sản phẩm liên quan nào.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        @* --- KẾT THÚC PHẦN SẢN PHẨM LIÊN QUAN --- *@
     </div>
 </div>
 

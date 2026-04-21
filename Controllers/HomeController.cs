@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ShopQuanAo.BO;
+using ShopQuanAo.Data;
 using ShopQuanAo.Models;
 using ShopQuanAo.Models.BEAN.DTO;
 using ShopQuanAo.Models.BEAN.Entity;
-using ShopQuanAo.BO;
 using System.Diagnostics;
 
 namespace ShopQuanAo.Controllers
@@ -11,37 +13,53 @@ namespace ShopQuanAo.Controllers
     public class HomeController : Controller
     {
         private readonly HomeService _homeService;
-
-        public HomeController(HomeService homeService)
+        private readonly ApplicationDbContext _context;
+        public HomeController(HomeService homeService, ApplicationDbContext context)  // ← SỬA
         {
             _homeService = homeService;
+            _context = context;  // ← THÊM
         }
+        // Các trang tĩnh
+        public async Task<IActionResult> Index()
+        {
+            var saleProducts = await _homeService.GetSaleProductsAsync();
+            ViewBag.SaleProducts = saleProducts;
 
-		// Các trang tĩnh
-		public async Task<IActionResult> Index()
-		{
-			// 1. Lấy sản phẩm Sale (Giữ nguyên)
-			var saleProducts = await _homeService.GetSaleProductsAsync();
-			ViewBag.SaleProducts = saleProducts;
+            var newArrivals = await _homeService.GetNewArrivalsAsync();
+            ViewBag.NewArrivals = newArrivals;
 
-			// 2. Lấy sản phẩm mới (Thêm mới)
-			var newArrivals = await _homeService.GetNewArrivalsAsync();
-			ViewBag.NewArrivals = newArrivals;
+            var bestSellers = await _homeService.GetBestSellersAsync();
+            ViewBag.BestSellers = bestSellers;
 
-			// 3. Lấy sản phẩm bán chạy (Thêm mới)
-			var bestSellers = await _homeService.GetBestSellersAsync();
-			ViewBag.BestSellers = bestSellers;
+            ViewBag.AoThun = await _homeService.GetProductsByCategoryAsync("Áo Thun");
+            ViewBag.AoSomi = await _homeService.GetProductsByCategoryAsync("Áo Sơ Mi");
+            ViewBag.QuanJean = await _homeService.GetProductsByCategoryAsync("Quần Jean");
+            ViewBag.QuanTay = await _homeService.GetProductsByCategoryAsync("Quần Tây");
 
-			// --- PHẦN SỬA MỚI: Lấy dữ liệu cho 4 Showcase danh mục ---
-			// Lưu ý: Tên danh mục truyền vào phải khớp chính xác với DB
-			ViewBag.AoThun = await _homeService.GetProductsByCategoryAsync("Áo Thun");
-			ViewBag.AoSomi = await _homeService.GetProductsByCategoryAsync("Áo Sơ Mi");
-			ViewBag.QuanJean = await _homeService.GetProductsByCategoryAsync("Quần Jean");
-			ViewBag.QuanTay = await _homeService.GetProductsByCategoryAsync("Quần Tây");
+            // ← THÊM MỚI: gom tất cả productId để lấy reviews 1 lần duy nhất
+            var allProducts = new List<ShopQuanAo.Models.BEAN.Entity.Product>();
+            if (saleProducts != null) allProducts.AddRange(saleProducts);
+            if (newArrivals != null) allProducts.AddRange(newArrivals);
+            if (bestSellers != null) allProducts.AddRange(bestSellers);
+            if (ViewBag.AoThun != null) allProducts.AddRange((List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoThun);
+            if (ViewBag.AoSomi != null) allProducts.AddRange((List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoSomi);
+            if (ViewBag.QuanJean != null) allProducts.AddRange((List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanJean);
+            if (ViewBag.QuanTay != null) allProducts.AddRange((List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanTay);
 
-			return View();
-		}
-		public IActionResult AboutUs() => View();
+            var allIds = allProducts.Select(p => p.Id).Distinct().ToList();
+            var reviews = await _context.ProductReviews
+                .Where(r => allIds.Contains(r.ProductId))
+                .ToListAsync();
+
+            var allReviews = allIds.ToDictionary(
+                id => id,
+                id => reviews.Where(r => r.ProductId == id).ToList()
+            );
+            ViewBag.AllReviews = allReviews;
+
+            return View();
+        }
+        public IActionResult AboutUs() => View();
         public IActionResult Sale()
         {
             // Lệnh này sẽ đá người dùng từ Home/Sale sang Product/Sale

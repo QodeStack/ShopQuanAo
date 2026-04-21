@@ -8,12 +8,12 @@
     DateTime createTime = ViewBag.CreateTime ?? DateTime.Now;
     int remainingSeconds = 600 - (int)(DateTime.Now - createTime).TotalSeconds;
     if (remainingSeconds < 0) remainingSeconds = 0; // Đưa về 0 nếu đã quá hạn
-    // ------------------------------------------------------------------
+    // -------------------------    -----------------------------------------
 
     // CẤU HÌNH API VIETQR
     string bankBin = "970422"; // MB Bank
     string bankAccount = "0982039097"; // STK của bạn
-    string accountName = "Duong Danh Quoc";
+    string accountName = "DUONG DANH QUOC";
     string orderCode = $"MENSHOP {orderId}";
 
     string encodedInfo = Uri.EscapeDataString(orderCode);

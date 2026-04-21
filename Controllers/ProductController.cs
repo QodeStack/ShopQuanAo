@@ -28,7 +28,7 @@ namespace ShopQuanAo.Controllers
 
         public async Task<IActionResult> Index(int? categoryId, string? categoryName, string? search, string? price, int? rating, string? sort, int page = 1)
         {
-            int pageSize = 12;
+            int pageSize = 20;
 
             // 1. Xử lý lấy CategoryId từ Name nếu cần
             if (!string.IsNullOrEmpty(categoryName) && categoryId == null)
@@ -92,7 +92,7 @@ namespace ShopQuanAo.Controllers
 
         public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, string? sort, int page = 1)
         {
-            int pageSize = 12;
+            int pageSize = 20;
             // 1. Gọi service lấy sản phẩm Sale
             var result = await _productService.GetPagedProductsAsync(
                 categoryId?.ToString(),

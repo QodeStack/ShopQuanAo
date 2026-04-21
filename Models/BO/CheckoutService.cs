@@ -46,7 +46,7 @@ namespace ShopQuanAo.BO
 
                 if (voucher != null && voucher.IsActive && voucher.Quantity > 0 && originalTotal >= voucher.MinOrderAmount)
                 {
-                    discountAmount = voucher.DiscountAmount;
+                    discountAmount = Math.Min(originalTotal, voucher.DiscountAmount);
                     appliedVoucherCode = voucher.Code;
 
                     // Cập nhật số lượng Voucher

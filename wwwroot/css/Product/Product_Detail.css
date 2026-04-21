@@ -306,6 +306,9 @@ body {
     font-size: 1.2rem;
     margin: 8px 0;
 }
+.stars-gold i {
+    color: #ffc107; /* Màu vàng đặc trưng của Bootstrap */
+}
 
 .rating-bars {
     flex: 1;
