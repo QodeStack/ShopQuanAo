@@ -73,5 +73,18 @@ namespace ShopQuanAo.DAO
         {
             return await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == code);
         }
+        public async Task<List<Order>> GetExpiredPendingOrdersAsync(string userId)
+        {
+            // Lấy mốc thời gian cách đây 10 phút
+            var tenMinsAgo = DateTime.Now.AddMinutes(-10);
+
+            return await _context.Orders
+                .Where(o => o.UserId == userId
+                         && o.OrderStatus.StatusName == "Chờ xác nhận"
+                         && !o.IsPaid
+                         && o.PaymentMethod != "COD"
+                         && o.CreateTime <= tenMinsAgo)
+                .ToListAsync();
+        }
     }
 }

@@ -116,6 +116,7 @@ namespace ShopQuanAo.Controllers
 
             ViewBag.OrderId = order.Id;
             ViewBag.TotalAmount = order.TotalAmount;
+            ViewBag.CreateTime = order.CreateTime;
             return View();
         }
 
