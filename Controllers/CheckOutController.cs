@@ -97,7 +97,7 @@ namespace ShopQuanAo.Controllers
             {
                 success = true,
                 message = "Áp dụng mã thành công!",
-                discountAmount = voucher.DiscountAmount,
+                discountAmount = Math.Min(dto.OrderTotal, voucher.DiscountAmount),
                 voucherCode = voucher.Code
             });
         }
