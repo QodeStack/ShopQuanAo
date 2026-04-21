@@ -29,7 +29,6 @@
                 <div class="brand-wrapper">
                     Thương hiệu: <span>@Model.BrandName</span>
                 </div>
-                <div class="divider">|</div>
                 <div class="product-rating-summary">
                     @{
                         var reviews = ViewBag.Reviews as List<ProductReview> ?? new List<ProductReview>();
@@ -126,7 +125,6 @@
                 </div>
             </form>
             
-            <button class="btn-wishlist w-100 mt-3 border py-2 bg-white rounded"><i class="bi bi-heart"></i> YÊU THÍCH</button>
         </div>
     </div>
 

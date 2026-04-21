@@ -95,7 +95,10 @@
                                 <tr>
                                     <td>
                                         <div class="product-info">
-                                            <img src="~/@(item.Image ?? "images/default.jpg")" alt="Ảnh SP" class="product-img" />
+                                            <img src="@(item.Image != null && item.Image.StartsWith("http") ? item.Image : "/" + item.Image ?? "images/default.jpg")"
+                                                 alt="Ảnh SP"
+                                                 class="product-img"
+                                                 onerror="this.src='/images/default.jpg'" />
                                             <strong>@item.ProductName</strong>
                                         </div>
                                     </td>

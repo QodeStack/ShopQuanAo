@@ -139,10 +139,13 @@
                             <button class="btn border-0 text-dark" type="button"><i class="bi bi-chevron-right"></i></button>
                         </div>
                         
-                        <div class="input-group">
-                            <input type="text" id="voucherCodeInput" class="form-control bg-light" placeholder="Hoặc nhập mã tại đây...">
-                            <button class="btn btn-dark px-4" type="button" id="btnApplyVoucher">Áp dụng</button>
-                        </div>
+                                <div class="input-group">
+                                    <input type="text" id="voucherCodeInput" class="form-control bg-light" placeholder="Hoặc nhập mã tại đây...">
+                                    <button class="btn btn-dark px-4" type="button" id="btnApplyVoucher">Áp dụng</button>
+                                    <button class="btn btn-outline-secondary px-3 d-none" type="button" id="removeVoucherBtn" onclick="removeVoucher()" title="Đổi mã khác">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
                         <div id="voucherMessage" class="mt-2 small fw-bold"></div>
                     </div>
                 </div>
@@ -268,67 +271,93 @@
     </style>
 
     <script>
-        const originalTotal = @Convert.ToInt32(totalAmount);
-        
-        function selectVoucher(code) {
-            var modalEl = document.getElementById('voucherModal');
-            var modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) { modal.hide(); }
-            document.getElementById('voucherCodeInput').value = code;
-            document.getElementById('btnApplyVoucher').click();
-        }
+                                        const originalTotal = @Convert.ToInt32(totalAmount);
 
-        document.getElementById('btnApplyVoucher').addEventListener('click', async function () {
-            const codeInput = document.getElementById('voucherCodeInput');
-            const code = codeInput.value.trim();
-            const messageEl = document.getElementById('voucherMessage');
-
-            if (!code) {
-                messageEl.innerHTML = '<span class="text-danger">Vui lòng nhập mã khuyến mãi.</span>';
-                return;
-            }
-
-            const btn = this;
-            const originalBtnText = btn.innerText;
-            btn.innerText = "Đang kiểm tra...";
-            btn.disabled = true;
-
-            try {
-                const response = await fetch('/Checkout/ApplyVoucher', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code, orderTotal: originalTotal })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    messageEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> ' + data.message + '</span>';
-                    const discount = data.discountAmount;
-                    let newTotal = originalTotal - discount;
-                    if (newTotal < 0) newTotal = 0;
-
-                    document.getElementById('appliedVoucherName').innerText = data.voucherCode;
-                    document.getElementById('discountAmountText').innerText = '-' + discount.toLocaleString('vi-VN') + 'đ';
-                    document.getElementById('discountRow').classList.remove('d-none');
-                    document.getElementById('finalTotalAmount').innerText = newTotal.toLocaleString('vi-VN') + 'đ';
-                    document.getElementById('hiddenVoucherCode').value = data.voucherCode;
-                    codeInput.readOnly = true;
-                } else {
-                    messageEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ' + data.message + '</span>';
-                    document.getElementById('discountRow').classList.add('d-none');
-                    document.getElementById('finalTotalAmount').innerText = originalTotal.toLocaleString('vi-VN') + 'đ';
-                    document.getElementById('hiddenVoucherCode').value = '';
+                function resetVoucherUI() {
+                    const codeInput = document.getElementById('voucherCodeInput');
                     codeInput.readOnly = false;
+                    codeInput.value = '';
+                    document.getElementById('hiddenVoucherCode').value = '';
+                    document.getElementById('discountRow').classList.add('d-none');
+                    document.getElementById('appliedVoucherName').innerText = '';
+                    document.getElementById('discountAmountText').innerText = '-0đ';
+                    document.getElementById('finalTotalAmount').innerText = originalTotal.toLocaleString('vi-VN') + 'đ';
+                    document.getElementById('voucherMessage').innerHTML = '';
+                    document.getElementById('btnApplyVoucher').disabled = false;
+                    document.getElementById('removeVoucherBtn').classList.add('d-none');
                 }
-            } catch (error) {
-                messageEl.innerHTML = '<span class="text-danger">Lỗi hệ thống. Vui lòng thử lại sau.</span>';
-            } finally {
-                if (!document.getElementById('hiddenVoucherCode').value) {
-                    btn.disabled = false;
+
+                function removeVoucher() {
+                    resetVoucherUI();
                 }
-                btn.innerText = originalBtnText;
-            }
-        });
+
+                function selectVoucher(code) {
+                    // Reset trước, rồi mới set mã mới và apply
+                    resetVoucherUI();
+                    var modalEl = document.getElementById('voucherModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) { modal.hide(); }
+                    document.getElementById('voucherCodeInput').value = code;
+                    // Dùng setTimeout để đảm bảo DOM đã cập nhật xong
+                    setTimeout(() => {
+                        document.getElementById('btnApplyVoucher').click();
+                    }, 100);
+                }
+
+                document.getElementById('btnApplyVoucher').addEventListener('click', async function () {
+                    const codeInput = document.getElementById('voucherCodeInput');
+                    const code = codeInput.value.trim();
+                    const messageEl = document.getElementById('voucherMessage');
+
+                    if (!code) {
+                        messageEl.innerHTML = '<span class="text-danger">Vui lòng nhập mã khuyến mãi.</span>';
+                        return;
+                    }
+
+                    const btn = this;
+                    const originalBtnText = btn.innerText;
+                    btn.innerText = "Đang kiểm tra...";
+                    btn.disabled = true;
+
+                    try {
+                        const response = await fetch('/Checkout/ApplyVoucher', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code: code, orderTotal: originalTotal })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            const discount = data.discountAmount;
+                            let newTotal = originalTotal - discount;
+                            if (newTotal < 0) newTotal = 0;
+
+                            messageEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> ' + data.message + '</span>';
+                            document.getElementById('appliedVoucherName').innerText = data.voucherCode;
+                            document.getElementById('discountAmountText').innerText = '-' + discount.toLocaleString('vi-VN') + 'đ';
+                            document.getElementById('discountRow').classList.remove('d-none');
+                            document.getElementById('finalTotalAmount').innerText = newTotal.toLocaleString('vi-VN') + 'đ';
+                            document.getElementById('hiddenVoucherCode').value = data.voucherCode;
+                            codeInput.readOnly = true;
+                            document.getElementById('removeVoucherBtn').classList.remove('d-none');
+                            // btn giữ disabled vì đã áp thành công
+                        } else {
+                            messageEl.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ' + data.message + '</span>';
+                            // Reset giá về gốc khi mã lỗi
+                            document.getElementById('discountRow').classList.add('d-none');
+                            document.getElementById('finalTotalAmount').innerText = originalTotal.toLocaleString('vi-VN') + 'đ';
+                            document.getElementById('hiddenVoucherCode').value = '';
+                            codeInput.readOnly = false;
+                            document.getElementById('removeVoucherBtn').classList.add('d-none');
+                            btn.disabled = false;
+                        }
+                    } catch (error) {
+                        messageEl.innerHTML = '<span class="text-danger">Lỗi hệ thống. Vui lòng thử lại sau.</span>';
+                        btn.disabled = false;
+                    } finally {
+                        btn.innerText = originalBtnText;
+                    }
+                });
     </script>
 }
