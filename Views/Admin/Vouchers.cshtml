@@ -133,7 +133,7 @@
                                             </td>
                                             <td class="text-end pe-4">
                                                 <div class="d-inline-flex gap-2">
-                                                    <button type="button" class="btn btn-sm btn-action btn-outline-primary" 
+                                                    <button type="button" class="btn btn-sm btn-action btn-outline-primary"
                                                             onclick="openEditModal(@item.Id, '@item.Code', @item.DiscountAmount, @item.MinOrderAmount, @item.Quantity, @item.IsActive.ToString().ToLower(), @item.IsPublic.ToString().ToLower())"
                                                             title="Sửa mã">
                                                         <i class="bi bi-pencil-square"></i> Sửa
@@ -191,15 +191,16 @@
                         <label class="form-label text-muted small fw-bold text-uppercase">Mã Code nhập tay</label>
                         <input type="text" name="Code" class="form-control form-control-lg bg-light border-0 text-uppercase" required placeholder="VD: FREESHIP, SALE50K" />
                     </div>
+                    
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Mức giảm (VNĐ)</label>
                             <div class="input-group">
                                 <input type="number" name="DiscountAmount" class="form-control bg-light border-0" required min="0" step="5000" placeholder="VD: 50000" />
                                 <span class="input-group-text bg-light border-0 text-muted">₫</span>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Đơn tối thiểu</label>
                             <div class="input-group">
                                 <input type="number" name="MinOrderAmount" class="form-control bg-light border-0" required min="0" step="5000" placeholder="VD: 200000" />
@@ -207,16 +208,21 @@
                             </div>
                         </div>
                     </div>
+                    
                     <div class="mb-4">
                         <label class="form-label text-muted small fw-bold text-uppercase">Số lượt phát hành</label>
                         <input type="number" name="Quantity" class="form-control bg-light border-0" required min="1" value="100" />
                     </div>
+                    
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center mb-2">
                         <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsActive" value="true" checked style="width: 40px; height: 20px; cursor: pointer;">
+                        <input type="hidden" name="IsActive" value="false" />
                         <label class="form-check-label fw-bold mb-0" style="cursor: pointer; color: #1a2b4c;">Kích hoạt mã ngay lập tức</label>
                     </div>
+                    
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center">
                         <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsPublic" value="true" checked style="width: 40px; height: 20px; cursor: pointer;">
+                        <input type="hidden" name="IsPublic" value="false" />
                         <label class="form-check-label fw-bold mb-0" style="cursor: pointer; color: #1a2b4c;">
                             Hiển thị công khai trên web <br>
                             <small class="text-muted fw-normal" style="font-size: 0.8rem;">Tắt đi để tạo "Mã ẩn" (Chỉ nhập tay).</small>
@@ -247,15 +253,16 @@
                         <label class="form-label text-muted small fw-bold text-uppercase">Mã Code nhập tay</label>
                         <input type="text" name="Code" id="editCode" class="form-control form-control-lg bg-light border-0 text-uppercase" required />
                     </div>
+                    
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Mức giảm (VNĐ)</label>
                             <div class="input-group">
                                 <input type="number" name="DiscountAmount" id="editDiscountAmount" class="form-control bg-light border-0" required min="0" step="5000" />
                                 <span class="input-group-text bg-light border-0 text-muted">₫</span>
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Đơn tối thiểu</label>
                             <div class="input-group">
                                 <input type="number" name="MinOrderAmount" id="editMinOrderAmount" class="form-control bg-light border-0" required min="0" step="5000" />
@@ -263,16 +270,21 @@
                             </div>
                         </div>
                     </div>
+                    
                     <div class="mb-4">
                         <label class="form-label text-muted small fw-bold text-uppercase">Số lượt phát hành</label>
                         <input type="number" name="Quantity" id="editQuantity" class="form-control bg-light border-0" required min="0" />
                     </div>
+                    
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center mb-2">
                         <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsActive" id="editIsActiveCheck" value="true" style="width: 40px; height: 20px; cursor: pointer;">
+                        <input type="hidden" name="IsActive" value="false" />
                         <label class="form-check-label fw-bold mb-0" for="editIsActiveCheck" style="cursor: pointer; color: #1a2b4c;">Kích hoạt mã ngay lập tức</label>
                     </div>
+                    
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center">
                         <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsPublic" id="editIsPublicCheck" value="true" style="width: 40px; height: 20px; cursor: pointer;">
+                        <input type="hidden" name="IsPublic" value="false" />
                         <label class="form-check-label fw-bold mb-0" for="editIsPublicCheck" style="cursor: pointer; color: #1a2b4c;">
                             Hiển thị công khai trên web <br>
                             <small class="text-muted fw-normal" style="font-size: 0.8rem;">Tắt đi để tạo "Mã ẩn" (Chỉ nhập tay).</small>
@@ -301,7 +313,7 @@
             document.getElementById('editQuantity').value = quantity;
             document.getElementById('editIsActiveCheck').checked = isActive;
             document.getElementById('editIsPublicCheck').checked = isPublic;
-
+            
             // Gọi Modal của Bootstrap 5 lên
             var editModal = new bootstrap.Modal(document.getElementById('editVoucherModal'));
             editModal.show();
