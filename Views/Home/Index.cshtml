@@ -9,7 +9,49 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="~/css/Home/Index.css" asp-append-version="true" rel="stylesheet" />
 
+<style>
+    /* CSS bổ sung để hiển thị chữ đè lên banner danh mục */
+    .category-banner {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
 
+        .category-banner .banner-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            width: 100%;
+            pointer-events: none; /* Để click xuyên qua chữ vào link */
+        }
+
+            .category-banner .banner-label h3 {
+                font-size: 28px;
+                font-weight: 700;
+                text-transform: uppercase;
+                margin-bottom: 10px;
+                text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+            }
+
+        .category-banner .btn-show-now {
+            background: #fff;
+            color: #000;
+            padding: 6px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+    /* Tinh chỉnh khoảng cách cho các section */
+    .category-showcase-wrapper {
+        margin-bottom: 60px !important;
+    }
+</style>
 
 <div class="container-fluid p-0">
     <section class="hero-slider-wrapper">
@@ -25,7 +67,7 @@
         </div>
     </section>
 
-    <section class="container">
+    <section class="container my-5">
         <div class="section-header-flex">
             <h2 class="section-title">Danh mục nổi bật</h2>
             <div class="nav-arrows">
@@ -46,7 +88,8 @@
                     new { n = "Quần Tây", i = "Quantay.jpg" }
                 };
             }
-            @foreach (var c in cats) {
+            @foreach (var c in cats)
+            {
                 <div class="item-wrapper">
                     <a href="@Url.Action("Index", "Product", new { categoryName = c.n })" class="text-decoration-none">
                         <div class="uniform-card">
@@ -68,22 +111,269 @@
             </div>
         </div>
         <div class="sale-slider">
-            @if (Model != null) {
-                foreach (var item in Model) {
+            @if (ViewBag.SaleProducts != null)
+            {
+                foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.SaleProducts)
+                {
                     <div class="item-wrapper">
                         <div class="uniform-card">
-                            <span class="sale-tag">HOT SALE</span>
+                            <span class="sale-tag">-@Math.Round((1 - (double)item.SalePrice / item.Price) * 100)%</span>
                             <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
                                 <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
                             </a>
                         </div>
                         <div class="product-info">
                             <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
-                            <p class="p-price">@item.Price.ToString("N0")₫</p>
+                            <p class="p-price" style="color: var(--brand-red);">@item.SalePrice.ToString("N0")₫</p>
+                            <p style="text-decoration: line-through; color: #888; font-size: 12px; margin: 0;">@item.Price.ToString("N0")₫</p>
                         </div>
                     </div>
                 }
             }
+        </div>
+    </section>
+
+    <section class="container my-5">
+        <div class="section-header-flex justify-content-center mb-4" style="border-bottom: 2px solid #f0f0f0;">
+            <div class="d-flex gap-5">
+                <h2 class="tab-link active" onclick="openTab(event, 'new-arrivals')">Sản phẩm mới</h2>
+                <h2 class="tab-link" onclick="openTab(event, 'best-sellers')">Bán chạy nhất</h2>
+            </div>
+        </div>
+
+        <div id="new-arrivals" class="tab-content">
+            <div class="row">
+                @if (ViewBag.NewArrivals != null)
+                {
+                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.NewArrivals)
+                    {
+                        <div class="col-6 col-md-3 mb-4">
+                            <div class="item-wrapper p-0">
+                                <div class="uniform-card">
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                        <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                                    </a>
+                                </div>
+                                <div class="product-info">
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                                    <p class="p-price">@item.Price.ToString("N0")₫</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div id="best-sellers" class="tab-content" style="display:none;">
+            <div class="row">
+                @if (ViewBag.BestSellers != null)
+                {
+                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.BestSellers)
+                    {
+                        <div class="col-6 col-md-3 mb-4">
+                            <div class="item-wrapper p-0">
+                                <div class="uniform-card">
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                        <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                                    </a>
+                                </div>
+                                <div class="product-info">
+                                    <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                                    <p class="p-price">@item.Price.ToString("N0")₫</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </section>
+    <section class="container my-5">
+        <div class="section-header-flex mb-4">
+            <h2 class="section-title">Gợi ý phối đồ theo phong cách</h2>
+        </div>
+
+        <div class="lookbook-grid">
+            <div class="lookbook-item">
+                <img src="/Image/Home_image/Combomix1.jpg" onerror="this.src='/Image/no-image.jpg'">
+            </div>
+
+            <div class="lookbook-item">
+                <img src="/Image/Home_image/Combomix2.jpg" onerror="this.src='/Image/no-image.jpg'">
+            </div>
+
+            <div class="lookbook-item">
+                <img src="/Image/Home_image/Combomix3.jpg" onerror="this.src='/Image/no-image.jpg'">
+            </div>
+
+            <div class="lookbook-item">
+                <img src="/Image/Home_image/Combomix4.jpg" onerror="this.src='/Image/no-image.jpg'">
+            </div>
+        </div>
+    </section>
+    <section class="container my-5 category-showcase-wrapper">
+        <div class="category-showcase">
+            <div class="category-banner">
+                <a href="/Product?categoryName=Áo Thun">
+                    <img src="/Image/Home_image/Aothun.jpg" alt="Áo Thun">
+                    <div class="banner-label">
+                        <h3>ÁO THUN</h3>
+                        <span class="btn-show-now">XEM NGAY</span>
+                    </div>
+                </a>
+            </div>
+            <div class="category-product-slider product-items-slick">
+                @if (ViewBag.AoThun != null)
+                {
+                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoThun)
+                    {
+                        <div class="item-wrapper">
+                            <div class="uniform-card">
+                                <span class="sale-tag new-badge">HÀNG MỚI</span>
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                                </a>
+                            </div>
+                            <div class="product-info">
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                                <p class="p-price">@item.Price.ToString("N0")₫</p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+    </section>
+
+
+    <section class="container my-5 category-showcase-wrapper">
+        <div class="category-showcase">
+            <div class="category-banner">
+                <a href="/Product?categoryName=Áo Sơ Mi">
+                    <img src="/Image/Home_image/Aosomi.jpg" alt="Áo Sơ Mi">
+                    <div class="banner-label">
+                        <h3>ÁO SƠ MI</h3>
+                        <span class="btn-show-now">XEM NGAY</span>
+                    </div>
+                </a>
+            </div>
+            <div class="category-product-slider product-items-slick">
+                @if (ViewBag.AoSomi != null)
+                {
+                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.AoSomi)
+                    {
+                        <div class="item-wrapper">
+                            <div class="uniform-card">
+                                <span class="sale-tag new-badge">HÀNG MỚI</span>
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                                </a>
+                            </div>
+                            <div class="product-info">
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                                <p class="p-price">@item.Price.ToString("N0")₫</p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="container my-5 category-showcase-wrapper">
+        <div class="category-showcase">
+            <div class="category-banner">
+                <a href="/Product?categoryName=Quần Jean">
+                    <img src="/Image/Home_image/Quanjeans.jpg" alt="Quần Jean">
+                    <div class="banner-label">
+                        <h3>QUẦN JEAN</h3>
+                        <span class="btn-show-now">XEM NGAY</span>
+                    </div>
+                </a>
+            </div>
+            <div class="category-product-slider product-items-slick">
+                @if (ViewBag.QuanJean != null)
+                {
+                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanJean)
+                    {
+                        <div class="item-wrapper">
+                            <div class="uniform-card">
+                                <span class="sale-tag new-badge">HÀNG MỚI</span>
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                                </a>
+                            </div>
+                            <div class="product-info">
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                                <p class="p-price">@item.Price.ToString("N0")₫</p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="container my-5 category-showcase-wrapper">
+        <div class="category-showcase">
+            <div class="category-banner">
+                <a href="/Product?categoryName=Quần Tây">
+                    <img src="/Image/Home_image/Quantay.jpg" alt="Quần Tây">
+                    <div class="banner-label">
+                        <h3>QUẦN TÂY</h3>
+                        <span class="btn-show-now">XEM NGAY</span>
+                    </div>
+                </a>
+            </div>
+            <div class="category-product-slider product-items-slick">
+                @if (ViewBag.QuanTay != null)
+                {
+                    foreach (var item in (List<ShopQuanAo.Models.BEAN.Entity.Product>)ViewBag.QuanTay)
+                    {
+                        <div class="item-wrapper">
+                            <div class="uniform-card">
+                                <span class="sale-tag new-badge">HÀNG MỚI</span>
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })">
+                                    <img src="@item.Image" onerror="this.src='/Image/no-image.jpg'">
+                                </a>
+                            </div>
+                            <div class="product-info">
+                                <a href="@Url.Action("ProductDetail", "Product", new { id = item.Id })" class="p-name">@item.ProductName</a>
+                                <p class="p-price">@item.Price.ToString("N0")₫</p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="policy-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 policy-item">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <h4>Giao hàng hỏa tốc</h4>
+                    <p>Nhận hàng trong vòng 2h tại TP.HCM</p>
+                </div>
+                <div class="col-md-3 policy-item">
+                    <i class="fa-solid fa-rotate"></i>
+                    <h4>7 Ngày đổi trả</h4>
+                    <p>Đổi trả dễ dàng, không cần lý do</p>
+                </div>
+                <div class="col-md-3 policy-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <h4>Thanh toán an toàn</h4>
+                    <p>Bảo mật thông tin 100%</p>
+                </div>
+                <div class="col-md-3 policy-item">
+                    <i class="fa-solid fa-headset"></i>
+                    <h4>Hỗ trợ 24/7</h4>
+                    <p>Luôn lắng nghe và giải đáp mọi lúc</p>
+                </div>
+            </div>
         </div>
     </section>
 </div>
@@ -92,43 +382,73 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
 <script>
     $(document).ready(function(){
-        // Banner Slider
-        var $hero = $('.hero-slider').slick({ 
-            autoplay: true, 
-            dots: true, 
-            arrows: false, 
-            fade: true, 
-            speed: 800,
-            autoplaySpeed: 5000 
-        });
-        $('.prev-banner').click(function() { $hero.slick('slickPrev'); });
-        $('.next-banner').click(function() { $hero.slick('slickNext'); });
-
-        // Category Slider
-        var $cat = $('.category-slider').slick({
-            slidesToShow: 5, 
-            slidesToScroll: 1, 
-            arrows: false,
-            responsive: [
-                { breakpoint: 1200, settings: { slidesToShow: 4 } },
-                { breakpoint: 992, settings: { slidesToShow: 2 } }
-            ]
-        });
-        $('.prev-cat').click(function() { $cat.slick('slickPrev'); });
-        $('.next-cat').click(function() { $cat.slick('slickNext'); });
-
-        // Sale Slider
-        var $sale = $('.sale-slider').slick({
-            slidesToShow: 5, 
-            slidesToScroll: 1, 
-            arrows: false, 
-            autoplay: true,
-            responsive: [
-                { breakpoint: 1200, settings: { slidesToShow: 4 } },
-                { breakpoint: 992, settings: { slidesToShow: 2 } }
-            ]
-        });
-        $('.prev-sale').click(function() { $sale.slick('slickPrev'); });
-        $('.next-sale').click(function() { $sale.slick('slickNext'); });
+    // 1. Banner Slider
+    var $hero = $('.hero-slider').slick({
+    autoplay: true,
+    dots: true,
+    arrows: false,
+    fade: true,
+    speed: 800,
+    autoplaySpeed: 5000
     });
+    $('.prev-banner').click(function() { $hero.slick('slickPrev'); });
+    $('.next-banner').click(function() { $hero.slick('slickNext'); });
+
+    // 2. Category Slider
+    var $cat = $('.category-slider').slick({
+    slidesToShow: 5,
+    slidesToScroll: 1,
+    arrows: false,
+    responsive: [
+    { breakpoint: 1200, settings: { slidesToShow: 4 } },
+    { breakpoint: 992, settings: { slidesToShow: 2 } }
+    ]
+    });
+    $('.prev-cat').click(function() { $cat.slick('slickPrev'); });
+    $('.next-cat').click(function() { $cat.slick('slickNext'); });
+
+    // 3. Sale Slider
+    var $sale = $('.sale-slider').slick({
+    slidesToShow: 5,
+    slidesToScroll: 1,
+    arrows: false,
+    autoplay: true,
+    responsive: [
+    { breakpoint: 1200, settings: { slidesToShow: 4 } },
+    { breakpoint: 992, settings: { slidesToShow: 2 } }
+    ]
+    });
+    $('.prev-sale').click(function() { $sale.slick('slickPrev'); });
+    $('.next-sale').click(function() { $sale.slick('slickNext'); });
+
+    // 4. Các Slider cho từng Danh mục (Áo thun, sơ mi...)
+    $('.product-items-slick').slick({
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    arrows: true,
+    infinite: false,
+    responsive: [
+    { breakpoint: 1024, settings: { slidesToShow: 3 } },
+    { breakpoint: 768, settings: { slidesToShow: 2 } }
+    ]
+    });
+    });
+
+    // 5. Hàm xử lý chuyển Tab
+    function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tab-link");
+    for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].classList.remove("active");
+    }
+    var targetTab = document.getElementById(tabName);
+    if (targetTab) {
+    targetTab.style.display = "block";
+    evt.currentTarget.classList.add("active");
+    }
+    }
 </script>

@@ -194,4 +194,169 @@ body {
     opacity: 1;
 }
 
+/* --- STYLE CHO MỤC TABS (SẢN PHẨM MỚI & BÁN CHẠY) --- */
+.tab-link {
+    font-weight: 700;
+    font-size: 20px;
+    text-transform: uppercase;
+    color: #999;
+    cursor: pointer;
+    padding-bottom: 10px;
+    transition: 0.3s;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
 
+    .tab-link.active {
+        color: var(--brand-black);
+        border-bottom-color: var(--brand-black);
+    }
+
+    .tab-link:hover {
+        color: var(--brand-black);
+    }
+
+.tab-content {
+    animation: fadeInTab 0.5s ease;
+}
+
+@keyframes fadeInTab {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- MỤC 4: DẢI CAM KẾT DỊCH VỤ (SERVICE POLICIES) --- */
+.policy-section {
+    background: #f8f8f8;
+    padding: 30px 0;
+    border-top: 1px solid #eee;
+    margin-top: 50px;
+}
+
+.policy-item {
+    text-align: center;
+    padding: 15px;
+}
+
+    .policy-item i {
+        font-size: 28px;
+        color: var(--brand-black);
+        margin-bottom: 15px;
+    }
+
+    .policy-item h4 {
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .policy-item p {
+        font-size: 13px;
+        color: #666;
+        margin: 0;
+    }
+/* --- MỤC 3: LOOKBOOK (FIXED FORM) --- */
+.lookbook-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.lookbook-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px; /* Bo góc nhẹ cho sang */
+    background: #f8f8f8;
+    /* Tự động tính chiều cao theo tỷ lệ 3:4, không lo ảnh dài ngắn khác nhau */
+    aspect-ratio: 3 / 4;
+}
+
+    .lookbook-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Quan trọng: Giúp ảnh không bị móp/méo */
+        display: block;
+        transition: transform 0.6s ease;
+    }
+
+    .lookbook-item:hover img {
+        transform: scale(1.05);
+    }
+
+/* Mobile: Hiện 2 cột */
+@media (max-width: 768px) {
+    .lookbook-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+/* --- CHỈNH SHOWCASE: BANNER NHỎ - SẢN PHẨM NHỎ XINH --- */
+.category-showcase {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start; /* Không ép banner cao bằng sản phẩm nữa để giữ form banner */
+}
+
+/* 1. Banner nhỏ lại theo tỉ lệ mẫu */
+.category-banner {
+    flex: 0 0 18%; /* Thu nhỏ banner lại còn 18% */
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+    .category-banner img {
+        width: 100%;
+        height: auto; /* Để ảnh banner tự giữ tỉ lệ đứng của nó */
+        display: block;
+        transition: 0.3s;
+    }
+
+/* 2. Slider chiếm không gian rộng hơn */
+.category-product-slider {
+    flex: 0 0 82%;
+    min-width: 0;
+}
+
+    /* 3. ÉP SẢN PHẨM NHỎ LẠI */
+    .category-product-slider .item-wrapper {
+        padding: 0 5px; /* Thu hẹp khoảng cách giữa các card */
+    }
+
+    .category-product-slider .uniform-card {
+        aspect-ratio: 3/4; /* Giữ khung ảnh đứng */
+        border-radius: 4px;
+    }
+
+    .category-product-slider .product-info .p-name {
+        font-size: 11px; /* Chữ tên sản phẩm nhỏ lại cho tinh tế */
+        height: 32px;
+    }
+
+    .category-product-slider .product-info .p-price {
+        font-size: 13px; /* Giá cũng nhỏ lại cho cân đối */
+    }
+
+/* Nút Xem tất cả ở dưới mỗi mục */
+.view-all-container {
+    text-align: center;
+    margin-top: -10px;
+    margin-bottom: 40px;
+}
+
+.btn-view-all {
+    padding: 5px 15px;
+    border: 1px solid #000;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: none;
+    color: #000;
+    text-decoration: none;
+}
