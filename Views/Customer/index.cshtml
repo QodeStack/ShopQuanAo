@@ -13,7 +13,6 @@
             <h1 class="order-title">Đơn Mua</h1>
         </div>
 
-        <!-- Status Tabs -->
         <div class="order-tabs">
             @{
                 var tabStatuses = new[] {
@@ -35,7 +34,6 @@
             }
         </div>
 
-        <!-- Orders List -->
         @if (!Model.Orders.Any())
         {
             <div class="order-empty">
@@ -160,6 +158,21 @@
 
                             @if (statusName == "Chờ xác nhận")
                             {
+                                @if (!order.IsPaid && order.PaymentMethod != "COD")
+                                {
+                                    var timeElapsed = (DateTime.Now - order.CreateTime).TotalSeconds;
+                                    var timeLeft = 600 - (int)timeElapsed;
+
+                                    if (timeLeft > 0)
+                                    {
+                                        <a href="/Checkout/Payment?orderId=@order.Id"
+                                               class="btn-order-rebuy"
+                                               style="background-color: #0a58ca; color: white; border-color: #0a58ca; margin-right: 8px;">
+                                            Tiếp tục thanh toán
+                                        </a>
+                                    }
+                                }
+
                                 <form method="post" action="@Url.Action("Cancel", "Customer")" style="display:inline"
                                       onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
                                     @Html.AntiForgeryToken()
@@ -205,7 +218,6 @@
                 }
             </div>
 
-            <!-- Pagination -->
             @if (Model.TotalPages > 1)
             {
                 <div class="order-pagination">

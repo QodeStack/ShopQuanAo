@@ -51,11 +51,27 @@ body {
 }
 
 .detail-name {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin-bottom: 15px;
-    line-height: 1.1;
+    font-size: 2rem; /* Kích thước vừa phải, không quá to gây thô */
+    font-weight: 700; /* Độ đậm cao để làm nổi bật tên sản phẩm */
+    line-height: 1.2; /* Khoảng cách dòng hợp lý */
+    color: #1a1a1a; /* Màu đen sâu sang trọng */
+    margin-bottom: 10px; /* Khoảng cách với phần thương hiệu/giá */
+    text-transform: capitalize; /* Viết hoa chữ cái đầu mỗi từ */
+    letter-spacing: -0.5px; /* Thu hẹp khoảng cách chữ một chút để trông hiện đại hơn */
 }
+
+.brand-title {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 15px;
+    display: block; /* Đảm bảo thương hiệu nằm riêng biệt */
+}
+
+    .brand-title span {
+        color: #000;
+        font-weight: 600;
+        text-decoration: underline; /* Tạo điểm nhấn cho tên thương hiệu */
+    }
 
 /* STYLE GIÁ CẢ (MỚI TỪ CODE 2) */
 .detail-price {

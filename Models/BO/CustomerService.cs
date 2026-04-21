@@ -16,6 +16,14 @@ namespace ShopQuanAo.BO
 
         public async Task<CustomerOrderPagedDto> GetOrdersAsync(string userId, string status, int page)
         {
+            var expiredOrders = await _customerDAO.GetExpiredPendingOrdersAsync(userId);
+            foreach (var expiredOrder in expiredOrders)
+            {
+                // Tái sử dụng hàm CancelOrderAsync để hoàn kho và hoàn voucher
+                await CancelOrderAsync(userId, expiredOrder.Id);
+            }
+
+          
             // 1. Nhờ DAO đếm tổng số đơn để tính toán
             var total = await _customerDAO.GetOrderCountAsync(userId, status);
 
