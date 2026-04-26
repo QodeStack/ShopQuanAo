@@ -10,7 +10,6 @@ namespace MenShopBot
 {
     class Program
     {
-        // Chuỗi kết nối Database chuẩn của bạn
         private static readonly string connectionString = "Server=localhost\\MSSQLSERVER01;Database=ShopQuanA;Trusted_Connection=True;TrustServerCertificate=True;";
 
         static async Task Main(string[] args)
@@ -21,8 +20,6 @@ namespace MenShopBot
             Console.WriteLine("    HỆ THỐNG BOT LẮNG NGHE THANH TOÁN MENSHOP    ");
             Console.WriteLine("=================================================\n");
             Console.ResetColor();
-
-            // Xin quyền đọc thông báo từ hệ điều hành Windows
             var listener = UserNotificationListener.Current;
             var accessStatus = await listener.RequestAccessAsync();
 
@@ -37,24 +34,17 @@ namespace MenShopBot
 
             Console.WriteLine("[*] Đã kết nối thành công. Đang chờ SMS từ Phone Link...\n");
 
-            // ==============================================================
-            // BỘ LỌC THỜI GIAN: Lưu lại thời điểm chính xác lúc Bot khởi động
-            // ==============================================================
             DateTimeOffset botStartTime = DateTimeOffset.Now;
 
-            // Vòng lặp vô hạn để canh gác thông báo 24/7
             while (true)
             {
                 try
                 {
-                    // Lấy tất cả thông báo đang hiện trên máy tính
+
                     var notifications = await listener.GetNotificationsAsync(NotificationKinds.Toast);
 
                     foreach (var toast in notifications)
                     {
-                        // ==============================================================
-                        // KIỂM TRA HẠN SỬ DỤNG: Nếu thông báo được tạo ra TRƯỚC khi bật Bot -> Lờ đi
-                        // ==============================================================
                         if (toast.CreationTime < botStartTime)
                         {
                             continue;
@@ -62,22 +52,17 @@ namespace MenShopBot
 
                         string appName = toast.AppInfo.DisplayInfo.DisplayName;
 
-                        // CHỈ bắt thông báo đến từ App Phone Link (Liên kết điện thoại)
                         if (appName.Contains("Phone Link") || appName.Contains("Liên kết điện thoại"))
                         {
                             var textElements = toast.Notification.Visual.GetBinding(KnownNotificationBindings.ToastGeneric)?.GetTextElements();
                             if (textElements != null)
                             {
                                 string content = string.Join(" ", textElements.Select(t => t.Text)).ToUpper();
-
-                                // Bộ lọc chống rác: Phải có chữ MENSHOP và dấu +
                                 if (content.Contains("MENSHOP") && content.Contains("+"))
                                 {
                                     Console.ForegroundColor = ConsoleColor.Yellow;
                                     Console.WriteLine($"\n[CÓ BIẾN ĐỘNG SỐ DƯ]: {content}");
                                     Console.ResetColor();
-
-                                    // Xử lý gạch nợ
                                     ProcessPayment(content, toast.Id, listener);
                                 }
                             }
@@ -90,15 +75,12 @@ namespace MenShopBot
                     Console.WriteLine($"[LỖI HỆ THỐNG]: {ex.Message}");
                     Console.ResetColor();
                 }
-
-                // Chờ 3 giây rồi quét tiếp để máy tính không bị giật lag
                 await Task.Delay(3000);
             }
         }
 
         static void ProcessPayment(string content, uint notificationId, UserNotificationListener listener)
         {
-            // 1. Tách mã đơn hàng bằng Regex (VD: MENSHOP 1234 -> lấy số 1234)
             var orderMatch = Regex.Match(content, @"MENSHOP\s*(\d+)");
             if (!orderMatch.Success)
             {
@@ -106,8 +88,6 @@ namespace MenShopBot
                 return;
             }
             int orderId = int.Parse(orderMatch.Groups[1].Value);
-
-            // 2. Tách số tiền thực nhận (VD: +500,000 -> lấy 500000)
             var moneyMatch = Regex.Match(content, @"\+([0-9,\.]+)");
             if (!moneyMatch.Success)
             {
@@ -117,56 +97,59 @@ namespace MenShopBot
             double transferAmount = double.Parse(moneyMatch.Groups[1].Value.Replace(",", "").Replace(".", ""));
 
             Console.WriteLine($"   -> Khách đang thanh toán cho Đơn hàng: #{orderId} - Số tiền nhận: {transferAmount:N0}đ");
-
-            // 3. Mở kết nối Database và cập nhật trạng thái đơn
-            bool isSuccess = UpdateOrderInDatabase(orderId, transferAmount);
-
-            if (isSuccess)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"   -> [THÀNH CÔNG] Đã tự động gạch nợ cho đơn hàng #{orderId}!");
-                Console.ResetColor();
-
-                // Dọn dẹp: Xóa cái thông báo đó khỏi màn hình để vòng lặp sau không đọc lại nữa
-                listener.RemoveNotification(notificationId);
-            }
+            ProcessOrderInDatabase(orderId, transferAmount);
+            listener.RemoveNotification(notificationId);
         }
 
-        static bool UpdateOrderInDatabase(int orderId, double amount)
+        static void ProcessOrderInDatabase(int orderId, double amount)
         {
             try
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-
-                    // Logic Update SQL Server: Đơn chưa thanh toán VÀ Khách chuyển đủ/dư tiền
-                    // ĐÃ FIX: Bọc [Order] trong ngoặc vuông để tránh trùng từ khóa SQL
-                    string query = @"
-                        UPDATE [Order] 
-                        SET IsPaid = 1, OrderStatusId = 2 
-                        WHERE Id = @OrderId 
-                          AND IsPaid = 0 
-                          AND TotalAmount <= @Amount";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    string checkQuery = "SELECT IsPaid, TotalAmount FROM [Order] WHERE Id = @OrderId";
+                    using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
                     {
-                        cmd.Parameters.AddWithValue("@OrderId", orderId);
-                        cmd.Parameters.AddWithValue("@Amount", amount);
-
-                        int rowsAffected = cmd.ExecuteNonQuery();
-
-                        if (rowsAffected > 0)
+                        checkCmd.Parameters.AddWithValue("@OrderId", orderId);
+                        using (SqlDataReader reader = checkCmd.ExecuteReader())
                         {
-                            return true; // Gạch nợ OK
+                            if (!reader.Read())
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine("   -> [THẤT BẠI] Đơn hàng không tồn tại trong hệ thống.");
+                                Console.ResetColor();
+                                return;
+                            }
+
+                            bool isPaid = Convert.ToBoolean(reader["IsPaid"]);
+                            double totalAmount = Convert.ToDouble(reader["TotalAmount"]);
+                            if (isPaid)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine("   -> [BỎ QUA] Đơn hàng này ĐÃ ĐƯỢC THANH TOÁN thành công từ trước.");
+                                Console.ResetColor();
+                                return;
+                            }
+
+                            if (amount < totalAmount)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"   -> [TỪ CHỐI] Khách chuyển THIẾU TIỀN (Cần: {totalAmount:N0}đ - Nhận: {amount:N0}đ). Yêu cầu khách chuyển lại đúng số tiền!");
+                                Console.ResetColor();
+                                return;
+                            }
                         }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("   -> [THẤT BẠI] Lỗi: Đơn không tồn tại, đã gạch nợ trước đó, hoặc khách chuyển thiếu tiền.");
-                            Console.ResetColor();
-                            return false;
-                        }
+                    }
+                    string updateQuery = "UPDATE [Order] SET IsPaid = 1, OrderStatusId = 2 WHERE Id = @OrderId";
+                    using (SqlCommand updateCmd = new SqlCommand(updateQuery, conn))
+                    {
+                        updateCmd.Parameters.AddWithValue("@OrderId", orderId);
+                        updateCmd.ExecuteNonQuery();
+
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"   -> [THÀNH CÔNG] Đã tự động gạch nợ cho đơn hàng #{orderId}!");
+                        Console.ResetColor();
                     }
                 }
             }
@@ -175,7 +158,6 @@ namespace MenShopBot
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"   -> [LỖI KẾT NỐI DB]: {ex.Message}");
                 Console.ResetColor();
-                return false;
             }
         }
     }

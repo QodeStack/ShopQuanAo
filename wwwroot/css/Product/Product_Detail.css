@@ -1,4 +1,4 @@
-﻿<style >
+﻿
 /* NỀN TỔNG THỂ */
 body {
     background-color: #f4f4f4;
@@ -385,4 +385,58 @@ body {
     color: #333;
 }
 
-</style >
+/* TAB SECTION */
+.product-tabs-section {
+    margin-top: 50px;
+    border-top: 1px solid #eee;
+}
+
+.tab-nav {
+    display: flex;
+    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 35px;
+}
+
+.tab-btn {
+    padding: 16px 30px;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    color: #aaa;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: 0.2s;
+}
+
+    .tab-btn:hover {
+        color: #333;
+    }
+
+.tab-active {
+    color: #000 !important;
+    border-bottom-color: #000 !important;
+}
+
+/* MÔ TẢ */
+.description-content {
+    max-width: 820px;
+    line-height: 1.95;
+    color: #333;
+    font-size: 15px;
+}
+
+    .description-content b,
+    .description-content strong {
+        font-weight: 700;
+        color: #000;
+    }
+
+.desc-empty {
+    color: #aaa;
+    font-style: italic;
+}

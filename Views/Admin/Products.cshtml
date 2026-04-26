@@ -206,7 +206,11 @@
                     <img id="imagePreview" class="img-preview" src="" alt="Preview" style="max-height: 150px; border-radius: 4px; display: none;">
                 </div>
             </div>
-
+            <div class="form-group full-width">
+                <label class="form-label">Mô tả sản phẩm</label>
+                <textarea class="form-control-admin" id="modalDescription" rows="5"
+                          placeholder="Nhập mô tả chi tiết: chất liệu, form dáng, đặc điểm nổi bật..."></textarea>
+            </div>
             <div class="form-group full-width">
                 <label class="form-label">Cấu hình kho hàng (Size & Số lượng)</label>
                 <div id="sizeArea" class="size-config-container"></div>
@@ -416,6 +420,7 @@
         document.getElementById('modalBrand').value = '';
         document.getElementById('modalPrice').value = '';
         document.getElementById('modalImage').value = '';
+        document.getElementById('modalDescription').value = '';
         document.getElementById('imagePreview').style.display = 'none';
         // show only size buttons; inputs appear when user clicks a size
         renderSizeArea();
@@ -430,6 +435,7 @@
         document.getElementById('modalBrand').value = p.brandName;
         document.getElementById('modalPrice').value = p.price;
         document.getElementById('modalImage').value = p.image || '';
+        document.getElementById('modalDescription').value = p.description || '';
         document.getElementById('modalCategory').value = p.categoryId;
         previewImage(p.image);
         renderSizeArea();
@@ -529,6 +535,7 @@
             Price: parseFloat(document.getElementById('modalPrice').value),
             Image: document.getElementById('modalImage').value,
             CategoryId: parseInt(document.getElementById('modalCategory').value),
+            Description: document.getElementById('modalDescription').value,
             Sizes: [] // Mảng chứa size
         };
 

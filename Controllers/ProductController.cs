@@ -150,32 +150,37 @@ namespace ShopQuanAo.Controllers
             return Json(result);
         }
 
-		public async Task<IActionResult> ProductDetail(int id)
-		{
-			var (product, sizes) = await _productService.GetProductDetailAsync(id);
-			if (product == null) return NotFound();
+        public async Task<IActionResult> ProductDetail(int id)
+        {
+            var (product, sizes) = await _productService.GetProductDetailAsync(id);
+            if (product == null) return NotFound();
 
-			var reviews = await _context.ProductReviews
-										.Where(r => r.ProductId == id)
-										.OrderByDescending(r => r.CreatedAt)
-										.ToListAsync();
+            var reviews = await _context.ProductReviews
+                .Where(r => r.ProductId == id)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
 
-			// LẤY VOUCHER TỪ DATABASE
-			// Lưu ý: Hãy kiểm tra chính xác tên cột trong bảng Vouchers của bạn là gì (ExpiryDate hay ExpirationDate...)
-			// Lấy danh sách Voucher đang hoạt động từ bảng Vouchers
-			var coupons = await _context.Vouchers
-				.Where(v => v.IsActive == true && v.Quantity > 0 && v.IsPublic == true)
-				.OrderBy(v => v.MinOrderAmount) // Đổi từ MinOrderValue thành MinOrderAmount theo DB
-				.ToListAsync();
+            var coupons = await _context.Vouchers
+                .Where(v => v.IsActive == true && v.Quantity > 0 && v.IsPublic == true)
+                .OrderBy(v => v.MinOrderAmount)
+                .ToListAsync();
 
-			ViewBag.AvailableSizes = sizes;
-			ViewBag.Reviews = reviews;
-			ViewBag.Coupons = coupons; // Gửi danh sách này sang View
+            // THÊM: Lấy sản phẩm liên quan (cùng danh mục, loại trừ sản phẩm hiện tại)
+            var relatedProducts = await _context.Products
+                .Where(p => p.CategoryId == product.CategoryId && p.Id != product.Id)
+                .OrderByDescending(p => p.Id)
+                .Take(4)
+                .ToListAsync();
 
-			return View(product);
-		}
+            ViewBag.AvailableSizes = sizes;
+            ViewBag.Reviews = reviews;
+            ViewBag.Coupons = coupons;
+            ViewBag.RelatedProducts = relatedProducts;  // THÊM DÒNG NÀY
 
-		[HttpPost]
+            return View(product);
+        }
+
+        [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitReview(int ProductId, int Rating, string Comment, string ReturnUrl = "ProductDetail")

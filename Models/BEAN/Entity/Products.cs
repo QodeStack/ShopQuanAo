@@ -30,9 +30,11 @@ namespace ShopQuanAo.Models.BEAN.Entity
 		[Column(TypeName = "varchar(500)")]
 		public string? Image { get; set; }
 
-		// Khóa ngoại Category
+        [Column(TypeName = "nvarchar(2000)")]
+        public string? Description { get; set;	}
 
-		public int CategoryId { get; set; }
+        // Khóa ngoại Category
+        public int CategoryId { get; set; }
 		[ForeignKey("CategoryId")]
 		public Categories Category { get; set; }
 

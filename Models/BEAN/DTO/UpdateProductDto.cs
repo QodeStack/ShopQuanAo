@@ -12,7 +12,8 @@
 
 		// SỬA TẠI ĐÂY: Phải là SizeDtos (có chữ s) để khớp với class định nghĩa bên dưới
 		public List<SizeDtos>? Sizes { get; set; }
-	}
+        public string? Description { get; set; }
+    }
 
 	// Class định nghĩa cấu trúc Size
 	public class SizeDtos

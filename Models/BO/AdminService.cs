@@ -165,6 +165,7 @@ namespace ShopQuanAo.BO
                 brandName = p.BrandName,
                 price = p.Price,
                 image = p.Image,
+                description = p.Description,
                 categoryId = p.CategoryId,
                 categoryName = p.Category != null ? p.Category.CategoryName : "N/A",
                 productSizes = p.ProductSizes.Select(ps => new { id = ps.Id, sizeName = ps.Size.SizeName, quantity = ps.Quantity }).ToList()
@@ -176,7 +177,7 @@ namespace ShopQuanAo.BO
             if (await _adminDAO.IsProductExistAsync(dto.ProductName))
                 return (false, "Sản phẩm đã tồn tại.");
 
-            var product = new Product { ProductName = dto.ProductName, BrandName = dto.BrandName ?? "MenShop", Price = dto.Price, Image = dto.Image, CategoryId = dto.CategoryId };
+            var product = new Product { ProductName = dto.ProductName, BrandName = dto.BrandName ?? "MenShop", Price = dto.Price, Image = dto.Image, CategoryId = dto.CategoryId, Description = dto.Description };
             await _adminDAO.AddProductAsync(product);
 
             if (dto.Sizes != null)
@@ -207,6 +208,7 @@ namespace ShopQuanAo.BO
                 product.Price = dto.Price;
                 product.BrandName = dto.BrandName ?? "MenShop";
                 product.CategoryId = dto.CategoryId;
+                product.Description = dto.Description;
                 if (!string.IsNullOrEmpty(dto.Image)) product.Image = dto.Image;
 
                 await _adminDAO.RemoveProductSizesAsync(product.ProductSizes);
