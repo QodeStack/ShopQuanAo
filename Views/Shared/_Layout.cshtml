@@ -24,13 +24,11 @@
 
                 <div class="collapse navbar-collapse" id="navbarMenu">
                     <ul class="navbar-nav mx-auto">
-                        
-                           
-                            <li class="nav-item dropdown-mega">
-                                <a class="nav-link" asp-controller="Product" asp-action="Index">
-                                    SẢN PHẨM 
-                                </a>
-                            </li>
+                        <li class="nav-item dropdown-mega">
+                            <a class="nav-link" asp-controller="Product" asp-action="Index">
+                                SẢN PHẨM
+                            </a>
+                        </li>
                         <li class="nav-item"><a class="nav-link text-danger fw-bold" asp-controller="Home" asp-action="Sale">SALE</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="AboutUs">Về Chúng Tôi</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">Liên Hệ </a></li>
@@ -78,8 +76,6 @@
                         <span class="payment-badge">VNPAY</span>
                         <span class="payment-badge">BANK TRANSFER</span>
                     </div>
-
-
                 </div>
 
                 <div class="col-md-3 mb-4">
@@ -124,11 +120,311 @@
                         </p>
                     </div>
                 </div>
-
-                
             </div>
-        </footer>
+        </div>
+    </footer>
 
+    <div id="chat-toggle-btn" onclick="toggleChat()">
+        💬 Chat với AI
+    </div>
+
+    <div id="chat-window" class="chat-hidden">
+        <div class="chat-header">
+            <span>🤖 Trợ lý MenShop</span>
+            <button onclick="toggleChat()" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;">✖</button>
+        </div>
+    
+        <div class="chat-body" id="chat-messages">
+            <div class="chat-bubble bot-bubble">
+                Chào bạn, mình là trợ lý AI của MenShop. Bạn muốn tìm đồ, phối đồ hay xem khuyến mãi, hãy nhắn hoặc <b>gửi ảnh</b> cho mình nhé!
+            </div>
+        </div>
+        
+        <div id="image-preview-container" style="display: none; padding: 5px 10px; background: #f4f7f6; border-top: 1px solid #ddd;">
+            <div style="position: relative; display: inline-block;">
+                <img id="image-preview" src="" style="max-height: 50px; border-radius: 5px; border: 1px solid #ccc;">
+                <button onclick="clearImage()" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer;">✖</button>
+            </div>
+        </div>
+
+        <div class="chat-footer">
+            <label for="chat-image-input" style="cursor: pointer; font-size: 20px; color: #555; margin-right: 10px; margin-top: 5px;">
+                <i class="fa-solid fa-paperclip"></i>
+            </label>
+            <input type="file" id="chat-image-input" accept="image/*" style="display: none;" onchange="previewImage(event)">
+            
+            <input type="text" id="chat-input" placeholder="Nhập câu hỏi..." onkeypress="handleEnter(event)">
+            <button id="chat-send-btn" onclick="sendMessage()">Gửi</button>
+        </div>
+    </div>
+
+    <style>
+            /* Nút mở chat - Đổi sang màu Đen nam tính */
+            #chat-toggle-btn {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: #000000;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 30px;
+                cursor: pointer;
+                font-weight: bold;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 9999;
+                transition: 0.3s;
+                border: 1px solid #333;
+            }
+            #chat-toggle-btn:hover { background-color: #333333; }
+
+            /* Khung chat */
+            #chat-window {
+                position: fixed;
+                bottom: 80px;
+                right: 20px;
+                width: 350px;
+                height: 450px;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                border: 1px solid #e0e0e0;
+                display: flex;
+                flex-direction: column;
+                z-index: 10000;
+                overflow: hidden;
+                transition: opacity 0.3s ease, transform 0.3s ease;
+            }
+    
+            /* Class để ẩn/hiện mượt mà */
+            .chat-hidden { opacity: 0; transform: translateY(20px); pointer-events: none; }
+            .chat-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+            /* Header - Đen nhám kèm viền Đỏ (Tone màu của thẻ Sale) */
+            .chat-header {
+                background: #000000;
+                color: white;
+                padding: 15px;
+                display: flex;
+                justify-content: space-between;
+                font-weight: bold;
+                border-bottom: 3px solid #e00000; /* Nhấn màu đỏ MenShop */
+            }
+
+            /* Vùng chứa tin nhắn */
+            .chat-body {
+                flex: 1;
+                padding: 15px;
+                overflow-y: auto;
+                background: #ffffff; /* Nền trắng sạch sẽ */
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            /* Bong bóng chat */
+            .chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word;}
+        
+            /* Tin nhắn của User: Đen sang trọng */
+            .user-bubble { background: #000000; color: white; align-self: flex-end; border-bottom-right-radius: 2px;}
+        
+            /* Tin nhắn của Bot: Xám nhạt, chữ đen */
+            .bot-bubble { background: #f4f4f4; color: #333; border: 1px solid #ebebeb; align-self: flex-start; border-bottom-left-radius: 2px;}
+
+            /* Footer nhập chữ */
+            .chat-footer {
+                display: flex;
+                padding: 10px;
+                border-top: 1px solid #eee;
+                background: #fafafa;
+            }
+            .chat-footer input {
+                flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; transition: 0.3s;
+            }
+            .chat-footer input:focus {
+                border-color: #000;
+            }
+            .chat-footer input:disabled {
+                background-color: #e9ecef; cursor: not-allowed;
+            }
+            .chat-footer button {
+                background: #000000; color: white; border: none; padding: 0 15px; margin-left: 10px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-weight: bold;
+            }
+            .chat-footer button:hover:not(:disabled) {
+                background: #333333;
+            }
+            .chat-footer button:disabled {
+                background: #ccc; cursor: not-allowed;
+            }
+    </style>
+
+    <script>
+            let currentImageBase64 = null;
+        
+            // KHO LƯU TRỮ LỊCH SỬ CHAT (Mảng truyền cho Backend)
+            let chatHistoryArray = [];
+
+            // --- MỚI: Phục hồi trạng thái chat và mảng lịch sử khi load lại trang ---
+            document.addEventListener("DOMContentLoaded", function () {
+                var chatWindow = document.getElementById('chat-window');
+                var chatBody = document.getElementById('chat-messages');
+            
+                // Khôi phục UI chat từ Session
+                var savedHistoryUI = sessionStorage.getItem("chatHistoryUI");
+                if (savedHistoryUI) {
+                    chatBody.innerHTML = savedHistoryUI;
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
+
+                // Khôi phục mảng dữ liệu chat từ Session để gửi C#
+                var savedHistoryData = sessionStorage.getItem("chatHistoryData");
+                if (savedHistoryData) {
+                    chatHistoryArray = JSON.parse(savedHistoryData);
+                }
+
+                // Khôi phục trạng thái mở/đóng của cửa sổ
+                if (sessionStorage.getItem("chatOpen") === "true") {
+                    chatWindow.classList.remove('chat-hidden');
+                    chatWindow.classList.add('chat-visible');
+                }
+            });
+
+            // Hàm bật/tắt khung chat
+            function toggleChat() {
+                var chatWindow = document.getElementById('chat-window');
+                if (chatWindow.classList.contains('chat-hidden')) {
+                    chatWindow.classList.remove('chat-hidden');
+                    chatWindow.classList.add('chat-visible');
+                    document.getElementById('chat-input').focus();
+                
+                    // Lưu trạng thái mở
+                    sessionStorage.setItem("chatOpen", "true");
+                } else {
+                    chatWindow.classList.remove('chat-visible');
+                    chatWindow.classList.add('chat-hidden');
+                
+                    // Lưu trạng thái đóng
+                    sessionStorage.setItem("chatOpen", "false");
+                }
+            }
+
+            // Xử lý khi khách chọn ảnh
+            function previewImage(event) {
+                var file = event.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('image-preview').src = e.target.result;
+                        document.getElementById('image-preview-container').style.display = 'block';
+                        currentImageBase64 = e.target.result; // Lưu lại Base64
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Nút X để xóa ảnh đang chọn
+            function clearImage() {
+                document.getElementById('chat-image-input').value = '';
+                document.getElementById('image-preview').src = '';
+                document.getElementById('image-preview-container').style.display = 'none';
+                currentImageBase64 = null;
+            }
+
+            // Nhấn Enter để gửi
+            function handleEnter(event) {
+                if (event.key === 'Enter') { sendMessage(); }
+            }
+
+            // Hàm gửi tin nhắn xuống Backend
+            async function sendMessage() {
+                var inputField = document.getElementById('chat-input');
+                var sendButton = document.getElementById('chat-send-btn');
+                var messageText = inputField.value.trim();
+            
+                // Phải có chữ hoặc có ảnh mới cho gửi
+                if (!messageText && !currentImageBase64) return;
+
+                // --- KHÓA GIAO DIỆN CHỐNG SPAM TRONG LÚC CHỜ XỬ LÝ ---
+                inputField.disabled = true;
+                sendButton.disabled = true;
+                inputField.placeholder = "Đang suy nghĩ...";
+
+                var chatBody = document.getElementById('chat-messages');
+
+                // 1. In tin nhắn của User ra màn hình (hiện cả chữ và ảnh thu nhỏ)
+                let userHTML = '';
+                if (currentImageBase64) {
+                    userHTML += `<img src="${currentImageBase64}" style="max-width: 100%; border-radius: 8px; margin-bottom: 5px;"><br>`;
+                }
+                if (messageText) {
+                    userHTML += messageText;
+                }
+                chatBody.innerHTML += `<div class="chat-bubble user-bubble">${userHTML}</div>`;
+            
+                // Lưu giao diện vào Session
+                sessionStorage.setItem("chatHistoryUI", chatBody.innerHTML);
+
+                let textToSend = messageText || "Hãy phân tích hình ảnh này và tư vấn cho mình.";
+
+                // 2. GÓI DỮ LIỆU GỬI LÊN C# (Bao gồm mảng Lịch sử chat)
+                let requestData = {
+                    text: textToSend,
+                    imageBase64: currentImageBase64,
+                    history: chatHistoryArray // Truyền trí nhớ vào đây
+                };
+
+                // Lưu luôn câu hỏi của user vào mảng
+                chatHistoryArray.push({ role: "user", text: textToSend });
+
+                // Reset khung chat sau khi gửi
+                inputField.value = '';
+                clearImage();
+            
+                // Tạo một bong bóng "Đang trả lời..."
+                let typingId = 'typing-' + Date.now();
+                chatBody.innerHTML += `<div id="${typingId}" class="chat-bubble bot-bubble"><em>Đang suy nghĩ...</em></div>`;
+                chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+
+                try {
+                    // 3. Gọi API vào Controller Chatbot
+                    let response = await fetch('/api/Chatbot/ask', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    let data = await response.json();
+
+                    // Xóa chữ "Đang suy nghĩ..." và in câu trả lời của AI
+                    document.getElementById(typingId).remove();
+                
+                    // Render HTML từ AI để hiện "Link ẩn"
+                    let formattedAnswer = data.answer.replace(/\n/g, '<br>');
+                    chatBody.innerHTML += `<div class="chat-bubble bot-bubble">${formattedAnswer}</div>`;
+
+                    // 4. LƯU CÂU TRẢ LỜI CỦA BOT VÀO MẢNG LỊCH SỬ VÀ SESSION
+                    chatHistoryArray.push({ role: "model", text: data.answer });
+                    sessionStorage.setItem("chatHistoryData", JSON.stringify(chatHistoryArray)); // Lưu mảng Data
+                    sessionStorage.setItem("chatHistoryUI", chatBody.innerHTML); // Lưu UI
+
+                } catch (error) {
+                    document.getElementById(typingId).remove();
+                    chatBody.innerHTML += `<div class="chat-bubble bot-bubble" style="color:red;">Lỗi kết nối đến Server!</div>`;
+                    // Nếu lỗi thì xóa câu hỏi cuối cùng để tránh lỗi dây chuyền
+                    chatHistoryArray.pop();
+                }
+            
+                chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+
+                // --- THỜI GIAN CHỜ (COOLDOWN) SAU KHI CÓ KẾT QUẢ: 3 GIÂY ---
+                inputField.placeholder = "Vui lòng đợi 3 giây...";
+                setTimeout(() => {
+                    inputField.disabled = false;
+                    sendButton.disabled = false;
+                    inputField.placeholder = "Nhập câu hỏi...";
+                    inputField.focus(); // Tự động trỏ chuột vào khung chat lại
+                }, 3000); // 3000ms = 3 giây
+            }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

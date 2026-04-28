@@ -90,5 +90,17 @@ namespace ShopQuanAo.BO
 
             return (product, sizes);
         }
+        public async Task<List<Product>> GetCandidatesForAIAsync(string keyword, string color = "", double maxPrice = 0)
+        {
+            return await _productDAO.GetCandidatesForAIAsync(keyword, color, maxPrice);
+        }
+        public async Task<Dictionary<int, string>> GetAvailableCategoriesAsync()
+        {
+            return await _productDAO.GetAvailableCategoriesAsync();
+        }
+        public async Task<List<string>> GetAvailableSizesAsync()
+        {
+            return await _productDAO.GetAvailableSizesAsync();
+        }
     }
 }

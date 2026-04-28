@@ -78,9 +78,17 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<HomeService>();
 builder.Services.AddScoped<ContactAdminService>();
+// Đăng ký DAO
+builder.Services.AddScoped<ShopQuanAo.DAO.ProductDAO>();
 
+// Đăng ký Service (BO)
+builder.Services.AddScoped<ShopQuanAo.BO.ProductService>();
 // ==============================================================
+// Đăng ký HttpClient để các Service (như ChatbotService) có thể gọi API ra ngoài internet
+builder.Services.AddHttpClient();
 
+// Đăng ký ChatbotService của bạn
+builder.Services.AddScoped<ShopQuanAo.BO.ChatbotService>();
 var app = builder.Build();
 
 // 4. Khởi tạo dữ liệu mẫu

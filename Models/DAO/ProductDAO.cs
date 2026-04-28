@@ -118,5 +118,48 @@ namespace ShopQuanAo.DAO
                 .ThenInclude(ps => ps.Size)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
+        public async Task<List<Product>> GetCandidatesForAIAsync(string keyword, string color = "", double maxPrice = 0)
+        {
+            if (string.IsNullOrWhiteSpace(keyword)) return new List<Product>();
+            string searchKey = keyword.ToLower();
+
+            var query = _context.Products.AsQueryable();
+
+            // 1. Lọc từ khóa
+            query = query.Where(p => p.ProductName.ToLower().Contains(searchKey)
+                                  || (p.Description != null && p.Description.ToLower().Contains(searchKey)));
+
+            // 2. Lọc màu sắc (Quét thẳng vào Mô tả bằng SQL)
+            if (!string.IsNullOrEmpty(color))
+            {
+                string colorKey = color.ToLower();
+                query = query.Where(p => p.ProductName.ToLower().Contains(colorKey)
+                                      || (p.Description != null && p.Description.ToLower().Contains(colorKey)));
+            }
+
+            // 3. Lọc giá tiền
+            if (maxPrice > 0)
+            {
+                query = query.Where(p => (p.SalePrice > 0 ? p.SalePrice : p.Price) <= maxPrice);
+            }
+
+            // Dò xong xuôi hết mới chốt lấy 15 món đem lên
+            return await query.Take(15).ToListAsync();
+        }
+        // Lấy danh sách tên các danh mục đang có trong kho để nạp cho AI
+        // Thay đổi kiểu trả về thành Dictionary để lấy kèm ID làm Link
+        public async Task<Dictionary<int, string>> GetAvailableCategoriesAsync()
+        {
+            return await _context.Categories
+                .ToDictionaryAsync(c => c.Id, c => c.CategoryName);
+        }
+        // LẤY DANH SÁCH CÁC SIZE CHỮ ĐANG CÓ TRONG KHO
+        public async Task<List<string>> GetAvailableSizesAsync()
+        {
+            return await _context.ProductSizes
+                .Select(ps => ps.Size.SizeName)
+                .Distinct()
+                .ToListAsync();
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace MenShopBot
 {
     class Program
     {
-        private static readonly string connectionString = "Server=localhost\\MSSQLSERVER01;Database=ShopQuanA;Trusted_Connection=True;TrustServerCertificate=True;";
+        private static readonly string connectionString = "Server=kietne;Database=ShopQuanA;Trusted_Connection=True;TrustServerCertificate=True;";
 
         static async Task Main(string[] args)
         {
