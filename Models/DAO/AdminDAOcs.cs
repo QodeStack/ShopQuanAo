@@ -43,12 +43,38 @@ namespace ShopQuanAo.DAO
         }
         #endregion
 
-        #region User Management (Xóa giỏ hàng)
-        public async Task RemoveCartsByUserIdAsync(string userId)
+        #region Category Management
+        public async Task<Categories?> GetCategoryByIdAsync(int id)
         {
-            var carts = _context.ShoppingCarts.Where(c => c.UserId == userId);
-            _context.ShoppingCarts.RemoveRange(carts);
+            return await _context.Categories.FindAsync(id);
+        }
+
+        public async Task AddCategoryAsync(Categories category)
+        {
+            _context.Categories.Add(category);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateCategoryAsync(Categories category)
+        {
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> HasProductsInCategoryAsync(int categoryId)
+        {
+            return await _context.Products.AnyAsync(p => p.CategoryId == categoryId);
+        }
+
+        public async Task DeleteCategoryAsync(Categories category)
+        {
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsCategoryNameExistAsync(string categoryName)
+        {
+            return await _context.Categories.AnyAsync(c => c.CategoryName.ToLower() == categoryName.ToLower());
         }
         #endregion
 
@@ -90,7 +116,6 @@ namespace ShopQuanAo.DAO
             await _context.SaveChangesAsync();
         }
 
-        // ĐÂY LÀ HÀM LẤY SẢN PHẨM THEO ID (Chỉ có 1 bản duy nhất)
         public async Task<Product?> GetProductByIdAsync(int id)
         {
             return await _context.Products.Include(p => p.ProductSizes).FirstOrDefaultAsync(p => p.Id == id);
@@ -128,7 +153,74 @@ namespace ShopQuanAo.DAO
         }
         #endregion
 
-        #region Order & Contact Management
+        #region Sale & Campaign Management
+        public async Task<List<SaleCampaign>> GetAllCampaignsAsync()
+        {
+            return await _context.SaleCampaigns.Include(c => c.Products).ToListAsync();
+        }
+
+        public async Task CreateCampaignAsync(SaleCampaign campaign, List<int> productIds, List<int> salePrices)
+        {
+            _context.SaleCampaigns.Add(campaign);
+            await _context.SaveChangesAsync(); // Lưu để lấy ID chiến dịch
+
+            // Áp dụng giá sale và gán chiến dịch cho từng sản phẩm được chọn
+            for (int i = 0; i < productIds.Count; i++)
+            {
+                var product = await _context.Products.FindAsync(productIds[i]);
+                if (product != null)
+                {
+                    product.SaleCampaignId = campaign.Id;
+                    product.SalePrice = salePrices[i]; // Giả sử bảng Product của bạn có trường SalePrice
+                    _context.Products.Update(product);
+                }
+            }
+            await _context.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Voucher Management
+        public async Task<List<Voucher>> GetAllVouchersAsync()
+        {
+            return await _context.Vouchers.OrderByDescending(v => v.Id).ToListAsync();
+        }
+
+        public async Task<List<Voucher>> GetActiveVouchersAsync()
+        {
+            return await _context.Vouchers.Where(p => p.IsActive && p.Quantity > 0 && p.IsPublic).ToListAsync();
+        }
+
+        public async Task<Voucher?> GetVoucherByIdAsync(int id)
+        {
+            return await _context.Vouchers.FindAsync(id);
+        }
+
+        public async Task AddVoucherAsync(Voucher voucher)
+        {
+            _context.Vouchers.Add(voucher);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateVoucherAsync(Voucher voucher)
+        {
+            _context.Vouchers.Update(voucher);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteVoucherAsync(Voucher voucher)
+        {
+            _context.Vouchers.Remove(voucher);
+            await _context.SaveChangesAsync();
+        }
+
+        // HÀM MỚI: Check trùng mã Voucher
+        public async Task<bool> IsVoucherCodeExistAsync(string code)
+        {
+            return await _context.Vouchers.AnyAsync(v => v.Code.ToLower() == code.ToLower());
+        }
+        #endregion
+
+        #region Order Management
         public async Task<List<Order>> GetAllOrdersWithRelationsAsync()
         {
             return await _context.Orders
@@ -149,48 +241,9 @@ namespace ShopQuanAo.DAO
         {
             return await _context.OrderStatuses.FirstAsync(s => s.StatusName == statusName);
         }
+        #endregion
 
-        // ĐÂY LÀ HÀM LƯU DATABASE (Chỉ có 1 bản duy nhất)
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
-        }
-        // Lấy danh sách tất cả mã giảm giá
-        public async Task<List<Voucher>> GetAllVouchersAsync()
-        {
-            return await _context.Vouchers.OrderByDescending(v => v.Id).ToListAsync();
-        }
-
-        // Thêm mã mới
-        public async Task AddVoucherAsync(Voucher voucher)
-        {
-            _context.Vouchers.Add(voucher);
-            await _context.SaveChangesAsync();
-        }
-
-        // Lấy 1 mã theo ID
-        public async Task<Voucher?> GetVoucherByIdAsync(int id)
-        {
-            return await _context.Vouchers.FindAsync(id);
-        }
-
-        // Cập nhật mã (Dùng để bật/tắt)
-        public async Task UpdateVoucherAsync(Voucher voucher)
-        {
-            _context.Vouchers.Update(voucher);
-            await _context.SaveChangesAsync();
-        }
-
-        // Xóa mã
-        public async Task DeleteVoucherAsync(Voucher voucher)
-        {
-            _context.Vouchers.Remove(voucher);
-            await _context.SaveChangesAsync();
-        }
-        public async Task<List<Voucher>> GetActiveVouchersAsync()
-        {
-            return await _context.Vouchers.Where(p => p.IsActive && p.Quantity > 0 && p.IsPublic ).ToListAsync();
-        }
+        #region Contact Management
         public async Task<bool> DeleteContactAsync(int id)
         {
             try
@@ -208,37 +261,19 @@ namespace ShopQuanAo.DAO
             }
         }
         #endregion
-        #region Category Management
-        // Lấy 1 danh mục theo ID
-        public async Task<Categories?> GetCategoryByIdAsync(int id)
-        {
-            return await _context.Categories.FindAsync(id);
-        }
 
-        // Thêm danh mục mới
-        public async Task AddCategoryAsync(Categories category)
+        #region User & Cart Management
+        public async Task RemoveCartsByUserIdAsync(string userId)
         {
-            _context.Categories.Add(category);
+            var carts = _context.ShoppingCarts.Where(c => c.UserId == userId);
+            _context.ShoppingCarts.RemoveRange(carts);
             await _context.SaveChangesAsync();
         }
+        #endregion
 
-        // Cập nhật danh mục
-        public async Task UpdateCategoryAsync(Categories category)
+        #region General Operations
+        public async Task SaveChangesAsync()
         {
-            _context.Categories.Update(category);
-            await _context.SaveChangesAsync();
-        }
-
-        // KIỂM TRA: Xem có sản phẩm nào đang thuộc danh mục này không?
-        public async Task<bool> HasProductsInCategoryAsync(int categoryId)
-        {
-            return await _context.Products.AnyAsync(p => p.CategoryId == categoryId);
-        }
-
-        // Xóa danh mục
-        public async Task DeleteCategoryAsync(Categories category)
-        {
-            _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
         }
         #endregion

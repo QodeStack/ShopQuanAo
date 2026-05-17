@@ -12,6 +12,7 @@ namespace ShopQuanAo.Controllers
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
+        #region Dependencies & Constructor
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly AdminService _service;
@@ -22,8 +23,9 @@ namespace ShopQuanAo.Controllers
             _userManager = userManager;
             _service = service;
         }
+        #endregion
 
-        // --- Các trang giao diện (Views) ---
+        #region Các trang giao diện (Views)
         public IActionResult Index()
         {
             ViewBag.RecentOrders = _context.Orders
@@ -52,8 +54,10 @@ namespace ShopQuanAo.Controllers
 
         public IActionResult Orders() => View();
         public IActionResult Revenue() => View();
+        public IActionResult Categories() => View(); // Đưa luôn View Categories lên khu vực này cho đồng bộ
+        #endregion
 
-        // --- Các hàm lấy dữ liệu (API Endpoints) ---
+        #region Các hàm lấy dữ liệu thống kê (API Endpoints)
         [HttpGet] public async Task<IActionResult> GetStats() => Json(await _service.GetStatsAsync());
         [HttpGet] public async Task<IActionResult> GetUsers() => Json(await _service.GetUsersAsync());
         [HttpGet] public async Task<IActionResult> GetProducts() => Json(await _service.GetAllProductsAsync());
@@ -65,8 +69,9 @@ namespace ShopQuanAo.Controllers
             var data = await _service.GetRevenueStatsAsync(startDate, endDate);
             return Ok(data);
         }
+        #endregion
 
-        // --- QUẢN LÝ SẢN PHẨM ---
+        #region QUẢN LÝ SẢN PHẨM (Products)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductWithSizesDto dto)
@@ -115,7 +120,82 @@ namespace ShopQuanAo.Controllers
             }
         }
 
-        // --- QUẢN LÝ LIÊN HỆ ---
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return Json(new { success = false, message = "Không có file nào được chọn." });
+
+            try
+            {
+                // 1. Tạo đường dẫn thư mục lưu trữ
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                // 2. Tạo tên file duy nhất để tránh trùng lặp
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // 3. Lưu file vào thư mục
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // 4. Trả về đường dẫn tương đối để lưu vào Database
+                var url = "/images/products/" + fileName;
+                return Json(new { success = true, url = url });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
+            }
+        }
+        #endregion
+
+        #region QUẢN LÝ DANH MỤC (Categories)
+        [HttpGet]
+        public async Task<IActionResult> GetCategories()
+        {
+            var categories = await _context.Categories.ToListAsync();
+            return Json(categories);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddCategory([FromBody] Categories category)
+        {
+            if (category == null) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+            var res = await _service.AddCategoryAsync(category);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditCategory([FromBody] Categories category)
+        {
+            if (category == null || category.Id <= 0) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+            var res = await _service.UpdateCategoryAsync(category);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteCategory([FromBody] DeleteDto dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.Id))
+                return Json(new { success = false, message = "ID trống." });
+
+            if (int.TryParse(dto.Id, out int categoryId))
+            {
+                var res = await _service.DeleteCategoryAsync(categoryId);
+                return Json(new { success = res.Success, message = res.Message });
+            }
+            return Json(new { success = false, message = "Định dạng ID không đúng." });
+        }
+        #endregion
+
+        #region QUẢN LÝ LIÊN HỆ (Contacts)
         [HttpPost]
         public async Task<IActionResult> ReplyContact([FromBody] ContactsReplyDto dto)
         {
@@ -159,8 +239,9 @@ namespace ShopQuanAo.Controllers
             }
             return Json(new { success = false, message = "ID định dạng sai." });
         }
+        #endregion
 
-        // --- ORDER & USER KHÁC ---
+        #region QUẢN LÝ ĐƠN HÀNG & NGƯỜI DÙNG (Orders & Users)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderStatusDto dto)
@@ -176,23 +257,20 @@ namespace ShopQuanAo.Controllers
             var success = await _service.DeleteUserAsync(dto.Id, _userManager.GetUserId(User));
             return Json(new { success, message = success ? "Xóa thành công" : "Lỗi không thể xóa người dùng này!" });
         }
+        #endregion
 
-        // ==========================================================
-        // --- KHU VỰC QUẢN LÝ KHUYẾN MÃI (SALE) ---
-        // ==========================================================
-
-        [HttpGet]
-        public async Task<IActionResult> Sales([FromServices] ProductService productService, string search, int page = 1)
-        {
-            int pageSize = 10;
-            var pagedData = await productService.GetPagedProductsAsync(null, search, page, pageSize, null, null, isSaleOnly: true);
-            return View(pagedData.Products);
-        }
+        #region KHU VỰC QUẢN LÝ KHUYẾN MÃI (Sales)
+        ////[HttpGet]
+        //public async Task<IActionResult> Sales([FromServices] ProductService productService, string search, int page = 1)
+        //{
+        //    int pageSize = 10;
+        //    var pagedData = await productService.GetPagedProductsAsync(null, search, page, pageSize, null, null, isSaleOnly: true);
+        //    return View(pagedData.Products);
+        //}
 
         [HttpPost]
         public async Task<IActionResult> UpdateSalePrice([FromBody] SaleRequestDto request)
         {
-            // Kiểm tra SalePrice < 0 đã được chặn
             if (request == null || request.ProductId <= 0 || request.SalePrice < 0)
                 return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
 
@@ -219,123 +297,70 @@ namespace ShopQuanAo.Controllers
             var results = await productService.SearchQuickAsync(keyword, null);
             return Json(results);
         }
-        // Hiển thị giao diện Quản lý Voucher
+        public async Task<IActionResult> Sales()
+        {
+            // 1. Lấy danh sách sản phẩm để Admin chọn (nhét vào ViewBag)
+            // View của mày đang dùng foreach(var p in ViewBag.Products) nên phải có dòng này
+            ViewBag.Products = await _context.Products.ToListAsync();
+
+            // 2. Lấy danh sách các Chiến dịch Sale đã có (làm Model chính)
+            // View của mày đang dùng @model IEnumerable<SaleCampaign> nên phải truyền cái này vào View()
+            var campaigns = await _context.SaleCampaigns
+                                          .Include(c => c.Products) // Để hiển thị được số lượng SP trong mỗi campaign
+                                          .ToListAsync();
+
+            // TRUYỀN campaigns VÀO ĐÂY, ĐỪNG TRUYỀN Products!
+            return View(campaigns);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateCampaign([FromBody] CampaignDTO request)
+        {
+            var result = await _service.CreateSaleCampaignAsync(
+                request.CampaignName,
+                request.StartDate,
+                request.EndDate,
+                request.ProductIds,
+                request.SalePrices);
+
+            return Json(new { success = result.Success, message = result.Message });
+        }
+        #endregion
+
+        #region QUẢN LÝ VOUCHER
         public async Task<IActionResult> Vouchers()
         {
             var vouchers = await _service.GetAllVouchersAsync();
             return View(vouchers);
         }
 
-        // Thêm mã mới
         [HttpPost]
-        public async Task<IActionResult> AddVoucher(Voucher voucher)
+        public async Task<IActionResult> AddVoucher([FromBody] Voucher voucher)
         {
-            if (ModelState.IsValid)
-            {
-                await _service.AddVoucherAsync(voucher);
-            }
-            return RedirectToAction("Vouchers");
-        }
-
-        // Bật/Tắt mã
-        [HttpPost]
-        public async Task<IActionResult> ToggleVoucher(int id)
-        {
-            await _service.ToggleVoucherStatusAsync(id);
-            return RedirectToAction("Vouchers");
-        }
-
-        // Xóa mã
-        [HttpPost]
-        public async Task<IActionResult> DeleteVoucher(int id)
-        {
-            await _service.DeleteVoucherAsync(id);
-            return RedirectToAction("Vouchers");
-        }
-        [HttpPost]
-        public async Task<IActionResult> EditVoucher(Voucher voucher)
-        {
-            if (ModelState.IsValid)
-            {
-                await _service.EditVoucherAsync(voucher);
-            }
-            return RedirectToAction("Vouchers");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> UploadImage(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return Json(new { success = false, message = "Không có file nào được chọn." });
-
-            try
-            {
-                // 1. Tạo đường dẫn thư mục lưu trữ
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                // 2. Tạo tên file duy nhất để tránh trùng lặp
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
-
-                // 3. Lưu file vào thư mục
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                // 4. Trả về đường dẫn tương đối để lưu vào Database
-                var url = "/images/products/" + fileName;
-                return Json(new { success = true, url = url });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
-            }
-        }
-        [HttpGet]
-        public async Task<IActionResult> GetCategories()
-        {
-            var categories = await _context.Categories.ToListAsync();
-            return Json(categories);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken] // Đừng quên gửi RequestVerificationToken từ View nếu dùng cái này
-        public async Task<IActionResult> AddCategory([FromBody] Categories category)
-        {
-            if (category == null) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
-            var res = await _service.AddCategoryAsync(category);
+            var res = await _service.AddVoucherAsync(voucher);
             return Json(new { success = res.Success, message = res.Message });
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCategory([FromBody] Categories category)
+        public async Task<IActionResult> EditVoucher([FromBody] Voucher voucher)
         {
-            if (category == null || category.Id <= 0) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
-            var res = await _service.UpdateCategoryAsync(category);
+            var res = await _service.EditVoucherAsync(voucher);
             return Json(new { success = res.Success, message = res.Message });
         }
-        public IActionResult Categories()
-        {
-            return View();
-        }
+
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteCategory([FromBody] DeleteDto dto)
+        public async Task<IActionResult> ToggleVoucher([FromBody] Voucher data)
         {
-            if (dto == null || string.IsNullOrEmpty(dto.Id))
-                return Json(new { success = false, message = "ID trống." });
-
-            if (int.TryParse(dto.Id, out int categoryId))
-            {
-                var res = await _service.DeleteCategoryAsync(categoryId);
-                return Json(new { success = res.Success, message = res.Message });
-            }
-            return Json(new { success = false, message = "Định dạng ID không đúng." });
+            var success = await _service.ToggleVoucherStatusAsync(data.Id);
+            return Json(new { success = success });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> DeleteVoucher([FromBody] Voucher data)
+        {
+            var success = await _service.DeleteVoucherAsync(data.Id);
+            return Json(new { success = success, message = success ? "Đã xóa thành công!" : "Lỗi xóa voucher." });
+        }
+        #endregion
     }
-    
 }

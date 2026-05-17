@@ -155,7 +155,7 @@ namespace ShopQuanAo.BO
         }
         #endregion
 
-        #region Product, Size & Sale Management
+        #region Product & Size Management
         public async Task<object> GetAllProductsAsync()
         {
             var products = await _adminDAO.GetAllProductsWithRelationsAsync();
@@ -241,8 +241,60 @@ namespace ShopQuanAo.BO
         {
             return await _adminDAO.DeleteProductDependenciesAsync(id);
         }
+        #endregion
 
-        // --- CÁC HÀM XỬ LÝ KHUYẾN MÃI (SALE) ---
+        #region Category Management
+        public async Task<(bool Success, string Message)> AddCategoryAsync(Categories category)
+        {
+            if (string.IsNullOrWhiteSpace(category.CategoryName))
+                return (false, "Tên danh mục không được để trống.");
+
+            bool isExist = await _adminDAO.IsCategoryNameExistAsync(category.CategoryName);
+            if (isExist)
+                return (false, "Tên danh mục này đã tồn tại trong hệ thống. Vui lòng chọn tên khác!");
+
+            await _adminDAO.AddCategoryAsync(category);
+            return (true, "Thêm danh mục thành công.");
+        }
+
+        public async Task<(bool Success, string Message)> UpdateCategoryAsync(Categories updatedCategory)
+        {
+            if (string.IsNullOrWhiteSpace(updatedCategory.CategoryName))
+                return (false, "Tên danh mục không được để trống.");
+
+            var category = await _adminDAO.GetCategoryByIdAsync(updatedCategory.Id);
+            if (category == null) return (false, "Không tìm thấy danh mục.");
+
+            if (!category.CategoryName.Equals(updatedCategory.CategoryName, StringComparison.OrdinalIgnoreCase))
+            {
+                bool isExist = await _adminDAO.IsCategoryNameExistAsync(updatedCategory.CategoryName);
+                if (isExist)
+                    return (false, "Tên danh mục này đã bị trùng với một danh mục khác!");
+            }
+
+            category.CategoryName = updatedCategory.CategoryName;
+
+            await _adminDAO.UpdateCategoryAsync(category);
+            return (true, "Cập nhật danh mục thành công.");
+        }
+
+        public async Task<(bool Success, string Message)> DeleteCategoryAsync(int id)
+        {
+            var category = await _adminDAO.GetCategoryByIdAsync(id);
+            if (category == null) return (false, "Không tìm thấy danh mục.");
+
+            bool hasProducts = await _adminDAO.HasProductsInCategoryAsync(id);
+            if (hasProducts)
+            {
+                return (false, "Không thể xóa danh mục này vì vẫn còn sản phẩm thuộc danh mục. Vui lòng xóa hoặc chuyển các sản phẩm sang danh mục khác trước!");
+            }
+
+            await _adminDAO.DeleteCategoryAsync(category);
+            return (true, "Đã xóa danh mục thành công.");
+        }
+        #endregion
+
+        #region Sale & Campaign Management
         public async Task<(bool Success, string Message)> UpdateSalePriceAsync(int productId, int salePrice)
         {
             var product = await _adminDAO.GetProductByIdAsync(productId);
@@ -276,6 +328,99 @@ namespace ShopQuanAo.BO
                 return (false, "Lỗi SQL: " + (ex.InnerException?.Message ?? ex.Message));
             }
         }
+
+        public async Task<(bool Success, string Message)> CreateSaleCampaignAsync(string name, DateTime start, DateTime end, List<int> productIds, List<int> salePrices)
+        {
+            if (end <= start) return (false, "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
+            if (productIds == null || !productIds.Any()) return (false, "Vui lòng chọn ít nhất 1 sản phẩm.");
+
+            var campaign = new SaleCampaign
+            {
+                CampaignName = name,
+                StartDate = start,
+                EndDate = end,
+                IsActive = true
+            };
+
+            await _adminDAO.CreateCampaignAsync(campaign, productIds, salePrices);
+            return (true, "Tạo chiến dịch Sale thành công!");
+        }
+        #endregion
+
+        #region Voucher Management
+        public async Task<List<Voucher>> GetAllVouchersAsync()
+        {
+            return await _adminDAO.GetAllVouchersAsync();
+        }
+
+        public async Task<List<Voucher>> GetActiveVouchersAsync()
+        {
+            return await _adminDAO.GetActiveVouchersAsync();
+        }
+
+        public async Task<(bool Success, string Message)> AddVoucherAsync(Voucher voucher)
+        {
+            if (string.IsNullOrWhiteSpace(voucher.Code))
+                return (false, "Mã Voucher không được để trống.");
+
+            voucher.Code = voucher.Code.Trim().ToUpper();
+
+            // KHI TẠO MỚI: Check xem mã đã tồn tại chưa
+            bool isExist = await _adminDAO.IsVoucherCodeExistAsync(voucher.Code);
+            if (isExist)
+                return (false, "Mã Voucher này đã tồn tại trong hệ thống. Vui lòng chọn mã khác!");
+
+            await _adminDAO.AddVoucherAsync(voucher);
+            return (true, "Thêm mã giảm giá thành công.");
+        }
+
+        public async Task<(bool Success, string Message)> EditVoucherAsync(Voucher updatedVoucher)
+        {
+            if (string.IsNullOrWhiteSpace(updatedVoucher.Code))
+                return (false, "Mã Voucher không được để trống.");
+
+            var voucher = await _adminDAO.GetVoucherByIdAsync(updatedVoucher.Id);
+            if (voucher == null) return (false, "Không tìm thấy mã giảm giá.");
+
+            updatedVoucher.Code = updatedVoucher.Code.Trim().ToUpper();
+
+            // KHI SỬA: Kiểm tra nếu đổi mã sang một mã khác đã tồn tại
+            if (!voucher.Code.Equals(updatedVoucher.Code, StringComparison.OrdinalIgnoreCase))
+            {
+                bool isExist = await _adminDAO.IsVoucherCodeExistAsync(updatedVoucher.Code);
+                if (isExist)
+                    return (false, "Mã Voucher này đã bị trùng với một mã khác trong hệ thống!");
+            }
+
+            voucher.Code = updatedVoucher.Code;
+            voucher.DiscountAmount = updatedVoucher.DiscountAmount;
+            voucher.MinOrderAmount = updatedVoucher.MinOrderAmount;
+            voucher.Quantity = updatedVoucher.Quantity;
+            voucher.IsActive = updatedVoucher.IsActive;
+            voucher.IsPublic = updatedVoucher.IsPublic;
+
+            await _adminDAO.UpdateVoucherAsync(voucher);
+            return (true, "Cập nhật mã giảm giá thành công.");
+        }
+
+        public async Task<bool> ToggleVoucherStatusAsync(int id)
+        {
+            var voucher = await _adminDAO.GetVoucherByIdAsync(id);
+            if (voucher == null) return false;
+
+            voucher.IsActive = !voucher.IsActive;
+            await _adminDAO.UpdateVoucherAsync(voucher);
+            return true;
+        }
+
+        public async Task<bool> DeleteVoucherAsync(int id)
+        {
+            var voucher = await _adminDAO.GetVoucherByIdAsync(id);
+            if (voucher == null) return false;
+
+            await _adminDAO.DeleteVoucherAsync(voucher);
+            return true;
+        }
         #endregion
 
         #region Order & Contact Management
@@ -295,10 +440,10 @@ namespace ShopQuanAo.BO
                 discountAmount = o.DiscountAmount,
                 statusName = o.OrderStatus.StatusName,
                 orderStatusId = o.OrderStatusId,
-                orderDetails = o.OrderDetails.Select(d => new { 
-                    d.Id, 
-                    d.Quantity, 
-                    d.UnitPrice, 
+                orderDetails = o.OrderDetails.Select(d => new {
+                    d.Id,
+                    d.Quantity,
+                    d.UnitPrice,
                     productName = d.Product.ProductName,
                     productImage = d.Product.Image
                 }).ToList()
@@ -331,57 +476,7 @@ namespace ShopQuanAo.BO
         {
             return await _adminDAO.DeleteContactAsync(id);
         }
-        public async Task<List<Voucher>> GetAllVouchersAsync()
-        {
-            return await _adminDAO.GetAllVouchersAsync();
-        }
 
-        public async Task AddVoucherAsync(Voucher voucher)
-        {
-            // Tự động viết hoa mã Code trước khi lưu cho chuẩn
-            voucher.Code = voucher.Code.ToUpper();
-            await _adminDAO.AddVoucherAsync(voucher);
-        }
-
-        public async Task<bool> ToggleVoucherStatusAsync(int id)
-        {
-            var voucher = await _adminDAO.GetVoucherByIdAsync(id);
-            if (voucher == null) return false;
-
-            // Đảo ngược trạng thái (Đang bật -> Tắt, Đang tắt -> Bật)
-            voucher.IsActive = !voucher.IsActive;
-            await _adminDAO.UpdateVoucherAsync(voucher);
-            return true;
-        }
-
-        public async Task<bool> DeleteVoucherAsync(int id)
-        {
-            var voucher = await _adminDAO.GetVoucherByIdAsync(id);
-            if (voucher == null) return false;
-
-            await _adminDAO.DeleteVoucherAsync(voucher);
-            return true;
-        }
-        public async Task<(bool Success, string Message)> EditVoucherAsync(Voucher updatedVoucher)
-        {
-            var voucher = await _adminDAO.GetVoucherByIdAsync(updatedVoucher.Id);
-            if (voucher == null) return (false, "Không tìm thấy mã.");
-
-            // Cập nhật các trường dữ liệu
-            voucher.Code = updatedVoucher.Code.ToUpper();
-            voucher.DiscountAmount = updatedVoucher.DiscountAmount;
-            voucher.MinOrderAmount = updatedVoucher.MinOrderAmount;
-            voucher.Quantity = updatedVoucher.Quantity;
-            voucher.IsActive = updatedVoucher.IsActive;
-            voucher.IsPublic = updatedVoucher.IsPublic;
-
-            await _adminDAO.UpdateVoucherAsync(voucher);
-            return (true, "Thành công");
-        }
-        public async Task<List<Voucher>> GetActiveVouchersAsync()
-        {
-            return await _adminDAO.GetActiveVouchersAsync();
-        }
         public async Task SendReplyContactEmailAsync(string toEmail, string fullName, string replyMessage)
         {
             string finalMessage = string.IsNullOrWhiteSpace(replyMessage) ? "Cảm ơn bạn đã liên hệ với chúng tôi." : replyMessage;
@@ -396,46 +491,6 @@ namespace ShopQuanAo.BO
                     <p>Trân trọng,<br/><b>Đội ngũ MenShop</b></p>
                 </div>";
             await SendEmailAsync(toEmail, subject, body);
-        }
-        #endregion
-        #region Category Management
-        public async Task<(bool Success, string Message)> AddCategoryAsync(Categories category)
-        {
-            if (string.IsNullOrWhiteSpace(category.CategoryName))
-                return (false, "Tên danh mục không được để trống.");
-
-            await _adminDAO.AddCategoryAsync(category);
-            return (true, "Thêm danh mục thành công.");
-        }
-
-        public async Task<(bool Success, string Message)> UpdateCategoryAsync(Categories updatedCategory)
-        {
-            var category = await _adminDAO.GetCategoryByIdAsync(updatedCategory.Id);
-            if (category == null) return (false, "Không tìm thấy danh mục.");
-
-            // Cập nhật dữ liệu
-            category.CategoryName = updatedCategory.CategoryName;
-            // Nếu bảng Categories của bạn có thêm trường Mô tả, hãy mở comment bên dưới:
-            // category.Description = updatedCategory.Description; 
-
-            await _adminDAO.UpdateCategoryAsync(category);
-            return (true, "Cập nhật danh mục thành công.");
-        }
-
-        public async Task<(bool Success, string Message)> DeleteCategoryAsync(int id)
-        {
-            var category = await _adminDAO.GetCategoryByIdAsync(id);
-            if (category == null) return (false, "Không tìm thấy danh mục.");
-
-            // ĐIỀU KIỆN RÀNG BUỘC: Kiểm tra sản phẩm trước khi xóa
-            bool hasProducts = await _adminDAO.HasProductsInCategoryAsync(id);
-            if (hasProducts)
-            {
-                return (false, "Không thể xóa danh mục này vì vẫn còn sản phẩm thuộc danh mục. Vui lòng xóa hoặc chuyển các sản phẩm sang danh mục khác trước!");
-            }
-
-            await _adminDAO.DeleteCategoryAsync(category);
-            return (true, "Đã xóa danh mục thành công.");
         }
         #endregion
     }

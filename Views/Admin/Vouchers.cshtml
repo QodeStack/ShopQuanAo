@@ -9,17 +9,25 @@
 }
 
 <link href="~/css/Admin/Admin_Voucher.css" asp-append-version="true" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@Html.AntiForgeryToken()
+
+<style>
+    /* Ép thằng SweetAlert2 luôn nổi lên trên cùng để không bị Modal che mất */
+    .swal2-container {
+    z-index: 99999 !important;
+    }
+</style>
 
 <div class="admin-wrap">
     <div class="admin-body">
+        
         <aside class="admin-sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-label">Tổng quan</div>
                 <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
                     <span class="sidebar-icon">📊</span> Dashboard
                 </a>
-                
-                @* Đoạn thay đổi ở đây *@
                 <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
                     <span class="sidebar-icon">💰</span> Doanh thu
                 </a>
@@ -39,15 +47,12 @@
                 <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@Url.Action("Categories", "Admin")">
                     <span class="sidebar-icon">📁</span> Danh mục
                 </a>
-                
                 <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@Url.Action("Sales", "Admin")">
                     <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
                 </a>
-                
-                <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@Url.Action("Vouchers", "Admin")">
+                <a class="sidebar-link active" href="@Url.Action("Vouchers", "Admin")">
                     <span class="sidebar-icon">🎫</span> Mã giảm giá
                 </a>
-
                 <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
                     <span class="sidebar-icon">📩</span> Phản hồi
                 </a>
@@ -70,24 +75,31 @@
                     <h4 class="fw-bolder mb-1" style="color: #1a2b4c;">Quản lý Mã giảm giá</h4>
                     <p class="text-muted small mb-0">Thiết lập và theo dõi các chương trình voucher toàn hệ thống</p>
                 </div>
-                <button class="btn btn-primary btn-modern shadow-sm" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
-                    <i class="bi bi-plus-lg me-1"></i> Thêm mã mới
-                </button>
+                
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="position-relative">
+                        <i class="bi bi-search text-muted position-absolute" style="top: 10px; left: 14px;"></i>
+                        <input type="text" id="searchVoucher" class="form-control" placeholder="Tìm theo Mã code..." onkeyup="filterVouchers()" style="padding-left: 38px; border-radius: 8px; border: 1px solid #d1d5db; width: 280px;">
+                    </div>
+                    <button class="btn btn-primary btn-modern shadow-sm" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
+                        <i class="bi bi-plus-lg me-1"></i> Thêm mã mới
+                    </button>
+                </div>
             </div>
 
             <div class="card border-0 modern-card">
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0 custom-table">
-                            <thead>
+                            <thead style="background-color: #f8fafc;">
                                 <tr>
-                                    <th class="ps-4">Mã Code</th>
-                                    <th>Mức giảm</th>
-                                    <th>Đơn tối thiểu</th>
-                                    <th>Loại mã</th>
-                                    <th>Lượt dùng</th>
-                                    <th>Trạng thái</th>
-                                    <th class="text-end pe-4">Hành động</th>
+                                    <th class="ps-4 py-3 text-uppercase text-muted" style="font-size: 0.8rem;">Mã Code</th>
+                                    <th class="py-3 text-uppercase text-muted" style="font-size: 0.8rem;">Mức giảm</th>
+                                    <th class="py-3 text-uppercase text-muted" style="font-size: 0.8rem;">Đơn tối thiểu</th>
+                                    <th class="py-3 text-uppercase text-muted" style="font-size: 0.8rem;">Loại mã</th>
+                                    <th class="py-3 text-uppercase text-muted" style="font-size: 0.8rem;">Lượt dùng</th>
+                                    <th class="py-3 text-uppercase text-muted text-center" style="font-size: 0.8rem;">Trạng thái</th>
+                                    <th class="text-end pe-4 py-3 text-uppercase text-muted" style="font-size: 0.8rem;">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -95,18 +107,18 @@
                                 {
                                     foreach (var item in Model)
                                     {
-                                        <tr>
-                                            <td class="ps-4">
+                                        <tr class="voucher-row">
+                                            <td class="ps-4 py-3">
                                                 <div class="d-flex align-items-center">
                                                     <div class="voucher-icon-wrap me-3">
                                                         <i class="bi bi-ticket-perforated"></i>
                                                     </div>
-                                                    <span class="fw-bold" style="color: #1a2b4c; letter-spacing: 0.5px;">@item.Code</span>
+                                                    <span class="fw-bold voucher-code" style="color: #1a2b4c; letter-spacing: 0.5px;">@item.Code</span>
                                                 </div>
                                             </td>
-                                            <td><span class="fw-bold text-danger">@item.DiscountAmount.ToString("N0")₫</span></td>
-                                            <td class="text-muted">@item.MinOrderAmount.ToString("N0")₫</td>
-                                            <td>
+                                            <td class="py-3"><span class="fw-bold text-danger">@item.DiscountAmount.ToString("N0")₫</span></td>
+                                            <td class="text-muted py-3">@item.MinOrderAmount.ToString("N0")₫</td>
+                                            <td class="py-3">
                                                 @if (item.IsPublic)
                                                 {
                                                     <span class="badge rounded-pill badge-soft-info px-3 py-2"><i class="bi bi-eye"></i> Công khai</span>
@@ -116,12 +128,12 @@
                                                     <span class="badge rounded-pill bg-dark text-white px-3 py-2"><i class="bi bi-eye-slash"></i> Mã ẩn</span>
                                                 }
                                             </td>
-                                            <td>
+                                            <td class="py-3">
                                                 <span class="badge rounded-pill @(item.Quantity > 0 ? "badge-soft-info" : "bg-light text-muted") px-3 py-2">
                                                     <i class="bi bi-people me-1"></i> @item.Quantity lượt
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td class="text-center py-3">
                                                 @if (item.IsActive)
                                                 {
                                                     <span class="badge rounded-pill badge-soft-success px-3 py-2"><span class="dot-active"></span> Đang bật</span>
@@ -131,27 +143,21 @@
                                                     <span class="badge rounded-pill badge-soft-danger px-3 py-2"><span class="dot-inactive"></span> Đã tắt</span>
                                                 }
                                             </td>
-                                            <td class="text-end pe-4">
+                                            <td class="text-end pe-4 py-3">
                                                 <div class="d-inline-flex gap-2">
                                                     <button type="button" class="btn btn-sm btn-action btn-outline-primary"
-                                                            onclick="openEditModal(@item.Id, '@item.Code', @item.DiscountAmount, @item.MinOrderAmount, @item.Quantity, @item.IsActive.ToString().ToLower(), @item.IsPublic.ToString().ToLower())"
+                                                            onclick="openEditModal(@item.Id, '@item.Code', @((int)item.DiscountAmount), @((int)item.MinOrderAmount), @item.Quantity, @item.IsActive.ToString().ToLower(), @item.IsPublic.ToString().ToLower())"
                                                             title="Sửa mã">
                                                         <i class="bi bi-pencil-square"></i> Sửa
                                                     </button>
 
-                                                    <form asp-action="ToggleVoucher" asp-controller="Admin" method="post" class="m-0">
-                                                        <input type="hidden" name="id" value="@item.Id" />
-                                                        <button type="submit" class="btn btn-sm btn-action @(item.IsActive ? "btn-outline-secondary" : "btn-outline-success")" title="@(item.IsActive ? "Tắt mã này" : "Bật mã này")">
-                                                            <i class="bi @(item.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i> @(item.IsActive ? "Tắt" : "Bật")
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" onclick="toggleVoucher(@item.Id)" class="btn btn-sm btn-action @(item.IsActive ? "btn-outline-secondary" : "btn-outline-success")" title="@(item.IsActive ? "Tắt mã này" : "Bật mã này")">
+                                                        <i class="bi @(item.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i> @(item.IsActive ? "Tắt" : "Bật")
+                                                    </button>
                                                     
-                                                    <form asp-action="DeleteVoucher" asp-controller="Admin" method="post" class="m-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn mã @item.Code này không?');">
-                                                        <input type="hidden" name="id" value="@item.Id" />
-                                                        <button type="submit" class="btn btn-sm btn-action btn-outline-danger" title="Xóa mã">
-                                                            <i class="bi bi-trash3"></i>
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" onclick="deleteVoucher(@item.Id)" class="btn btn-sm btn-action btn-outline-danger" title="Xóa mã">
+                                                        <i class="bi bi-trash3"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -169,6 +175,7 @@
                                         </td>
                                     </tr>
                                 }
+                                <tr id="noDataRow" style="display: none;"><td colspan="7" class="text-center text-muted py-4">Không tìm thấy mã giảm giá nào khớp.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -181,7 +188,7 @@
 <div class="modal fade" id="addVoucherModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 modern-card">
-            <form asp-action="AddVoucher" asp-controller="Admin" method="post">
+            <form id="addVoucherForm">
                 <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold" style="color: #1a2b4c;">✨ Tạo Mã Giảm Giá Mới</h5>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -189,21 +196,21 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold text-uppercase">Mã Code nhập tay</label>
-                        <input type="text" name="Code" class="form-control form-control-lg bg-light border-0 text-uppercase" required placeholder="VD: FREESHIP, SALE50K" />
+                        <input type="text" id="addCode" class="form-control form-control-lg bg-light border-0 text-uppercase" required placeholder="VD: FREESHIP, SALE50K" />
                     </div>
                     
                     <div class="row">
                         <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Mức giảm (VNĐ)</label>
                             <div class="input-group">
-                                <input type="number" name="DiscountAmount" class="form-control bg-light border-0" required min="0" step="5000" placeholder="VD: 50000" />
+                                <input type="number" id="addDiscountAmount" class="form-control bg-light border-0" required min="0" step="1000" placeholder="VD: 50000" />
                                 <span class="input-group-text bg-light border-0 text-muted">₫</span>
                             </div>
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Đơn tối thiểu</label>
                             <div class="input-group">
-                                <input type="number" name="MinOrderAmount" class="form-control bg-light border-0" required min="0" step="5000" placeholder="VD: 200000" />
+                                <input type="number" id="addMinOrderAmount" class="form-control bg-light border-0" required min="0" step="1000" placeholder="VD: 200000" />
                                 <span class="input-group-text bg-light border-0 text-muted">₫</span>
                             </div>
                         </div>
@@ -211,21 +218,19 @@
                     
                     <div class="mb-4">
                         <label class="form-label text-muted small fw-bold text-uppercase">Số lượt phát hành</label>
-                        <input type="number" name="Quantity" class="form-control bg-light border-0" required min="1" value="100" />
+                        <input type="number" id="addQuantity" class="form-control bg-light border-0" required min="1" value="100" />
                     </div>
                     
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center mb-2">
-                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsActive" value="true" checked style="width: 40px; height: 20px; cursor: pointer;">
-                        <input type="hidden" name="IsActive" value="false" />
-                        <label class="form-check-label fw-bold mb-0" style="cursor: pointer; color: #1a2b4c;">Kích hoạt mã ngay lập tức</label>
+                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" id="addIsActiveCheck" checked style="width: 40px; height: 20px; cursor: pointer;">
+                        <label class="form-check-label fw-bold mb-0" for="addIsActiveCheck" style="cursor: pointer; color: #1a2b4c;">Kích hoạt mã ngay lập tức</label>
                     </div>
                     
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center">
-                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsPublic" value="true" checked style="width: 40px; height: 20px; cursor: pointer;">
-                        <input type="hidden" name="IsPublic" value="false" />
-                        <label class="form-check-label fw-bold mb-0" style="cursor: pointer; color: #1a2b4c;">
+                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" id="addIsPublicCheck" checked style="width: 40px; height: 20px; cursor: pointer;">
+                        <label class="form-check-label fw-bold mb-0" for="addIsPublicCheck" style="cursor: pointer; color: #1a2b4c;">
                             Hiển thị công khai trên web <br>
-                            <small class="text-muted fw-normal" style="font-size: 0.8rem;">Tắt đi để tạo "Mã ẩn" (Chỉ nhập tay).</small>
+                            <small class="text-muted fw-normal" style="font-size: 0.8rem;">Tắt đi để tạo "Mã ẩn".</small>
                         </label>
                     </div>
                 </div>
@@ -241,8 +246,8 @@
 <div class="modal fade" id="editVoucherModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 modern-card">
-            <form asp-action="EditVoucher" asp-controller="Admin" method="post">
-                <input type="hidden" name="Id" id="editVoucherId" />
+            <form id="editVoucherForm">
+                <input type="hidden" id="editVoucherId" />
                 
                 <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
                     <h5 class="modal-title fw-bold" style="color: #1a2b4c;"><i class="bi bi-pencil-square text-primary me-2"></i>Chỉnh sửa Mã Giảm Giá</h5>
@@ -251,21 +256,21 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold text-uppercase">Mã Code nhập tay</label>
-                        <input type="text" name="Code" id="editCode" class="form-control form-control-lg bg-light border-0 text-uppercase" required />
+                        <input type="text" id="editCode" class="form-control form-control-lg bg-light border-0 text-uppercase" required />
                     </div>
                     
                     <div class="row">
                         <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Mức giảm (VNĐ)</label>
                             <div class="input-group">
-                                <input type="number" name="DiscountAmount" id="editDiscountAmount" class="form-control bg-light border-0" required min="0" step="5000" />
+                                <input type="number" id="editDiscountAmount" class="form-control bg-light border-0" required min="0" step="1000" />
                                 <span class="input-group-text bg-light border-0 text-muted">₫</span>
                             </div>
                         </div>
                         <div class="col-12 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">Đơn tối thiểu</label>
                             <div class="input-group">
-                                <input type="number" name="MinOrderAmount" id="editMinOrderAmount" class="form-control bg-light border-0" required min="0" step="5000" />
+                                <input type="number" id="editMinOrderAmount" class="form-control bg-light border-0" required min="0" step="1000" />
                                 <span class="input-group-text bg-light border-0 text-muted">₫</span>
                             </div>
                         </div>
@@ -273,21 +278,19 @@
                     
                     <div class="mb-4">
                         <label class="form-label text-muted small fw-bold text-uppercase">Số lượt phát hành</label>
-                        <input type="number" name="Quantity" id="editQuantity" class="form-control bg-light border-0" required min="0" />
+                        <input type="number" id="editQuantity" class="form-control bg-light border-0" required min="0" />
                     </div>
                     
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center mb-2">
-                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsActive" id="editIsActiveCheck" value="true" style="width: 40px; height: 20px; cursor: pointer;">
-                        <input type="hidden" name="IsActive" value="false" />
+                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" id="editIsActiveCheck" style="width: 40px; height: 20px; cursor: pointer;">
                         <label class="form-check-label fw-bold mb-0" for="editIsActiveCheck" style="cursor: pointer; color: #1a2b4c;">Kích hoạt mã ngay lập tức</label>
                     </div>
                     
                     <div class="form-check form-switch custom-switch p-3 bg-light rounded-3 d-flex align-items-center">
-                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" name="IsPublic" id="editIsPublicCheck" value="true" style="width: 40px; height: 20px; cursor: pointer;">
-                        <input type="hidden" name="IsPublic" value="false" />
+                        <input class="form-check-input me-3 ms-0 mt-0" type="checkbox" id="editIsPublicCheck" style="width: 40px; height: 20px; cursor: pointer;">
                         <label class="form-check-label fw-bold mb-0" for="editIsPublicCheck" style="cursor: pointer; color: #1a2b4c;">
                             Hiển thị công khai trên web <br>
-                            <small class="text-muted fw-normal" style="font-size: 0.8rem;">Tắt đi để tạo "Mã ẩn" (Chỉ nhập tay).</small>
+                            <small class="text-muted fw-normal" style="font-size: 0.8rem;">Tắt đi để tạo "Mã ẩn".</small>
                         </label>
                     </div>
                 </div>
@@ -304,19 +307,145 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <script>
-        // Hàm đẩy dữ liệu từ dòng vừa click vào Modal Sửa
-        function openEditModal(id, code, discount, minOrder, quantity, isActive, isPublic) {
-            document.getElementById('editVoucherId').value = id;
-            document.getElementById('editCode').value = code;
-            document.getElementById('editDiscountAmount').value = discount;
-            document.getElementById('editMinOrderAmount').value = minOrder;
-            document.getElementById('editQuantity').value = quantity;
-            document.getElementById('editIsActiveCheck').checked = isActive;
-            document.getElementById('editIsPublicCheck').checked = isPublic;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        // TÌM KIẾM
+        function filterVouchers() {
+        let input = document.getElementById("searchVoucher").value.toLowerCase();
+        let rows = document.querySelectorAll(".voucher-row");
+        let hasData = false;
             
-            // Gọi Modal của Bootstrap 5 lên
-            var editModal = new bootstrap.Modal(document.getElementById('editVoucherModal'));
-            editModal.show();
+        rows.forEach(row => {
+        let code = row.querySelector(".voucher-code").textContent.toLowerCase();
+        if (code.includes(input)) {
+        row.style.display = "";
+        hasData = true;
+        } else {
+        row.style.display = "none";
+        }
+        });
+            
+        let noDataRow = document.getElementById("noDataRow");
+        if (noDataRow) noDataRow.style.display = hasData || rows.length === 0 ? "none" : "";
+        }
+
+        // ĐỔ DỮ LIỆU LÊN MODAL SỬA
+        function openEditModal(id, code, discount, minOrder, quantity, isActive, isPublic) {
+        document.getElementById('editVoucherId').value = id;
+        document.getElementById('editCode').value = code;
+        document.getElementById('editDiscountAmount').value = discount;
+        document.getElementById('editMinOrderAmount').value = minOrder;
+        document.getElementById('editQuantity').value = quantity;
+        document.getElementById('editIsActiveCheck').checked = isActive;
+        document.getElementById('editIsPublicCheck').checked = isPublic;
+            
+        var editModal = new bootstrap.Modal(document.getElementById('editVoucherModal'));
+        editModal.show();
+        }
+
+        // THÊM MỚI
+        document.getElementById('addVoucherForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const payload = {
+        Code: document.getElementById('addCode').value.trim(),
+        DiscountAmount: parseFloat(document.getElementById('addDiscountAmount').value),
+        MinOrderAmount: parseFloat(document.getElementById('addMinOrderAmount').value),
+        Quantity: parseInt(document.getElementById('addQuantity').value),
+        IsActive: document.getElementById('addIsActiveCheck').checked,
+        IsPublic: document.getElementById('addIsPublicCheck').checked
+        };
+
+        Swal.showLoading();
+        try {
+        const res = await fetch('/Admin/AddVoucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if(result.success) {
+        Swal.fire({ icon: 'success', title: 'Thành công', text: result.message, showConfirmButton: false, timer: 1500 }).then(() => location.reload());
+        } else {
+        Swal.fire('Lỗi', result.message, 'error');
+        }
+        } catch (err) {
+        Swal.fire('Lỗi mạng', 'Không thể kết nối đến máy chủ', 'error');
+        }
+        });
+
+        // CHỈNH SỬA
+        document.getElementById('editVoucherForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const payload = {
+        Id: parseInt(document.getElementById('editVoucherId').value),
+        Code: document.getElementById('editCode').value.trim(),
+        DiscountAmount: parseFloat(document.getElementById('editDiscountAmount').value),
+        MinOrderAmount: parseFloat(document.getElementById('editMinOrderAmount').value),
+        Quantity: parseInt(document.getElementById('editQuantity').value),
+        IsActive: document.getElementById('editIsActiveCheck').checked,
+        IsPublic: document.getElementById('editIsPublicCheck').checked
+        };
+
+        Swal.showLoading();
+        try {
+        const res = await fetch('/Admin/EditVoucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if(result.success) {
+        Swal.fire({ icon: 'success', title: 'Thành công', text: result.message, showConfirmButton: false, timer: 1500 }).then(() => location.reload());
+        } else {
+        Swal.fire('Lỗi', result.message, 'error');
+        }
+        } catch (err) {
+        Swal.fire('Lỗi mạng', 'Không thể kết nối đến máy chủ', 'error');
+        }
+        });
+
+        // BẬT / TẮT
+        function toggleVoucher(id) {
+        fetch('/Admin/ToggleVoucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify({ Id: parseInt(id) })
+        })
+        .then(res => res.json())
+        .then(data => {
+        if (data.success) location.reload();
+        else Swal.fire('Lỗi', 'Không thể đổi trạng thái', 'error');
+        });
+        }
+
+        // XÓA
+        function deleteVoucher(id) {
+        Swal.fire({
+        title: 'Xóa mã giảm giá?',
+        text: "Bạn có chắc chắn muốn xóa mã voucher này không?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Đồng ý xóa',
+        cancelButtonText: 'Hủy'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        fetch('/Admin/DeleteVoucher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify({ Id: parseInt(id) })
+        })
+        .then(res => res.json())
+        .then(data => {
+        if (data.success) {
+        Swal.fire({ icon: 'success', title: 'Đã xóa!', showConfirmButton: false, timer: 1500 }).then(() => location.reload());
+        } else {
+        Swal.fire('Lỗi', data.message, 'error');
+        }
+        });
+        }
+        });
         }
     </script>
 }

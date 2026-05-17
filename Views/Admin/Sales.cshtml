@@ -1,351 +1,535 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using ShopQuanAo.Models.BEAN.Entity
 @inject UserManager<ApplicationUser> UserManager
-@model IEnumerable<Product> 
+@model IEnumerable<ShopQuanAo.Models.BEAN.Entity.SaleCampaign>
 
 @{
     ViewData["Title"] = "Quản lý Khuyến mãi (Sale)";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+    
+    var allProducts = ViewBag.Products as IEnumerable<Product> ?? new List<Product>();
+    var productsOnSale = allProducts.Where(p => p.SalePrice > 0).ToList();
 }
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link href="~/css/Admin/Admin_Sale.css" asp-append-version="true" rel="stylesheet" />
 
+<style>
+    /* CSS dành cho trang Sale */
+    .sale-card { border: none; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); background: #fff; }
+    .custom-table th { background-color: #f3f4f6 !important; color: #4b5563 !important; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 14px; border-bottom: 2px solid #e5e7eb; }
+    .custom-table td { padding: 14px; vertical-align: middle; color: #1f2937; border-bottom: 1px solid #f3f4f6; }
+    .product-img-wrapper { width: 50px; height: 50px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; background: #f9fafb; display: flex; align-items: center; justify-content: center; }
+    .product-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+    .search-box-custom { border-radius: 8px; border: 1px solid #d1d5db; padding-left: 38px; transition: all 0.2s; }
+    .search-box-custom:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+    .btn-create-sale { background: #2563eb; color: #fff; font-weight: 600; border-radius: 8px; padding: 10px 20px; border: none; transition: background 0.2s; }
+    .btn-create-sale:hover { background: #1d4ed8; color: #fff; }
+    .badge-pill-custom { padding: 6px 12px; border-radius: 50px; font-weight: 500; font-size: 0.8rem; }
+    .modal-content-custom { border-radius: 16px; border: none; overflow: hidden; }
+    .scroll-table-container { max-height: 380px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+</style>
 
 <div class="admin-wrap">
     <div class="admin-body">
         
-            <aside class="admin-sidebar">
-                <div class="sidebar-section">
-                    <div class="sidebar-label">Tổng quan</div>
-                    <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
-                        <span class="sidebar-icon">📊</span> Dashboard
-                    </a>
-                
-                    @* Đoạn thay đổi ở đây *@
-                    <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
-                        <span class="sidebar-icon">💰</span> Doanh thu
-                    </a>
-                    <a class="sidebar-link @(currentAction == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")">
-                        <span class="sidebar-icon">📦</span> Đơn hàng
-                    </a>
-                </div>
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Tổng quan</div>
+                <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
+                    <span class="sidebar-icon">📊</span> Dashboard
+                </a>
+            
+                <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
+                    <span class="sidebar-icon">💰</span> Doanh thu
+                </a>
+                <a class="sidebar-link @(currentAction == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")">
+                    <span class="sidebar-icon">📦</span> Đơn hàng
+                </a>
+            </div>
 
-                <div class="sidebar-section">
-                    <div class="sidebar-label">Quản lý</div>
-                    <a class="sidebar-link @(currentAction == "Users" ? "active" : "")" href="@Url.Action("Users", "Admin")">
-                        <span class="sidebar-icon">👥</span> Người dùng
-                    </a>
-                    <a class="sidebar-link @(currentAction == "Products" ? "active" : "")" href="@Url.Action("Products", "Admin")">
-                        <span class="sidebar-icon">👕</span> Sản phẩm
-                    </a>
-                    <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@Url.Action("Categories", "Admin")">
-                        <span class="sidebar-icon">📁</span> Danh mục
-                    </a>
-                
-                    <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@Url.Action("Sales", "Admin")">
-                        <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
-                    </a>
-                
-                    <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@Url.Action("Vouchers", "Admin")">
-                        <span class="sidebar-icon">🎫</span> Mã giảm giá
-                    </a>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Quản lý</div>
+                <a class="sidebar-link @(currentAction == "Users" ? "active" : "")" href="@Url.Action("Users", "Admin")">
+                    <span class="sidebar-icon">👥</span> Người dùng
+                </a>
+                <a class="sidebar-link @(currentAction == "Products" ? "active" : "")" href="@Url.Action("Products", "Admin")">
+                    <span class="sidebar-icon">👕</span> Sản phẩm
+                </a>
+                <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@Url.Action("Categories", "Admin")">
+                    <span class="sidebar-icon">📁</span> Danh mục
+                </a>
+            
+                <a class="sidebar-link active" href="@Url.Action("Sales", "Admin")">
+                    <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
+                </a>
+            
+                <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@Url.Action("Vouchers", "Admin")">
+                    <span class="sidebar-icon">🎫</span> Mã giảm giá
+                </a>
 
-                    <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
-                        <span class="sidebar-icon">📩</span> Phản hồi
-                    </a>
-                </div>
+                <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
+                    <span class="sidebar-icon">📩</span> Phản hồi
+                </a>
+            </div>
 
-                <div class="sidebar-section">
-                    <div class="sidebar-label">Hệ thống</div>
-                    <a class="sidebar-link" href="@Url.Action("Index", "Home")">
-                        <span class="sidebar-icon">🏠</span> Về cửa hàng
-                    </a>
-                    <a class="sidebar-link" href="/Identity/Account/Manage">
-                        <span class="sidebar-icon">⚙️</span> Tài khoản
-                    </a>
-                </div>
-            </aside>
+            <div class="sidebar-section">
+                <div class="sidebar-label">Hệ thống</div>
+                <a class="sidebar-link" href="@Url.Action("Index", "Home")">
+                    <span class="sidebar-icon">🏠</span> Về cửa hàng
+                </a>
+                <a class="sidebar-link" href="/Identity/Account/Manage">
+                    <span class="sidebar-icon">⚙️</span> Tài khoản
+                </a>
+            </div>
+        </aside>
 
         <main class="admin-content light-mode">
-            <div class="page-eyebrow">Quản lý</div>
-            <h1 class="page-title">Sản Phẩm Khuyến Mãi (Sale)</h1>
-
-            <div class="white-panel">
-                <div class="toolbar">
-                    <form method="get" class="search-group">
-                        <input type="text" name="search" placeholder="Tìm kiếm sản phẩm sale..." value="@ViewContext.HttpContext.Request.Query["search"]" />
-                        <button type="submit" class="btn-dark">Tìm kiếm</button>
-                    </form>
-                    <button class="btn-dark" onclick="openModal(null, '', '', '')">+ Thêm chương trình Sale</button>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                <h3 class="m-0 fw-bold text-dark" style="letter-spacing: -0.5px;">Sản phẩm đang Khuyến mãi</h3>
+                
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="position-relative">
+                        <i class="fas fa-search text-muted position-absolute" style="top: 12px; left: 14px; z-index: 5;"></i>
+                        <input type="text" id="searchSaleMain" class="form-control search-box-custom" placeholder="Tìm sản phẩm đang sale..." onkeyup="filterMainTable()" style="width: 280px;">
+                    </div>
+                    <button class="btn btn-create-sale shadow-sm" data-bs-toggle="modal" data-bs-target="#addSaleModal">
+                        <i class="fas fa-plus me-1"></i> Thiết lập Sale
+                    </button>
                 </div>
-
-                <table class="table-light">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th><th>Danh mục</th><th>Giá gốc</th><th>Giá Sale</th><th>Tồn kho</th><th>Trạng thái</th><th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
-                        {
-                            foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="product-info">
-                                            <img src="@(item.Image != null && item.Image.StartsWith("http") ? item.Image : "/" + item.Image ?? "images/default.jpg")"
-                                                 alt="Ảnh SP"
-                                                 class="product-img"
-                                                 onerror="this.src='/images/default.jpg'" />
-                                            <strong>@item.ProductName</strong>
-                                        </div>
-                                    </td>
-                                    <td>@(item.Category?.CategoryName ?? "N/A")</td>
-                                    <td style="text-decoration: line-through; color: #9ca3af;">@item.Price.ToString("N0")₫</td>
-                                    <td style="color: #dc2626; font-weight: bold;">
-                                        @(item.SalePrice > 0 ? item.SalePrice.ToString("N0") + "₫" : item.Price.ToString("N0") + "₫")
-                                    </td>
-                                    <td><span class="badge-stock">@item.TotalQuantity sp</span></td>
-                                    <td>
-                                        @if(item.SalePrice > 0)
-                                        {
-                                            <span class="badge-sale">Đang Sale</span>
-                                        }
-                                        else
-                                        {
-                                            <span style="color: #9ca3af; font-size: 0.85rem;">Không Sale</span>
-                                        }
-                                    </td>
-                                    <td class="actions">
-                                        <a onclick="openModal(@item.Id, '@item.ProductName', @(item.SalePrice > 0 ? item.SalePrice : item.Price), @item.Price)">Sửa</a>
-                                        <a onclick="disableSale(@item.Id)" class="text-danger">Tắt Sale</a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr><td colspan="7" style="text-align: center; padding: 40px; color: #9ca3af;">Chưa có sản phẩm nào đang trong chương trình Sale.</td></tr>
-                        }
-                    </tbody>
-                </table>
             </div>
+
+            <div class="card sale-card mb-5">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 custom-table" id="mainSaleTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;" class="text-center">Ảnh</th>
+                                <th>Tên Sản Phẩm</th>
+                                <th>Giá Gốc</th>
+                                <th>Giá Đang Sale</th>
+                                <th>Chương Trình</th>
+                                <th class="text-center" style="width: 120px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (productsOnSale.Any())
+                            {
+                                foreach (var item in productsOnSale)
+                                {
+                                    string campName = "Sale Nhỏ Lẻ";
+                                    if (item.SaleCampaignId.HasValue && Model != null)
+                                    {
+                                        var camp = Model.FirstOrDefault(c => c.Id == item.SaleCampaignId.Value);
+                                        if (camp != null) campName = camp.CampaignName;
+                                    }
+
+                                    <tr class="main-sale-row">
+                                        <td class="text-center">
+                                            <div class="product-img-wrapper mx-auto">
+                                                <img src="@(item.Image != null && item.Image.StartsWith("http") ? item.Image : "/" + (item.Image ?? "images/default.jpg"))" alt="Ảnh" onerror="this.src='/images/default.jpg'" />
+                                            </div>
+                                        </td>
+                                        <td class="fw-bold text-dark product-name">@item.ProductName</td>
+                                        <td><del class="text-muted small">@item.Price.ToString("N0") đ</del></td>
+                                        <td class="text-danger fw-bold fs-6">@item.SalePrice.ToString("N0") đ</td>
+                                        <td>
+                                            @if (item.SaleCampaignId.HasValue)
+                                            {
+                                                <span class="badge bg-success-subtle text-success badge-pill-custom border border-success-subtle mb-1">@campName</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary-subtle text-secondary badge-pill-custom border border-secondary-subtle mb-1">@campName</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-link text-primary p-1 border-0" onclick="openEditProductModal(@item.Id, '@item.ProductName', @item.Price, @item.SalePrice)" title="Sửa giá Sale">
+                                                <i class="fas fa-edit fs-5"></i>
+                                            </button>
+                                            <button class="btn btn-link text-danger p-1 border-0 ms-1" onclick="disableSale(@item.Id)" title="Hủy Sale">
+                                                <i class="fas fa-trash-alt fs-5"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr id="noDataMain"><td colspan="6" class="text-center py-5 text-muted fs-6">Chưa có sản phẩm nào đang giảm giá.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="m-0 fw-bold text-dark" style="letter-spacing: -0.5px;">Quản lý Chương trình Sale</h3>
+            </div>
+            
+            <div class="card sale-card mb-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 custom-table">
+                        <thead>
+                            <tr>
+                                <th>Tên Chương Trình</th>
+                                <th>Thời Gian Bắt Đầu</th>
+                                <th>Thời Gian Kết Thúc</th>
+                                <th>Trạng Thái</th>
+                                <th class="text-center" style="width: 120px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var camp in Model)
+                                {
+                                    var status = DateTime.Now >= camp.StartDate && DateTime.Now <= camp.EndDate ? "Đang chạy" : (DateTime.Now < camp.StartDate ? "Sắp diễn ra" : "Đã kết thúc");
+                                    var statusClass = status == "Đang chạy" ? "bg-success" : (status == "Sắp diễn ra" ? "bg-warning text-dark" : "bg-secondary");
+                                    <tr>
+                                        <td class="fw-bold text-dark">@camp.CampaignName</td>
+                                        <td>@camp.StartDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@camp.EndDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td><span class="badge @statusClass badge-pill-custom">@status</span></td>
+                                        <td class="text-center">
+                                            <button class="btn btn-link text-primary p-1 border-0" onclick="openEditCampaignModal(@camp.Id, '@camp.CampaignName', '@camp.StartDate.ToString("yyyy-MM-ddTHH:mm")', '@camp.EndDate.ToString("yyyy-MM-ddTHH:mm")')" title="Sửa thông tin">
+                                                <i class="fas fa-edit fs-5"></i>
+                                            </button>
+                                            <button class="btn btn-link text-danger p-1 border-0 ms-1" onclick="deleteCampaign(@camp.Id)" title="Xóa toàn bộ">
+                                                <i class="fas fa-trash-alt fs-5"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="5" class="text-center py-4 text-muted">Chưa có chương trình khuyến mãi nào được tạo.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </main>
     </div>
 </div>
 
-<div id="saleModal" class="modal-overlay">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 id="modalTitle">Thêm Khuyến Mãi</h3>
-            <button class="close-btn" onclick="closeModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="inputProductId" />
-            <input type="hidden" id="inputOriginalPrice" /> 
-
-            <div class="form-group" id="productSelectGroup">
-                <label>Tìm kiếm Sản phẩm</label>
-                <div class="autocomplete-wrapper">
-                    <input type="text" id="inputProductSearch" placeholder="Gõ tên sản phẩm (VD: áo sơ mi)..." autocomplete="off" />
-                    <ul id="searchDropdown" class="autocomplete-results"></ul>
+<div class="modal fade" id="addSaleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content modal-content-custom shadow-lg">
+            <div class="modal-header bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold m-0"><i class="fas fa-tags text-warning me-2"></i> Thiết Lập Chương Trình Khuyến Mãi</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light-subtle">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="card p-3 border-0 shadow-sm mb-3" style="border-radius: 10px;">
+                            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-sliders-h me-1 text-primary"></i> 1. Thông tin Campaign</h6>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Tên chiến dịch</label>
+                                <input type="text" id="campName" class="form-control" placeholder="Tùy chọn (để trống nếu tạo sale lẻ)">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small text-muted mb-1">Bắt đầu</label>
+                                <input type="datetime-local" id="startDate" class="form-control">
+                            </div>
+                            <div>
+                                <label class="form-label small text-muted mb-1">Kết thúc</label>
+                                <input type="datetime-local" id="endDate" class="form-control">
+                            </div>
+                        </div>
+                        <div class="card p-3 border-0 shadow-sm border-start border-warning border-4" style="border-radius: 10px;">
+                            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-magic me-1 text-warning"></i> 2. Công cụ tính giá nhanh</h6>
+                            <div class="mb-2">
+                                <select id="discountType" class="form-select">
+                                    <option value="percent">Giảm theo tỷ lệ %</option>
+                                    <option value="amount">Giảm trừ số tiền (đ)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <input type="number" id="discountValue" class="form-control" placeholder="Mức giảm (VD: 10)">
+                            </div>
+                            <button class="btn btn-warning w-100 fw-bold text-dark" onclick="autoCalculate()">
+                                Tính giá tự động <i class="fas fa-bolt ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="card p-3 border-0 shadow-sm" style="border-radius: 10px; height: 100%;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold text-dark m-0"><i class="fas fa-th-list me-1 text-primary"></i> 3. Chọn sản phẩm</h6>
+                                <div class="position-relative">
+                                    <i class="fas fa-search text-muted position-absolute" style="top: 9px; left: 12px; font-size: 0.85rem;"></i>
+                                    <input type="text" id="searchModal" class="form-control form-control-sm ps-4" placeholder="Tìm..." onkeyup="filterModalTable()" style="width: 220px;">
+                                </div>
+                            </div>
+                            <div class="scroll-table-container">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-dark" style="position: sticky; top: 0; z-index: 10;">
+                                        <tr>
+                                            <th class="text-center" style="width: 50px;"><input type="checkbox" class="form-check-input" onclick="toggleAll(this)"></th>
+                                            <th>Sản phẩm</th>
+                                            <th>Giá gốc</th>
+                                            <th style="width: 150px;">Giá Sale mới</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (allProducts != null)
+                                        {
+                                            foreach (var p in allProducts)
+                                            {
+                                                <tr class="modal-product-row">
+                                                    <td class="text-center"><input type="checkbox" class="form-check-input chk-item" value="@p.Id"></td>
+                                                    <td class="modal-product-name fw-bold text-secondary">@p.ProductName</td>
+                                                    <td class="text-danger fw-bold orig-price" data-price="@p.Price">@p.Price.ToString("N0")</td>
+                                                    <td><input type="number" class="form-control form-control-sm item-saleprice" data-id="@p.Id" placeholder="Nhập giá..."></td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label>Giá Sale mới (VNĐ)</label>
-                <input type="number" id="inputSalePrice" placeholder="VD: 150000" min="0" step="5000" />
+            <div class="modal-footer bg-light p-3 border-top-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-primary px-5 fw-bold" onclick="saveData()">Kích hoạt Khuyến mãi</button>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn-light" onclick="closeModal()">Hủy</button>
-            <button class="btn-dark" onclick="saveSale()">Lưu thay đổi</button>
+    </div>
+</div>
+
+<div class="modal fade" id="editSingleSaleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom shadow-lg">
+            <div class="modal-header bg-primary text-white p-4">
+                <h5 class="modal-title fw-bold m-0"><i class="fas fa-edit me-2"></i> Chỉnh Sửa Giá Sản Phẩm</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light-subtle">
+                <input type="hidden" id="editProdId" />
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tên sản phẩm</label>
+                    <input type="text" id="editProdName" class="form-control bg-light" disabled />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Giá Gốc (đ)</label>
+                    <input type="text" id="editProdOrigPrice" class="form-control bg-light" disabled />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-danger">Giá Sale Mới (đ)</label>
+                    <input type="number" id="editProdSalePrice" class="form-control border-danger" placeholder="Nhập mức giá sale mới..." />
+                </div>
+            </div>
+            <div class="modal-footer bg-light p-3 border-top-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary px-4 fw-bold" onclick="submitEditProduct()">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCampaignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom shadow-lg">
+            <div class="modal-header bg-dark text-white p-4">
+                <h5 class="modal-title fw-bold m-0"><i class="fas fa-cog text-warning me-2"></i> Chỉnh Sửa Chương Trình</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light-subtle">
+                <input type="hidden" id="editCampId" />
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tên chiến dịch</label>
+                    <input type="text" id="editCampName" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Thời gian bắt đầu</label>
+                    <input type="datetime-local" id="editCampStart" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Thời gian kết thúc</label>
+                    <input type="datetime-local" id="editCampEnd" class="form-control" />
+                </div>
+            </div>
+            <div class="modal-footer bg-light p-3 border-top-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary px-4 fw-bold" onclick="submitEditCampaign()">Cập Nhật</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const modal = document.getElementById('saleModal');
-    const title = document.getElementById('modalTitle');
-    const hiddenId = document.getElementById('inputProductId');
-    const hiddenOriginalPrice = document.getElementById('inputOriginalPrice'); // Biến lưu giá gốc
-    const searchInput = document.getElementById('inputProductSearch');
-    const searchDropdown = document.getElementById('searchDropdown');
-    const inputPrice = document.getElementById('inputSalePrice');
-
-    let searchTimeout = null;
-
-    // --- LOGIC TÌM KIẾM AUTOCOMPLETE ---
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        const keyword = this.value.trim();
-
-        hiddenId.value = ''; 
-        hiddenOriginalPrice.value = ''; 
-
-        if (keyword.length < 2) {
-            searchDropdown.style.display = 'none';
-            return;
-        }
-
-        searchTimeout = setTimeout(async () => {
-            try {
-                const res = await fetch(`/Admin/SearchProducts?keyword=${encodeURIComponent(keyword)}`);
-                const data = await res.json();
-
-                searchDropdown.innerHTML = '';
-                if (data && data.length > 0) {
-                    data.forEach(item => {
-                        const li = document.createElement('li');
-                        const imgUrl = item.image ? `/${item.image}` : '/images/default.jpg';
-                        
-                        li.innerHTML = `
-                            <img src="${imgUrl}" alt="Ảnh"> 
-                            <div>
-                                <p class="search-title">${item.productName}</p>
-                                <p class="search-price">Giá gốc: ${item.price.toLocaleString()}₫</p>
-                            </div>
-                        `;
-                        
-                        li.onclick = () => {
-                            hiddenId.value = item.id;          
-                            searchInput.value = item.productName; 
-                            searchDropdown.style.display = 'none'; 
-                            
-                            inputPrice.value = item.price;
-                            hiddenOriginalPrice.value = item.price; // Lưu giá gốc từ API
-                            inputPrice.max = item.price - 1; // Giới hạn nút bấm tăng giá
-                        };
-                        searchDropdown.appendChild(li);
-                    });
-                    searchDropdown.style.display = 'block';
-                } else {
-                    searchDropdown.innerHTML = '<li style="color:#999; text-align:center; padding:15px;">Không tìm thấy sản phẩm phù hợp</li>';
-                    searchDropdown.style.display = 'block';
-                }
-            } catch (e) {
-                console.error("Lỗi tìm kiếm", e);
-            }
-        }, 300); 
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
-            searchDropdown.style.display = 'none';
-        }
-    });
-
-    // --- LOGIC MỞ/ĐÓNG POPUP ---
-    function openModal(id, name, price, originalPrice) {
-        modal.style.display = 'flex';
-        searchDropdown.style.display = 'none';
-        
-        if (id) {
-            title.innerText = 'Sửa Khuyến Mãi';
-            hiddenId.value = id;
-            searchInput.value = name;
-            searchInput.disabled = true; 
-            inputPrice.value = price; 
-            hiddenOriginalPrice.value = originalPrice; // Nhận và lưu giá gốc từ nút bấm
-            inputPrice.max = originalPrice - 1; // Set giới hạn khi sửa
-        } else {
-            title.innerText = 'Thêm Khuyến Mãi Mới';
-            hiddenId.value = '';
-            searchInput.value = '';
-            searchInput.disabled = false; 
-            inputPrice.value = '';
-            hiddenOriginalPrice.value = ''; // Xóa sạch khi thêm mới
-            inputPrice.removeAttribute('max'); // Mở khóa giới hạn khi form trống
-        }
+    // --- CÁC HÀM XỬ LÝ CỦA MODAL THÊM MỚI --- (Giữ nguyên)
+    function filterMainTable() {
+        let input = document.getElementById("searchSaleMain").value.toLowerCase();
+        let rows = document.querySelectorAll(".main-sale-row");
+        let hasData = false;
+        rows.forEach(row => {
+            let name = row.querySelector(".product-name").textContent.toLowerCase();
+            if (name.includes(input)) { row.style.display = ""; hasData = true; } else { row.style.display = "none"; }
+        });
+        const noDataRow = document.getElementById("noDataMain");
+        if(noDataRow) noDataRow.style.display = hasData || rows.length === 0 ? "none" : "";
     }
-
-    function closeModal() {
-        modal.style.display = 'none';
+    function filterModalTable() {
+        let input = document.getElementById("searchModal").value.toLowerCase();
+        let rows = document.querySelectorAll(".modal-product-row");
+        rows.forEach(row => {
+            let name = row.querySelector(".modal-product-name").textContent.toLowerCase();
+            row.style.display = name.includes(input) ? "" : "none";
+        });
     }
-
-    // --- LOGIC LƯU VÀ TẮT (TÍCH HỢP SWEETALERT2) ---
-    async function saveSale() {
-        const pId = hiddenId.value; 
-        const sPrice = inputPrice.value;
-        const originalPrice = hiddenOriginalPrice.value;
-
-        if(!pId) {
-            Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng tìm và chọn một sản phẩm từ danh sách!' });
-            return;
-        }
-        if(sPrice === '') {
-            Swal.fire({ icon: 'warning', title: 'Thiếu thông tin', text: 'Vui lòng nhập Giá Sale!' });
-            return;
-        }
-        
-        const parsedSalePrice = parseInt(sPrice, 10);
-        const parsedOriginalPrice = parseInt(originalPrice, 10);
-
-        if(parsedSalePrice < 0) {
-            Swal.fire({ icon: 'error', title: 'Không hợp lệ', text: 'Giá Sale không được phép nhỏ hơn 0!' });
-            return;
-        }
-
-        // Logic chặn Sale ảo/Lỗi nhập liệu
-        if (parsedSalePrice >= parsedOriginalPrice) {
-            Swal.fire({ 
-                icon: 'error', 
-                title: 'Giá không hợp lệ', 
-                text: `Giá Sale (${parsedSalePrice.toLocaleString()}₫) bắt buộc phải nhỏ hơn Giá gốc (${parsedOriginalPrice.toLocaleString()}₫)!` 
-            });
-            return;
-        }
-
+    function toggleAll(source) {
+        document.querySelectorAll('.modal-product-row').forEach(row => {
+            if (row.style.display !== "none") { let chk = row.querySelector('.chk-item'); if(chk) chk.checked = source.checked; }
+        });
+    }
+    function autoCalculate() {
+        const type = document.getElementById('discountType').value;
+        const val = parseFloat(document.getElementById('discountValue').value);
+        if (!val || val <= 0) return Swal.fire('Lỗi', 'Nhập mức giảm hợp lệ!', 'warning');
+        const checked = document.querySelectorAll('.chk-item:checked');
+        if (checked.length === 0) return Swal.fire('Lỗi', 'Tick chọn SP trước!', 'warning');
+        checked.forEach(chk => {
+            const tr = chk.closest('tr');
+            const orig = parseFloat(tr.querySelector('.orig-price').getAttribute('data-price'));
+            let input = tr.querySelector('.item-saleprice');
+            let newPrice = type === 'percent' ? orig * (1 - val/100) : orig - val;
+            input.value = Math.max(0, Math.floor(newPrice)); 
+        });
+    }
+    async function saveData() {
+        const name = document.getElementById('campName').value.trim();
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        let pIds = [], pPrices = [], hasError = false;
+        document.querySelectorAll('.chk-item:checked').forEach(chk => {
+            const id = chk.value;
+            const price = document.querySelector(`.item-saleprice[data-id="${id}"]`).value;
+            if (!price || price <= 0) hasError = true;
+            else { pIds.push(parseInt(id)); pPrices.push(parseInt(price)); }
+        });
+        if (hasError || pIds.length === 0) return Swal.fire('Lỗi', 'Cần nhập giá Sale cho SP đã chọn!', 'error');
+        Swal.showLoading();
         try {
-            const res = await fetch('/Admin/UpdateSalePrice', {
+            const res = await fetch('/Admin/CreateCampaign', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId: parseInt(pId), salePrice: parsedSalePrice })
+                body: JSON.stringify({ CampaignName: name || "", StartDate: start || new Date().toISOString(), EndDate: end || new Date(new Date().getTime() + 7*24*60*60*1000).toISOString(), ProductIds: pIds, SalePrices: pPrices })
             });
             const data = await res.json();
-            
-            if(data.success) {
-                Swal.fire({ icon: 'success', title: 'Thành công!', text: 'Đã cập nhật giá sale.', timer: 1500, showConfirmButton: false })
-                .then(() => location.reload());
-            } else {
-                Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message });
-            }
-        } catch(err) {
-            Swal.fire({ icon: 'error', title: 'Lỗi mạng', text: 'Không thể kết nối tới máy chủ!' });
-        }
+            if (data.success) { Swal.fire('Thành công!', 'Lưu thành công.', 'success').then(() => location.reload()); } 
+            else { Swal.fire('Thất bại', data.message, 'error'); }
+        } catch (err) { Swal.fire('Lỗi', 'Mất kết nối máy chủ!', 'error'); }
     }
-
     function disableSale(id) {
         Swal.fire({
-            title: 'Tắt khuyến mãi?',
-            text: "Sản phẩm này sẽ quay về giá gốc. Bạn có chắc chắn không?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#111',
-            cancelButtonColor: '#dc2626',
-            confirmButtonText: 'Đồng ý tắt',
-            cancelButtonText: 'Hủy bỏ'
+            title: 'Hủy Sale SP này?', text: "SP sẽ quay về giá gốc.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#2563eb', cancelButtonColor: '#dc2626', confirmButtonText: 'Đồng ý', cancelButtonText: 'Hủy'
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    const res = await fetch('/Admin/DisableSale', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ productId: id })
+                    const res = await fetch('/Admin/DisableSale', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: id }) });
+                    const data = await res.json();
+                    if(data.success) location.reload();
+                    else Swal.fire('Lỗi', data.message, 'error');
+                } catch(err) { Swal.fire('Lỗi kết nối', 'Lỗi mạng!', 'error'); }
+            }
+        });
+    }
+
+    // --- CHỨC NĂNG SỬA 1 SẢN PHẨM ---
+    function openEditProductModal(id, name, origPrice, salePrice) {
+        document.getElementById('editProdId').value = id;
+        document.getElementById('editProdName').value = name;
+        document.getElementById('editProdOrigPrice').value = new Intl.NumberFormat('vi-VN').format(origPrice);
+        document.getElementById('editProdSalePrice').value = salePrice;
+        new bootstrap.Modal(document.getElementById('editSingleSaleModal')).show();
+    }
+
+    async function submitEditProduct() {
+        const id = document.getElementById('editProdId').value;
+        const salePrice = parseInt(document.getElementById('editProdSalePrice').value);
+        const origPriceText = document.getElementById('editProdOrigPrice').value.replace(/\./g, '').replace(/,/g, '');
+        const origPrice = parseInt(origPriceText);
+
+        if (!salePrice || salePrice <= 0 || salePrice >= origPrice) {
+            return Swal.fire('Lỗi', `Giá Sale bắt buộc phải nhỏ hơn giá gốc (${origPrice})!`, 'error');
+        }
+
+        Swal.showLoading();
+        try {
+            // Sử dụng lại API cũ của bạn
+            const res = await fetch('/Admin/UpdateSalePrice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: parseInt(id), salePrice: salePrice })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire('Thành công', 'Đã cập nhật giá mới.', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Lỗi', data.message, 'error');
+            }
+        } catch (err) { Swal.fire('Lỗi mạng', 'Không thể kết nối', 'error'); }
+    }
+
+    // --- CHỨC NĂNG SỬA CAMPAIGN ---
+    function openEditCampaignModal(id, name, start, end) {
+        document.getElementById('editCampId').value = id;
+        document.getElementById('editCampName').value = name;
+        document.getElementById('editCampStart').value = start;
+        document.getElementById('editCampEnd').value = end;
+        new bootstrap.Modal(document.getElementById('editCampaignModal')).show();
+    }
+
+    async function submitEditCampaign() {
+        const id = document.getElementById('editCampId').value;
+        const name = document.getElementById('editCampName').value.trim();
+        const start = document.getElementById('editCampStart').value;
+        const end = document.getElementById('editCampEnd').value;
+
+        if (!name || !start || !end) return Swal.fire('Lỗi', 'Vui lòng điền đủ thông tin!', 'warning');
+
+        Swal.showLoading();
+        try {
+            // Cần có hàm UpdateCampaign trong Controller
+            const res = await fetch('/Admin/UpdateCampaign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Id: parseInt(id), CampaignName: name, StartDate: start, EndDate: end })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire('Thành công', 'Đã cập nhật Chương trình.', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Lỗi', data.message, 'error');
+            }
+        } catch (err) { Swal.fire('Lỗi', 'Kiểm tra xem C# đã có hàm UpdateCampaign chưa nhé!', 'error'); }
+    }
+
+    function deleteCampaign(id) {
+        Swal.fire({
+            title: 'Xóa toàn bộ Chương trình?',
+            text: "Toàn bộ sản phẩm trong chương trình này sẽ mất giá sale. Bạn chắc chứ?",
+            icon: 'danger', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Đồng ý xóa'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    // Cần có hàm DeleteCampaign trong Controller
+                    const res = await fetch('/Admin/DeleteCampaign', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id })
                     });
                     const data = await res.json();
-                    
-                    if(data.success) {
-                        Swal.fire({ icon: 'success', title: 'Thành công!', text: 'Đã tắt khuyến mãi.', timer: 1500, showConfirmButton: false })
-                        .then(() => location.reload());
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Lỗi', text: data.message });
-                    }
-                } catch(err) {
-                    Swal.fire({ icon: 'error', title: 'Lỗi mạng', text: 'Không thể kết nối tới máy chủ!' });
-                }
+                    if(data.success) location.reload();
+                    else Swal.fire('Lỗi', data.message, 'error');
+                } catch(err) { Swal.fire('Lỗi', 'Kiểm tra C# xem có hàm DeleteCampaign chưa nhé!', 'error'); }
             }
         });
     }

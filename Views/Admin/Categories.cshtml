@@ -6,6 +6,7 @@
 }
 
 <link href="~/css/Admin/Admin_Categories.css" asp-append-version="true" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @Html.AntiForgeryToken()
 
 <div class="admin-wrap">
@@ -64,9 +65,16 @@
                     <h4 class="fw-bolder mb-1" style="color: #1a2b4c;">Quản lý Danh mục</h4>
                     <p class="text-muted small mb-0">Thiết lập và phân loại sản phẩm trên hệ thống</p>
                 </div>
-                <button class="btn btn-primary btn-modern shadow-sm" style="background-color: #1a2b4c; border-color: #1a2b4c;" onclick="openAddModal()">
-                    <i class="bi bi-plus-lg me-1"></i> Thêm danh mục mới
-                </button>
+                
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="position-relative">
+                        <i class="bi bi-search text-muted position-absolute" style="top: 10px; left: 14px;"></i>
+                        <input type="text" id="searchCategory" class="form-control" placeholder="Tìm kiếm danh mục..." onkeyup="filterCategories()" style="padding-left: 38px; border-radius: 8px; border: 1px solid #d1d5db; width: 280px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    </div>
+                    <button class="btn btn-primary btn-modern shadow-sm" style="background-color: #1a2b4c; border-color: #1a2b4c; border-radius: 8px; padding: 8px 20px;" onclick="openAddModal()">
+                        <i class="bi bi-plus-lg me-1"></i> Thêm danh mục mới
+                    </button>
+                </div>
             </div>
 
             <div class="card border-0 modern-card shadow-sm" style="border-radius: 12px; overflow: hidden;">
@@ -77,7 +85,7 @@
                                 <tr>
                                     <th class="ps-4 py-3 text-uppercase text-muted" style="font-size: 0.8rem;" width="15%">ID</th>
                                     <th class="py-3 text-uppercase text-muted" style="font-size: 0.8rem;" width="60%">Tên danh mục</th>
-                                    <th class="text-end pe-4 py-3 text-uppercase text-muted" style="font-size: 0.8rem;" width="25%">Hành động</th>
+                                    <th class="text-center pe-4 py-3 text-uppercase text-muted" style="font-size: 0.8rem;" width="25%">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="categoryTableBody">
@@ -120,88 +128,144 @@
         const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
 
         document.addEventListener("DOMContentLoaded", function () {
-            loadCategories();
+        loadCategories();
         });
 
-        function loadCategories() {
-            fetch('/Admin/GetCategories')
-                .then(res => res.json())
-                .then(data => {
-                    const tbody = document.getElementById('categoryTableBody');
-                    tbody.innerHTML = '';
-                    if(data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-5"><i class="bi bi-inbox fs-1"></i><br/>Chưa có danh mục nào.</td></tr>';
-                        return;
-                    }
+        // 1. TÌM KIẾM DANH MỤC REAL-TIME
+        function filterCategories() {
+        let input = document.getElementById("searchCategory").value.toLowerCase();
+        let rows = document.querySelectorAll(".cat-row");
+        let hasData = false;
+            
+        rows.forEach(row => {
+        let name = row.querySelector(".cat-name").textContent.toLowerCase();
+        if (name.includes(input)) {
+        row.style.display = "";
+        hasData = true;
+        } else {
+        row.style.display = "none";
+        }
+        });
+            
+        // Ẩn/hiện dòng thông báo "Trống"
+        const noDataRow = document.getElementById("noDataRow");
+        if (noDataRow) {
+        noDataRow.style.display = hasData || rows.length === 0 ? "none" : "";
+        }
+        }
 
-                    data.forEach(item => {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td class="ps-4 fw-bold py-3" style="color: #1a2b4c;">#${item.id}</td>
-                                <td class="fw-semibold text-dark py-3">${item.categoryName}</td>
-                                <td class="text-end pe-4 py-3">
-                                    <div class="d-inline-flex gap-2">
-                                        <button class="btn btn-sm btn-outline-primary" style="color: #1a2b4c; border-color: #1a2b4c;" onclick="openEditModal(${item.id}, '${item.categoryName}')" title="Sửa danh mục">
-                                            <i class="bi bi-pencil-square"></i> Sửa
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${item.id})" title="Xóa danh mục">
-                                            <i class="bi bi-trash3"></i> Xóa
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                });
+        // 2. LOAD DATA
+        function loadCategories() {
+        fetch('/Admin/GetCategories')
+        .then(res => res.json())
+        .then(data => {
+        const tbody = document.getElementById('categoryTableBody');
+        tbody.innerHTML = '';
+        if(data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-5"><i class="bi bi-inbox fs-1"></i><br/>Chưa có danh mục nào.</td></tr>';
+        return;
+        }
+
+        data.forEach(item => {
+        tbody.innerHTML += `
+        <tr class="cat-row">
+        <td class="ps-4 fw-bold py-3" style="color: #1a2b4c;">#${item.id}</td>
+        <td class="fw-semibold text-dark py-3 cat-name">${item.categoryName}</td>
+        <td class="text-center pe-4 py-3">
+        <div class="d-inline-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary px-3" style="color: #1a2b4c; border-color: #1a2b4c;" onclick="openEditModal(${item.id}, '${item.categoryName}')" title="Sửa danh mục">
+        <i class="bi bi-pencil-square"></i> Sửa
+        </button>
+        <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteCategory(${item.id})" title="Xóa danh mục">
+        <i class="bi bi-trash3"></i> Xóa
+        </button>
+        </div>
+        </td>
+        </tr>
+        `;
+        });
+                    
+        // Thêm dòng báo trống ẩn sẵn
+        tbody.innerHTML += '<tr id="noDataRow" style="display:none;"><td colspan="3" class="text-center text-muted py-4">Không tìm thấy danh mục phù hợp.</td></tr>';
+        });
         }
 
         function openAddModal() {
-            document.getElementById('categoryModalLabel').innerText = "✨ Thêm Danh Mục Mới";
-            document.getElementById('categoryId').value = "0";
-            document.getElementById('categoryName').value = "";
-            categoryModal.show();
+        document.getElementById('categoryModalLabel').innerText = "✨ Thêm Danh Mục Mới";
+        document.getElementById('categoryId').value = "0";
+        document.getElementById('categoryName').value = "";
+        categoryModal.show();
         }
 
         function openEditModal(id, name) {
-            document.getElementById('categoryModalLabel').innerHTML = '<i class="bi bi-pencil-square text-primary me-2"></i> Chỉnh sửa Danh Mục';
-            document.getElementById('categoryId').value = id;
-            document.getElementById('categoryName').value = name;
-            categoryModal.show();
+        document.getElementById('categoryModalLabel').innerHTML = '<i class="bi bi-pencil-square text-primary me-2"></i> Chỉnh sửa Danh Mục';
+        document.getElementById('categoryId').value = id;
+        document.getElementById('categoryName').value = name;
+        categoryModal.show();
         }
 
+        // 3. LƯU & BẮT LỖI TRÙNG TÊN BẰNG SWEETALERT
         function saveCategory() {
-            const id = document.getElementById('categoryId').value;
-            const name = document.getElementById('categoryName').value.trim();
-            if (!name) { alert("Vui lòng nhập tên danh mục!"); return; }
-
-            const isEdit = id !== "0";
-            const url = isEdit ? '/Admin/EditCategory' : '/Admin/AddCategory';
+        const id = document.getElementById('categoryId').value;
+        const name = document.getElementById('categoryName').value.trim();
             
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
-                body: JSON.stringify({ Id: parseInt(id), CategoryName: name })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) { categoryModal.hide(); loadCategories(); }
-                else { alert("Lỗi: " + data.message); }
-            });
+        if (!name) {
+        Swal.fire('Chú ý', 'Vui lòng nhập tên danh mục!', 'warning');
+        return;
         }
 
+        const isEdit = id !== "0";
+        const url = isEdit ? '/Admin/EditCategory' : '/Admin/AddCategory';
+            
+        fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify({ Id: parseInt(id), CategoryName: name })
+        })
+        .then(res => res.json())
+        .then(data => {
+        if (data.success) {
+        categoryModal.hide();
+        Swal.fire({ icon: 'success', title: 'Hoàn tất', text: data.message, timer: 1500, showConfirmButton: false });
+        loadCategories();
+        }
+        else {
+        Swal.fire('Không thành công', data.message, 'error');
+        }
+        })
+        .catch(err => Swal.fire('Lỗi', 'Lỗi kết nối máy chủ', 'error'));
+        }
+
+        // 4. XÓA BẰNG SWEETALERT
         function deleteCategory(id) {
-            if (confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
-                fetch('/Admin/DeleteCategory', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
-                    body: JSON.stringify({ Id: id.toString() })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) { loadCategories(); }
-                    else { alert(data.message); }
-                });
-            }
+        Swal.fire({
+        title: 'Xóa danh mục?',
+        text: "Hành động này không thể hoàn tác!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Đồng ý xóa',
+        cancelButtonText: 'Hủy'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        fetch('/Admin/DeleteCategory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify({ Id: id.toString() })
+        })
+        .then(res => res.json())
+        .then(data => {
+        if (data.success) {
+        Swal.fire({ icon: 'success', title: 'Đã xóa!', timer: 1500, showConfirmButton: false });
+        loadCategories();
+        }
+        else {
+        Swal.fire('Không thể xóa', data.message, 'error');
+        }
+        });
+        }
+        });
         }
     </script>
 }
