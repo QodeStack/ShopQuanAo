@@ -299,18 +299,50 @@ namespace ShopQuanAo.Controllers
         }
         public async Task<IActionResult> Sales()
         {
-            // 1. Lấy danh sách sản phẩm để Admin chọn (nhét vào ViewBag)
-            // View của mày đang dùng foreach(var p in ViewBag.Products) nên phải có dòng này
-            ViewBag.Products = await _context.Products.ToListAsync();
+            // Lấy TẤT CẢ sản phẩm đưa ra View. View sẽ tự lọc cái nào hiện ở bảng nào.
+            ViewBag.AllProducts = await _context.Products.ToListAsync();
 
-            // 2. Lấy danh sách các Chiến dịch Sale đã có (làm Model chính)
-            // View của mày đang dùng @model IEnumerable<SaleCampaign> nên phải truyền cái này vào View()
             var campaigns = await _context.SaleCampaigns
-                                          .Include(c => c.Products) // Để hiển thị được số lượng SP trong mỗi campaign
+                                          .Include(c => c.Products)
                                           .ToListAsync();
 
-            // TRUYỀN campaigns VÀO ĐÂY, ĐỪNG TRUYỀN Products!
             return View(campaigns);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ValidateCampaign([FromBody] CampaignDTO dto)
+        {
+            if (dto == null || dto.ProductIds == null || !dto.ProductIds.Any())
+            {
+                return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+            }
+
+            // Gọi hàm ValidateCampaignAsync từ AdminService.cs để kiểm tra trùng tên và xung đột sản phẩm
+            var validationResult = await _service.ValidateCampaignAsync(dto.CampaignName, dto.ProductIds);
+
+            // Nếu Success = false (tức là trùng tên chiến dịch), báo lỗi đỏ và chặn lưu
+            if (!validationResult.Success)
+            {
+                return Json(new { success = false, message = validationResult.Message });
+            }
+
+            // Trả về danh sách cảnh báo (nếu có sản phẩm đang nằm ở chiến dịch khác)
+            // Giao diện (Frontend) sẽ tự động bắt cảnh báo này và hỏi người dùng có muốn ghi đè không
+            return Json(new { success = true, warnings = validationResult.Warnings });
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetCampaignForEdit(int id)
+        {
+            // Gọi Service để lấy toàn bộ dữ liệu đã được xử lý
+            var result = await _service.GetCampaignForEditDataAsync(id);
+
+            if (result == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy" });
+            }
+
+            // Trả thẳng object ra JSON cho Frontend
+            return Json(result);
         }
 
         [HttpPost]
@@ -324,6 +356,32 @@ namespace ShopQuanAo.Controllers
                 request.SalePrices);
 
             return Json(new { success = result.Success, message = result.Message });
+        }
+        // Đặt class này ở file DTO hoặc ở không gian namespace tùy ý
+
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateCampaign([FromBody] UpdateCampaignDto dto)
+        {
+            if (dto == null || dto.Id <= 0)
+                return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+
+            var res = await _service.UpdateCampaignAsync(dto.Id, dto.CampaignName, dto.StartDate, dto.EndDate, dto.ProductIds, dto.SalePrices);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteCampaign([FromBody] DeleteDto dto)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.Id))
+                return Json(new { success = false, message = "ID trống." });
+
+            if (int.TryParse(dto.Id, out int campaignId))
+            {
+                var res = await _service.DeleteCampaignAsync(campaignId);
+                return Json(new { success = res.Success, message = res.Message });
+            }
+            return Json(new { success = false, message = "Định dạng ID không đúng." });
         }
         #endregion
 

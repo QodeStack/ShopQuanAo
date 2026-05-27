@@ -12,8 +12,8 @@ using ShopQuanAo.Data;
 namespace ShopQuanAo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260427015036_kiet")]
-    partial class kiet
+    [Migration("20260517075311_Add_SaleCampaign_Final")]
+    partial class Add_SaleCampaign_Final
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -464,12 +464,17 @@ namespace ShopQuanAo.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("SaleCampaignId")
+                        .HasColumnType("int");
+
                     b.Property<int>("SalePrice")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("SaleCampaignId");
 
                     b.ToTable("Product");
                 });
@@ -533,6 +538,32 @@ namespace ShopQuanAo.Migrations
                     b.HasIndex("SizeId");
 
                     b.ToTable("ProductSize");
+                });
+
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.SaleCampaign", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CampaignName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SaleCampaigns");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ShoppingCart", b =>
@@ -713,7 +744,13 @@ namespace ShopQuanAo.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ShopQuanAo.Models.BEAN.Entity.SaleCampaign", "SaleCampaign")
+                        .WithMany("Products")
+                        .HasForeignKey("SaleCampaignId");
+
                     b.Navigation("Category");
+
+                    b.Navigation("SaleCampaign");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ProductReview", b =>
@@ -765,6 +802,11 @@ namespace ShopQuanAo.Migrations
                     b.Navigation("ProductReviews");
 
                     b.Navigation("ProductSizes");
+                });
+
+            modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.SaleCampaign", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("ShopQuanAo.Models.BEAN.Entity.ShoppingCart", b =>

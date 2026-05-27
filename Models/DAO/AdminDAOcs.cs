@@ -177,6 +177,63 @@ namespace ShopQuanAo.DAO
             }
             await _context.SaveChangesAsync();
         }
+        // Kiểm tra trùng tên chiến dịch
+        public async Task<bool> IsCampaignNameExistAsync(string name)
+        {
+            return await _context.SaleCampaigns.AnyAsync(c => c.CampaignName.ToLower() == name.ToLower());
+        }
+
+        // Lấy danh sách cảnh báo các sản phẩm đã có chiến dịch
+        public async Task<List<string>> GetProductActiveCampaignWarningsAsync(List<int> productIds)
+        {
+            var productsInCampaigns = await _context.Products
+                .Where(p => productIds.Contains(p.Id) && p.SaleCampaignId != null)
+                .Select(p => new {
+                    p.ProductName,
+                    // Subquery lấy tên chiến dịch mà sản phẩm đang tham gia
+                    CampaignName = _context.SaleCampaigns.FirstOrDefault(c => c.Id == p.SaleCampaignId).CampaignName
+                }).ToListAsync();
+
+            return productsInCampaigns
+                .Select(x => $"Sản phẩm '{x.ProductName}' đang nằm trong chiến dịch '{x.CampaignName ?? "Không rõ"}'")
+                .ToList();
+        }
+        public async Task<SaleCampaign?> GetCampaignByIdAsync(int id)
+        {
+            return await _context.SaleCampaigns
+                .Include(c => c.Products) // Lấy kèm các sản phẩm đang thuộc chiến dịch này
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+        public async Task UpdateCampaignAsync(SaleCampaign campaign)
+        {
+            _context.SaleCampaigns.Update(campaign);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteCampaignAsync(SaleCampaign campaign)
+        {
+            // Đưa giá sale của các sản phẩm trong chiến dịch này về 0 và gỡ ID chiến dịch
+            if (campaign.Products != null && campaign.Products.Any())
+            {
+                foreach (var product in campaign.Products)
+                {
+                    product.SaleCampaignId = null;
+                    product.SalePrice = 0;
+                    _context.Products.Update(product);
+                }
+            }
+
+            // Xóa chiến dịch
+            _context.SaleCampaigns.Remove(campaign);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<List<Product>> GetProductsForCampaignEditAsync(int campaignId)
+        {
+            return await _context.Products
+                .Where(p => p.SaleCampaignId == null || p.SaleCampaignId == campaignId)
+                .ToListAsync();
+        }
         #endregion
 
         #region Voucher Management

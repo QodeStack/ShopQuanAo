@@ -31,15 +31,20 @@ namespace ShopQuanAo.Models.BEAN.Entity
 		public string? Image { get; set; }
 
         [Column(TypeName = "nvarchar(2000)")]
+        
         public string? Description { get; set;	}
 
         // Khóa ngoại Category
         public int CategoryId { get; set; }
 		[ForeignKey("CategoryId")]
 		public Categories Category { get; set; }
+        public int? SaleCampaignId { get; set; } // Khóa ngoại
 
-		// Navigation Properties (Nên dùng ICollection và khởi tạo sẵn)
-		public virtual ICollection<OrderDetail> OrderDetail { get; set; } = new List<OrderDetail>();
+        [ForeignKey("SaleCampaignId")] // Thêm dòng này để ép cứng
+        public virtual SaleCampaign SaleCampaign { get; set; }
+
+        // Navigation Properties (Nên dùng ICollection và khởi tạo sẵn)
+        public virtual ICollection<OrderDetail> OrderDetail { get; set; } = new List<OrderDetail>();
 		public virtual ICollection<CartDetail> CartDetail { get; set; } = new List<CartDetail>();
 
 		// Liên kết 1 - Nhiều với bảng ProductSize (Để gom size)

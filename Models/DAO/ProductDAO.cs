@@ -125,11 +125,9 @@ namespace ShopQuanAo.DAO
 
             var query = _context.Products.AsQueryable();
 
-            // 1. Lọc từ khóa
             query = query.Where(p => p.ProductName.ToLower().Contains(searchKey)
                                   || (p.Description != null && p.Description.ToLower().Contains(searchKey)));
 
-            // 2. Lọc màu sắc (Quét thẳng vào Mô tả bằng SQL)
             if (!string.IsNullOrEmpty(color))
             {
                 string colorKey = color.ToLower();
@@ -137,17 +135,14 @@ namespace ShopQuanAo.DAO
                                       || (p.Description != null && p.Description.ToLower().Contains(colorKey)));
             }
 
-            // 3. Lọc giá tiền
             if (maxPrice > 0)
             {
                 query = query.Where(p => (p.SalePrice > 0 ? p.SalePrice : p.Price) <= maxPrice);
             }
 
-            // Dò xong xuôi hết mới chốt lấy 15 món đem lên
             return await query.Take(15).ToListAsync();
         }
-        // Lấy danh sách tên các danh mục đang có trong kho để nạp cho AI
-        // Thay đổi kiểu trả về thành Dictionary để lấy kèm ID làm Link
+       
         public async Task<Dictionary<int, string>> GetAvailableCategoriesAsync()
         {
             return await _context.Categories

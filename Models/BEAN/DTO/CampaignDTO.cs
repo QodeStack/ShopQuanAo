@@ -19,4 +19,13 @@ namespace ShopQuanAo.Models.BEAN.DTO // Đảm bảo namespace này khớp với
         // Tao đổi thành int luôn cho khớp với thuộc tính SalePrice trong class Product của mày
         public List<int> SalePrices { get; set; }
     }
+    public class UpdateCampaignDto
+    {
+        public int Id { get; set; }
+        public string CampaignName { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public List<int> ProductIds { get; set; }
+        public List<int> SalePrices { get; set; }
+    }
 }

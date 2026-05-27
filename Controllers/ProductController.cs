@@ -93,7 +93,6 @@ namespace ShopQuanAo.Controllers
         public async Task<IActionResult> Sale(int? categoryId, string? search, string? price, int? rating, string? sort, int page = 1)
         {
             int pageSize = 20;
-            // 1. Gọi service lấy sản phẩm Sale
             var result = await _productService.GetPagedProductsAsync(
                 categoryId?.ToString(),
                 search,
@@ -104,7 +103,6 @@ namespace ShopQuanAo.Controllers
                 isSaleOnly: true,
                 sort: sort);
 
-            // 2. BỔ SUNG: Lấy tất cả ratings cho các sản phẩm Sale đang hiển thị
             var allReviews = new Dictionary<int, List<ProductReview>>();
             if (result.Products != null)
             {
@@ -119,13 +117,11 @@ namespace ShopQuanAo.Controllers
                 }
             }
 
-            // 3. Thiết lập ViewBag
             ViewBag.CurrentSort = sort;
-            ViewBag.AllReviews = allReviews; // Đưa dữ liệu đánh giá ra View trang Sale
+            ViewBag.AllReviews = allReviews; 
 
             await SetProductViewBagData(result, categoryId, search, rating, price, pageSize);
 
-            // Trả về View Sale
             return View(result.Products);
         }
 

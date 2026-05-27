@@ -64,7 +64,6 @@ namespace ShopQuanAo.Controllers
             var result = await _checkoutService.PlaceOrderAsync(_userManager.GetUserId(User), dto);
             if (!result.Success) return RedirectToAction("Index", "Cart");
 
-            // KIỂM TRA PHƯƠNG THỨC THANH TOÁN ĐỂ CHUYỂN HƯỚNG
             if (dto.PaymentMethod == "ChuyenKhoan")
             {
                 return RedirectToAction("Payment", new { orderId = result.OrderId });
@@ -102,16 +101,14 @@ namespace ShopQuanAo.Controllers
             });
         }
 
-        // TẠO GIAO DIỆN QUÉT MÃ QR RIÊNG BẰNG HÀM NÀY
         [HttpGet]
         public async Task<IActionResult> Payment(int orderId)
         {
             var userId = _userManager.GetUserId(User);
-            var order = await _checkoutService.GetLatestOrderAsync(userId);
+            var order = await _checkoutService.GetOrderByIdAsync(orderId);
 
-            if (order == null || order.Id != orderId) return RedirectToAction("Index", "Home");
+            if (order == null || order.Id != orderId || order.UserId != userId ) return RedirectToAction("Index", "Home");
 
-            // Nếu đơn đã thanh toán rồi (ấn f5 lại) thì cho sang trang Success luôn
             if (order.IsPaid) return RedirectToAction("OrderSuccess", new { orderId = order.Id });
 
             ViewBag.OrderId = order.Id;
@@ -120,35 +117,33 @@ namespace ShopQuanAo.Controllers
             return View();
         }
 
-        // API TRẢ VỀ TRẠNG THÁI THANH TOÁN CHO JAVASCRIPT HỎI THĂM
         [HttpGet]
         public async Task<IActionResult> CheckPaymentStatus(int orderId)
         {
             var userId = _userManager.GetUserId(User);
-            var order = await _checkoutService.GetLatestOrderAsync(userId);
+            var order = await _checkoutService.GetOrderByIdAsync(orderId);
 
-            if (order != null && order.Id == orderId)
+            if (order == null || order.Id != orderId || order.UserId != userId)
             {
-                return Json(new { isPaid = order.IsPaid });
+                return Json(new { isPaid = false });
             }
-            return Json(new { isPaid = false });
+            return Json(new { isPaid = order.IsPaid });
         }
 
-        // TRANG THÀNH CÔNG THUẦN TÚY (LỜI CẢM ƠN)
         [HttpGet]
         public async Task<IActionResult> OrderSuccess(int orderId)
         {
             var userId = _userManager.GetUserId(User);
-            var order = await _checkoutService.GetLatestOrderAsync(userId);
+            var order = await _checkoutService.GetOrderByIdAsync(orderId);
 
-            if (order != null && order.Id == orderId)
+            if (order == null || order.UserId != userId)
             {
-                ViewBag.OrderId = order.Id;
+                return RedirectToAction("Index", "Home");
             }
-            else
-            {
-                ViewBag.OrderId = orderId;
-            }
+
+            ViewBag.OrderId = order.Id;
+            ViewBag.TotalAmount = order.TotalAmount; 
+            ViewBag.PaymentMethod = order.PaymentMethod;
 
             return View();
         }

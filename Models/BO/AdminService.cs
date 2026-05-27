@@ -345,6 +345,103 @@ namespace ShopQuanAo.BO
             await _adminDAO.CreateCampaignAsync(campaign, productIds, salePrices);
             return (true, "Tạo chiến dịch Sale thành công!");
         }
+        public async Task<(bool Success, string Message, List<string>? Warnings)> ValidateCampaignAsync(string name, List<int> productIds)
+        {
+            // 1. Check trùng tên chiến dịch (nếu có nhập tên)
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                bool isExist = await _adminDAO.IsCampaignNameExistAsync(name);
+                if (isExist) return (false, "Tên chiến dịch này đã tồn tại trong hệ thống!", null);
+            }
+
+            // 2. Check sản phẩm đã nằm trong chiến dịch khác
+            var warnings = await _adminDAO.GetProductActiveCampaignWarningsAsync(productIds);
+
+            return (true, "", warnings);
+        }
+        public async Task<(bool Success, string Message)> UpdateCampaignAsync(int id, string name, DateTime start, DateTime end, List<int> productIds, List<int> salePrices)
+        {
+            var campaign = await _adminDAO.GetCampaignByIdAsync(id);
+            if (campaign == null) return (false, "Không tìm thấy chiến dịch.");
+
+            if (end <= start) return (false, "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
+
+            // Kiểm tra trùng tên (nếu người dùng đổi sang tên mới)
+            if (!campaign.CampaignName.Equals(name, StringComparison.OrdinalIgnoreCase))
+            {
+                bool isExist = await _adminDAO.IsCampaignNameExistAsync(name);
+                if (isExist) return (false, "Tên chiến dịch này đã tồn tại trong hệ thống!");
+            }
+
+            campaign.CampaignName = name;
+            campaign.StartDate = start;
+            campaign.EndDate = end;
+
+            // BƯỚC 1: Xóa toàn bộ sản phẩm cũ khỏi chiến dịch hiện tại
+            if (campaign.Products != null)
+            {
+                foreach (var p in campaign.Products)
+                {
+                    p.SaleCampaignId = null;
+                    p.SalePrice = 0;
+                }
+            }
+
+            // BƯỚC 2: Cập nhật danh sách sản phẩm mới vào chiến dịch
+            if (productIds != null && productIds.Any())
+            {
+                for (int i = 0; i < productIds.Count; i++)
+                {
+                    var p = await _adminDAO.GetProductByIdAsync(productIds[i]);
+                    if (p != null)
+                    {
+                        p.SaleCampaignId = campaign.Id;
+                        p.SalePrice = salePrices[i];
+                    }
+                }
+            }
+
+            await _adminDAO.SaveChangesAsync();
+            return (true, "Cập nhật chiến dịch thành công.");
+        }
+
+        public async Task<(bool Success, string Message)> DeleteCampaignAsync(int id)
+        {
+            var campaign = await _adminDAO.GetCampaignByIdAsync(id);
+            if (campaign == null) return (false, "Không tìm thấy chiến dịch.");
+
+            await _adminDAO.DeleteCampaignAsync(campaign);
+            return (true, "Đã xóa chiến dịch thành công. Các sản phẩm đã được đưa về giá gốc.");
+        }
+        public async Task<object?> GetCampaignForEditDataAsync(int id)
+        {
+            // 1. Gọi DAO lấy thông tin chiến dịch
+            var campaign = await _adminDAO.GetCampaignByIdAsync(id);
+            if (campaign == null) return null;
+
+            // 2. Gọi DAO lấy danh sách sản phẩm phù hợp
+            var products = await _adminDAO.GetProductsForCampaignEditAsync(id);
+
+            // 3. Xử lý logic và map dữ liệu
+            var productsForEdit = products.Select(p => new {
+                id = p.Id,
+                productName = p.ProductName,
+                price = p.Price,
+                salePrice = p.SaleCampaignId == id ? p.SalePrice : 0,
+                inCampaign = p.SaleCampaignId == id
+            }).ToList();
+
+            // Trả về object chứa đầy đủ các thuộc tính mà Frontend yêu cầu
+            return new
+            {
+                success = true,
+                id = campaign.Id,
+                name = campaign.CampaignName,
+                startDate = campaign.StartDate.ToString("yyyy-MM-ddTHH:mm"),
+                endDate = campaign.EndDate.ToString("yyyy-MM-ddTHH:mm"),
+                products = productsForEdit
+            };
+        }
         #endregion
 
         #region Voucher Management
