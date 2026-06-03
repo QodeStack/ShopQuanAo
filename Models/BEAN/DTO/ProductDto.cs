@@ -18,4 +18,6 @@ namespace ShopQuanAo.Models.BEAN.DTO
         public double? SalePrice { get; set; }
         public string? Image { get; set; }
     }
+    
+
 }

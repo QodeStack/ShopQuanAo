@@ -47,17 +47,36 @@ namespace ShopQuanAo.BO
             _httpClient = httpClient;
             _logger = logger;
             _cache = cache;
-            _apiKeys = configuration.GetSection("Gemini:ApiKeys").Get<List<string>>()
-                       ?? throw new ArgumentNullException("Chưa cấu hình danh sách ApiKeys");
+
+            var keys = configuration.GetSection("Gemini:ApiKeys").Get<List<string>>();
+            if (keys == null)
+            {
+                throw new ArgumentNullException("Chưa cấu hình danh sách ApiKeys");
+            }
+            else
+            {
+                _apiKeys = keys;
+            }
         }
 
         public async Task<string> ProcessChatAsync(ChatRequestDto request, string? userId, string clientIdentifier)
         {
-            string userKey = string.IsNullOrEmpty(userId) ? $"anon_{clientIdentifier}" : userId;
+            string userKey = "";
+            if (string.IsNullOrEmpty(userId))
+            {
+                userKey = $"anon_{clientIdentifier}";
+            }
+            else
+            {
+                userKey = userId;
+            }
+
             string rateLimitKey = $"RateLimit_{userKey}";
 
             if (_cache.TryGetValue(rateLimitKey, out _))
+            {
                 return $"Bạn nhắn nhanh quá! Đợi mình {RATE_LIMIT_SECONDS} giây nhé 😅";
+            }
 
             _cache.Set(rateLimitKey, true, TimeSpan.FromSeconds(RATE_LIMIT_SECONDS));
 
@@ -67,7 +86,9 @@ namespace ShopQuanAo.BO
                 var (doc, errorMsg) = await CallGeminiApiWithRetryAsync(payload);
 
                 if (doc == null)
+                {
                     return $"Hệ thống AI đang bận (Chi tiết: {errorMsg}). Bạn đợi xíu nhé! 😅";
+                }
 
                 return await ProcessGeminiResponseAsync(doc, userId);
             }
@@ -84,7 +105,11 @@ namespace ShopQuanAo.BO
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CACHE_DURATION_MINUTES);
                 return await _productService.GetAvailableCategoriesAsync();
             });
-            categoriesMap ??= new Dictionary<int, string>();
+
+            if (categoriesMap == null)
+            {
+                categoriesMap = new Dictionary<int, string>();
+            }
 
             string categoryLinks = string.Join(", ", categoriesMap.Select(c => $"{c.Value} (/Product?categoryId={c.Key})"));
 
@@ -92,20 +117,33 @@ namespace ShopQuanAo.BO
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CACHE_DURATION_MINUTES);
                 return await _productService.GetAvailableSizesAsync();
             });
-            string sizeString = string.Join(", ", availableSizes ?? new List<string> { "S", "M", "L", "XL" });
+
+            string sizeString = "";
+            if (availableSizes != null)
+            {
+                sizeString = string.Join(", ", availableSizes);
+            }
+            else
+            {
+                sizeString = string.Join(", ", new List<string> { "S", "M", "L", "XL" });
+            }
 
             var publicVouchers = await _cache.GetOrCreateAsync("Bot_Vouchers", async entry => {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CACHE_DURATION_MINUTES);
                 var rawVouchers = await _checkoutService.GetActiveVouchersAsync();
                 return rawVouchers.Where(v => v.IsActive && v.IsPublic).ToList();
             });
-            string promoString = publicVouchers != null && publicVouchers.Any()
-                ? string.Join("; ", publicVouchers.Select(v => $"Mã '{v.Code}' (giảm {v.DiscountAmount:N0}đ cho đơn từ {v.MinOrderAmount:N0}đ)"))
-                : "Hiện tại shop đang tạm hết mã giảm giá.";
 
-            // ----------------------------------------------------------------------------------
-            // 🧠 TÍNH NĂNG KÝ ỨC (USER CONTEXT): LẤY LỊCH SỬ MUA HÀNG GẦN NHẤT
-            // ----------------------------------------------------------------------------------
+            string promoString = "";
+            if (publicVouchers != null && publicVouchers.Any())
+            {
+                promoString = string.Join("; ", publicVouchers.Select(v => $"Mã '{v.Code}' (giảm {v.DiscountAmount:N0}đ cho đơn từ {v.MinOrderAmount:N0}đ)"));
+            }
+            else
+            {
+                promoString = "Hiện tại shop đang tạm hết mã giảm giá.";
+            }
+
             string userHistoryContext = "Khách hàng mới, chưa có lịch sử mua hàng.";
             if (!string.IsNullOrEmpty(userId))
             {
@@ -134,17 +172,39 @@ namespace ShopQuanAo.BO
             var mergedHistory = new List<(string Role, string Text)>();
             foreach (var msg in request.History.TakeLast(6))
             {
-                string role = msg.Role == "user" ? "user" : "model";
-                if (mergedHistory.Count > 0 && mergedHistory.Last().Role == role)
-                    mergedHistory[mergedHistory.Count - 1] = (role, mergedHistory.Last().Text + "\n" + msg.Text);
+                string role = "";
+                if (msg.Role == "user")
+                {
+                    role = "user";
+                }
                 else
+                {
+                    role = "model";
+                }
+
+                if (mergedHistory.Count > 0 && mergedHistory.Last().Role == role)
+                {
+                    mergedHistory[mergedHistory.Count - 1] = (role, mergedHistory.Last().Text + "\n" + msg.Text);
+                }
+                else
+                {
                     mergedHistory.Add((role, msg.Text));
+                }
             }
+
             if (mergedHistory.Count > 0 && mergedHistory.Last().Role == "user")
+            {
                 mergedHistory[mergedHistory.Count - 1] = ("user", mergedHistory.Last().Text + "\n" + request.Text);
+            }
             else
+            {
                 mergedHistory.Add(("user", request.Text));
-            if (mergedHistory.Count > 0 && mergedHistory[0].Role == "model") mergedHistory.RemoveAt(0);
+            }
+
+            if (mergedHistory.Count > 0 && mergedHistory[0].Role == "model")
+            {
+                mergedHistory.RemoveAt(0);
+            }
 
             return new
             {
@@ -189,11 +249,31 @@ namespace ShopQuanAo.BO
                     var response = await _httpClient.PostAsync(endpoint, new StringContent(payloadJson, Encoding.UTF8, "application/json"), cts.Token);
                     var jsonString = await response.Content.ReadAsStringAsync();
                     var doc = JsonDocument.Parse(jsonString);
-                    if (!doc.RootElement.TryGetProperty("error", out var err)) return (doc, "");
-                    lastError = err.GetProperty("message").GetString() ?? "Lỗi API";
-                    if (err.TryGetProperty("code", out var code) && code.GetInt32() == 400) break;
+
+                    if (!doc.RootElement.TryGetProperty("error", out var err))
+                    {
+                        return (doc, "");
+                    }
+
+                    var messageProperty = err.GetProperty("message").GetString();
+                    if (messageProperty != null)
+                    {
+                        lastError = messageProperty;
+                    }
+                    else
+                    {
+                        lastError = "Lỗi API";
+                    }
+
+                    if (err.TryGetProperty("code", out var code) && code.GetInt32() == 400)
+                    {
+                        break;
+                    }
                 }
-                catch (Exception ex) { lastError = ex.Message; }
+                catch (Exception ex)
+                {
+                    lastError = ex.Message;
+                }
             }
             return (null, lastError);
         }
@@ -206,27 +286,69 @@ namespace ShopQuanAo.BO
                 if (part.TryGetProperty("functionCall", out var fc))
                 {
                     string name = fc.GetProperty("name").GetString() ?? "";
-                    if (name == FUNC_SEARCH) return await HandleProductSearchAsync(fc);
-                    if (name == FUNC_CART) return await HandleCartCheckAsync(userId);
+                    if (name == FUNC_SEARCH)
+                    {
+                        return await HandleProductSearchAsync(fc);
+                    }
+
+                    if (name == FUNC_CART)
+                    {
+                        return await HandleCartCheckAsync(userId);
+                    }
                 }
             }
+
             var sb = new StringBuilder();
-            foreach (var part in parts.EnumerateArray()) if (part.TryGetProperty("text", out var t)) sb.Append(t.GetString());
+            foreach (var part in parts.EnumerateArray())
+            {
+                if (part.TryGetProperty("text", out var t))
+                {
+                    sb.Append(t.GetString());
+                }
+            }
             return sb.ToString().Trim();
         }
 
         private async Task<string> HandleProductSearchAsync(JsonElement fc)
         {
             string keyword = "áo:1", color = "", size = "";
-            double maxPrice = -1; bool isCheapest = false, isBestseller = false;
+            double maxPrice = -1;
+            bool isCheapest = false, isBestseller = false;
 
             if (fc.TryGetProperty("args", out var args))
             {
-                if (args.TryGetProperty("search", out var s)) keyword = s.GetString() ?? keyword;
-                if (args.TryGetProperty("size", out var sz)) size = sz.GetString() ?? "";
-                if (args.TryGetProperty("max_price", out var p) && p.ValueKind == JsonValueKind.Number) maxPrice = p.GetDouble();
-                if (args.TryGetProperty("is_cheapest", out var ch)) isCheapest = ch.GetBoolean();
-                if (args.TryGetProperty("is_bestseller", out var bs)) isBestseller = bs.GetBoolean();
+                if (args.TryGetProperty("search", out var s))
+                {
+                    string searchString = s.GetString();
+                    if (searchString != null)
+                    {
+                        keyword = searchString;
+                    }
+                }
+
+                if (args.TryGetProperty("size", out var sz))
+                {
+                    string sizeString = sz.GetString();
+                    if (sizeString != null)
+                    {
+                        size = sizeString;
+                    }
+                }
+
+                if (args.TryGetProperty("max_price", out var p) && p.ValueKind == JsonValueKind.Number)
+                {
+                    maxPrice = p.GetDouble();
+                }
+
+                if (args.TryGetProperty("is_cheapest", out var ch))
+                {
+                    isCheapest = ch.GetBoolean();
+                }
+
+                if (args.TryGetProperty("is_bestseller", out var bs))
+                {
+                    isBestseller = bs.GetBoolean();
+                }
             }
 
             string safeKeyword = keyword.Replace(" và ", ",").Replace(" & ", ",").Replace(" + ", ",");
@@ -269,10 +391,27 @@ namespace ShopQuanAo.BO
 
                 if (maxPrice >= 0)
                 {
-                    double budgetToCompare = remainingBudget > 0 ? remainingBudget : maxPrice;
+                    double budgetToCompare;
+                    if (remainingBudget > 0)
+                    {
+                        budgetToCompare = remainingBudget;
+                    }
+                    else
+                    {
+                        budgetToCompare = maxPrice;
+                    }
+
                     candidates = candidates.Where(p =>
                     {
-                        double currentPrice = p.SalePrice > 0 ? p.SalePrice : p.Price;
+                        double currentPrice;
+                        if (p.SalePrice > 0)
+                        {
+                            currentPrice = p.SalePrice;
+                        }
+                        else
+                        {
+                            currentPrice = p.Price;
+                        }
                         return currentPrice <= budgetToCompare;
                     }).ToList();
                 }
@@ -283,7 +422,17 @@ namespace ShopQuanAo.BO
                 }
                 else if (isCheapest)
                 {
-                    candidates = candidates.OrderBy(p => (p.SalePrice > 0 ? p.SalePrice : p.Price)).ToList();
+                    candidates = candidates.OrderBy(p =>
+                    {
+                        if (p.SalePrice > 0)
+                        {
+                            return p.SalePrice;
+                        }
+                        else
+                        {
+                            return p.Price;
+                        }
+                    }).ToList();
                 }
                 else
                 {
@@ -297,7 +446,15 @@ namespace ShopQuanAo.BO
                 {
                     foreach (var p in pickedItems)
                     {
-                        double priceToPay = p.SalePrice > 0 ? p.SalePrice : p.Price;
+                        double priceToPay;
+                        if (p.SalePrice > 0)
+                        {
+                            priceToPay = p.SalePrice;
+                        }
+                        else
+                        {
+                            priceToPay = p.Price;
+                        }
                         remainingBudget -= priceToPay;
                     }
                 }
@@ -310,13 +467,29 @@ namespace ShopQuanAo.BO
                 foreach (var kwItem in keywords)
                 {
                     var candidates = await _productService.GetCandidatesForAIAsync(kwItem, color, 0);
-                    topProducts.AddRange(candidates.OrderBy(p => p.SalePrice > 0 ? p.SalePrice : p.Price).Take(1));
+                    var cheapestCandidates = candidates.OrderBy(p =>
+                    {
+                        if (p.SalePrice > 0)
+                        {
+                            return p.SalePrice;
+                        }
+                        else
+                        {
+                            return p.Price;
+                        }
+                    }).Take(1);
+
+                    topProducts.AddRange(cheapestCandidates);
                 }
             }
 
             topProducts = topProducts.GroupBy(p => p.Id).Select(g => g.First()).Take(MAX_TOTAL_PRODUCTS).ToList();
             var sb = new StringBuilder();
-            if (!string.IsNullOrEmpty(size)) sb.AppendLine($"💡 <i>Gợi ý: Size <b>{size}</b> sẽ chuẩn nhất với bạn!</i><br/><br/>");
+
+            if (!string.IsNullOrEmpty(size))
+            {
+                sb.AppendLine($"💡 <i>Gợi ý: Size <b>{size}</b> sẽ chuẩn nhất với bạn!</i><br/><br/>");
+            }
 
             bool isFallback = !topProducts.Any();
             if (isFallback)
@@ -337,36 +510,56 @@ namespace ShopQuanAo.BO
                 sb.AppendLine("Dưới đây là các món đồ cực chuẩn mình đã tìm được cho bạn:<br/><br/>");
             }
 
-            // ----------------------------------------------------------------------------------
-            // 🖼️ RICH UI: THÊM ẢNH SẢN PHẨM VÀO KẾT QUẢ TRẢ VỀ
-            // ----------------------------------------------------------------------------------
             double total = 0;
             foreach (var p in topProducts)
             {
-                double price = p.SalePrice > 0 ? p.SalePrice : p.Price;
+                double price;
+                if (p.SalePrice > 0)
+                {
+                    price = p.SalePrice;
+                }
+                else
+                {
+                    price = p.Price;
+                }
+
                 total += price;
                 string safeName = HtmlEncoder.Default.Encode(p.ProductName);
-                sb.AppendLine("<div style='margin-bottom: 15px; display: flex; align-items: center;'>");
-                sb.AppendLine($"  <img src='/Image/Product_image/{p.Image}' style='width: 50px; height: 50px; border-radius: 5px; margin-right: 10px; object-fit: cover;' />");
-                sb.AppendLine("  <div>");
+
+                sb.AppendLine("<div style='margin-bottom: 15px;'>");
                 sb.AppendLine($"    <a href='/Product/ProductDetail/{p.Id}' style='color:#e00000; font-weight:bold;'>{safeName}</a><br/>");
                 sb.AppendLine($"    <span>{price:N0}đ</span>");
-                sb.AppendLine("  </div>");
                 sb.AppendLine("</div>");
             }
 
-            if (!isFallback && topProducts.Count > 1 && !isBestseller) sb.AppendLine($"<br/><b>Tổng combo: {total:N0}đ</b><br/>");
+            if (!isFallback && topProducts.Count > 1 && !isBestseller)
+            {
+                sb.AppendLine($"<br/><b>Tổng combo: {total:N0}đ</b><br/>");
+            }
+
             sb.AppendLine("<br/>Bạn có ưng mẫu nào không?");
             return sb.ToString();
         }
 
         private async Task<string> HandleCartCheckAsync(string? userId)
         {
-            if (string.IsNullOrEmpty(userId)) return "Bạn cần <a href='/Identity/Account/Login' style='color:#e00000; font-weight:bold;'>Đăng nhập</a> để xem giỏ hàng!";
+            if (string.IsNullOrEmpty(userId))
+            {
+                return "Bạn cần <a href='/Identity/Account/Login' style='color:#e00000; font-weight:bold;'>Đăng nhập</a> để xem giỏ hàng!";
+            }
+
             var cart = await _cartService.GetCartAsync(userId);
-            if (cart == null || !cart.CartDetails.Any()) return "Giỏ hàng của bạn đang trống.";
+            if (cart == null || !cart.CartDetails.Any())
+            {
+                return "Giỏ hàng của bạn đang trống.";
+            }
+
             var sb = new StringBuilder("Giỏ hàng của bạn có:<br/><br/>");
-            foreach (var item in cart.CartDetails) sb.AppendLine($"- <b>{HtmlEncoder.Default.Encode(item.Product.ProductName)}</b> (SL: {item.Quantity})<br/>");
+            foreach (var item in cart.CartDetails)
+            {
+                sb.AppendLine($"- <b>{HtmlEncoder.Default.Encode(item.Product.ProductName)}</b> (SL: {item.Quantity})<br/>");
+            }
+
             sb.AppendLine("<br/><a href='/Cart' style='color:#e00000; font-weight:bold;'>Vào Giỏ hàng</a>");
             return sb.ToString();
         }

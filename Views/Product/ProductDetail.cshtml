@@ -96,11 +96,11 @@
                         foreach (dynamic sizeItem in ViewBag.AvailableSizes)
                         {
                             bool isOutOfStock = sizeItem.Quantity <= 0;
-                            <button type="button" 
-                                    class="size-btn @(isOutOfStock ? "disabled" : "")" 
-                                    data-size="@sizeItem.SizeName" 
+                            <button type="button"
+                                    class="size-btn @(isOutOfStock ? "disabled" : "")"
+                                    data-size="@sizeItem.SizeName"
                                     data-stock="@sizeItem.Quantity"
-                                    @(isOutOfStock ? "disabled" : "")>
+                                @(isOutOfStock ? "disabled" : "")>
                                 @sizeItem.SizeName
                             </button>
                         }
@@ -170,7 +170,7 @@
                         @for (int i = 1; i <= 5; i++)
                         {
                             <i class="bi @(i <= avgRating ? "bi-star-fill" 
-                                                                                   : (i - avgRating < 1 && i - avgRating > 0 ? "bi-star-half" : "bi-star"))"></i>
+                                                                                                                                              : (i - avgRating < 1 && i - avgRating > 0 ? "bi-star-half" : "bi-star"))"></i>
                     }
                 </div>
                 <div class="text-muted">@reviewCount nhận xét</div>
@@ -295,7 +295,7 @@
 
 <script>
     const isLoggedIn = @Json.Serialize(User.Identity.IsAuthenticated);
-    let maxStock = 999; 
+    let maxStock = 999;
 
         function switchTab(tabId) {
         // Ẩn tất cả panel
@@ -338,13 +338,33 @@
 
     document.getElementById('btnAddCart').addEventListener('click', async () => {
         if (!document.getElementById('selectedSize').value) { showToast("Vui lòng chọn kích cỡ!", "error"); return; }
-        if (!isLoggedIn) { showToast("Vui lòng đăng nhập!", "error"); return; }
+
+        // Chưa đăng nhập → redirect sang Login, dùng pathname (không có host) để LocalRedirect không bị chặn
+        if (!isLoggedIn) {
+            window.location.href = '/Identity/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            return;
+        }
 
         const form = document.getElementById('cartForm');
         try {
             const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-            if (response.ok) showToast("Đã thêm vào giỏ hàng!", "success");
-            else showToast("Lỗi khi thêm vào giỏ!", "error");
+            const result = await response.json();
+
+            // Server double-check cần đăng nhập
+            if (result.requireLogin) {
+                window.location.href = result.redirectUrl;
+                return;
+            }
+
+            if (result.success) {
+                showToast("Đã thêm vào giỏ hàng!", "success");
+                const cartBadge = document.getElementById('cartCount');
+                if (cartBadge && result.cartCount !== undefined) {
+                    cartBadge.textContent = result.cartCount;
+                }
+            } else {
+                showToast(result.message || "Lỗi khi thêm vào giỏ!", "error");
+            }
         } catch (e) { showToast("Lỗi hệ thống!", "error"); }
     });
 

@@ -74,7 +74,7 @@ namespace ShopQuanAo.BO
                 var productSize = await _checkoutDAO.GetProductSizeAsync(item.ProductId, item.Size);
                 if (productSize == null || productSize.Quantity < item.Quantity)
                 {
-
+                    return (false, "Sản phẩm trong kho không đủ số lượng", 0);
                 }
 
                 var orderDetail = new OrderDetail

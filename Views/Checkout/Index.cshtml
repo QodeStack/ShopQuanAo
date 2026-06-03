@@ -271,7 +271,7 @@
     </style>
 
     <script>
-                                        const originalTotal = @Convert.ToInt32(totalAmount);
+                                const originalTotal = @totalAmount.ToString("0", System.Globalization.CultureInfo.InvariantCulture);
 
                 function resetVoucherUI() {
                     const codeInput = document.getElementById('voucherCodeInput');

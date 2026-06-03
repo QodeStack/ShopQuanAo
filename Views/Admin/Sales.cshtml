@@ -36,6 +36,8 @@
     .scroll-table-container { max-height: 380px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
 </style>
 
+@Html.AntiForgeryToken()
+
 <div class="admin-wrap">
     <div class="admin-body">
         
@@ -228,10 +230,15 @@
                     <div class="col-lg-4">
                         <div class="card p-3 border-0 shadow-sm mb-3" style="border-radius: 10px;">
                             <h6 class="fw-bold text-dark mb-3"><i class="fas fa-sliders-h me-1 text-primary"></i> 1. Thông tin Campaign</h6>
+                            
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Tên chiến dịch</label>
-                                <input type="text" id="campName" class="form-control" placeholder="Tùy chọn (để trống nếu tạo sale lẻ)">
+                                <input type="text" id="campName" class="form-control" placeholder="Tùy chọn (để trống nếu tạo sale lẻ)" onblur="validateCampaignName()">
+                                <small id="campNameError" class="text-danger mt-1 fw-bold" style="display:none;">
+                                    <i class="fas fa-exclamation-circle"></i> Tên chiến dịch này đã tồn tại!
+                                </small>
                             </div>
+                            
                             <div class="mb-2">
                                 <label class="form-label small text-muted mb-1">Bắt đầu</label>
                                 <input type="datetime-local" id="startDate" class="form-control">
@@ -317,10 +324,15 @@
                     <div class="col-lg-4">
                         <div class="card p-3 border-0 shadow-sm mb-3" style="border-radius: 10px;">
                             <h6 class="fw-bold text-dark mb-3"><i class="fas fa-sliders-h me-1 text-primary"></i> 1. Thông tin Campaign</h6>
+                            
                             <div class="mb-3">
                                 <label class="form-label small fw-bold">Tên chiến dịch</label>
-                                <input type="text" id="editCampName" class="form-control">
+                                <input type="text" id="editCampName" class="form-control" onblur="validateEditCampaignName()">
+                                <small id="editCampNameError" class="text-danger mt-1 fw-bold" style="display:none;">
+                                    <i class="fas fa-exclamation-circle"></i> Tên chiến dịch này đã tồn tại!
+                                </small>
                             </div>
+                            
                             <div class="mb-2">
                                 <label class="form-label small text-muted mb-1">Bắt đầu</label>
                                 <input type="datetime-local" id="editCampStart" class="form-control">
@@ -412,6 +424,11 @@
 </div>
 
 <script>
+    // --- Các biến cờ validation ---
+    let isCampaignNameValid = true;
+    let isEditCampaignNameValid = true;
+    let originalEditCampName = ""; 
+
     // --- Các hàm UI Filter dùng chung ---
     function filterMainTable() {
         let input = document.getElementById("searchSaleMain").value.toLowerCase();
@@ -440,6 +457,71 @@
         });
     }
     
+    // --- CÁC HÀM VALIDATE THEO THỜI GIAN THỰC ---
+    async function validateCampaignName() {
+        const nameInput = document.getElementById('campName');
+        const name = nameInput.value.trim();
+        const errorMsg = document.getElementById('campNameError');
+
+        if (!name) {
+            isCampaignNameValid = true;
+            errorMsg.style.display = 'none';
+            nameInput.classList.remove('is-invalid', 'is-valid');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/Admin/CheckCampaignName?name=${encodeURIComponent(name)}`);
+            const data = await res.json();
+
+            if (data.isExist) {
+                isCampaignNameValid = false;
+                errorMsg.style.display = 'block';
+                nameInput.classList.add('is-invalid');
+                nameInput.classList.remove('is-valid');
+            } else {
+                isCampaignNameValid = true;
+                errorMsg.style.display = 'none';
+                nameInput.classList.remove('is-invalid');
+                nameInput.classList.add('is-valid');
+            }
+        } catch (err) {
+            console.error("Lỗi khi kiểm tra tên chiến dịch:", err);
+        }
+    }
+
+    async function validateEditCampaignName() {
+        const nameInput = document.getElementById('editCampName');
+        const name = nameInput.value.trim();
+        const errorMsg = document.getElementById('editCampNameError');
+
+        if (!name || name.toLowerCase() === originalEditCampName.toLowerCase()) {
+            isEditCampaignNameValid = true;
+            errorMsg.style.display = 'none';
+            nameInput.classList.remove('is-invalid', 'is-valid');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/Admin/CheckCampaignName?name=${encodeURIComponent(name)}`);
+            const data = await res.json();
+
+            if (data.isExist) {
+                isEditCampaignNameValid = false;
+                errorMsg.style.display = 'block';
+                nameInput.classList.add('is-invalid');
+                nameInput.classList.remove('is-valid');
+            } else {
+                isEditCampaignNameValid = true;
+                errorMsg.style.display = 'none';
+                nameInput.classList.remove('is-invalid');
+                nameInput.classList.add('is-valid');
+            }
+        } catch (err) {
+            console.error("Lỗi khi kiểm tra tên chiến dịch:", err);
+        }
+    }
+
     // --- Tính năng của MODAL TẠO MỚI ---
     function autoCalculate() {
         const type = document.getElementById('discountType').value;
@@ -468,6 +550,11 @@
     }
 
     async function saveData(force = false) {
+        if (!isCampaignNameValid) {
+            document.getElementById('campName').focus();
+            return Swal.fire('Lỗi', 'Tên chiến dịch đã tồn tại. Vui lòng chọn tên khác trước khi tiếp tục!', 'error');
+        }
+
         const name = document.getElementById('campName').value.trim();
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
@@ -485,10 +572,17 @@
         
         const payload = { CampaignName: name, StartDate: start || new Date().toISOString(), EndDate: end || new Date(new Date().getTime() + 7*24*60*60*1000).toISOString(), ProductIds: pIds, SalePrices: pPrices };
         
+        // --- Lấy token để gọi POST ---
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        
         Swal.showLoading();
         try {
             if (!force) {
-                const valRes = await fetch('/Admin/ValidateCampaign', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const valRes = await fetch('/Admin/ValidateCampaign', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }, 
+                    body: JSON.stringify(payload) 
+                });
                 const valData = await valRes.json();
                 if (!valData.success) return Swal.fire('Lỗi', valData.message, 'error');
                 if (valData.warnings && valData.warnings.length > 0) {
@@ -496,11 +590,15 @@
                                .then((r) => { if (r.isConfirmed) saveData(true); });
                 }
             }
-            const res = await fetch('/Admin/CreateCampaign', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch('/Admin/CreateCampaign', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }, 
+                body: JSON.stringify(payload) 
+            });
             const data = await res.json();
             if (data.success) Swal.fire('Thành công!', 'Đã lưu.', 'success').then(() => location.reload());
             else Swal.fire('Thất bại', data.message, 'error');
-        } catch (err) { Swal.fire('Lỗi mạng!', '', 'error'); }
+        } catch (err) { Swal.fire('Lỗi mạng!', 'Vui lòng thử lại sau.', 'error'); }
     }
 
     // --- Tính năng của MODAL CHỈNH SỬA CHIẾN DỊCH (MỚI) ---
@@ -515,13 +613,16 @@
                 return;
             }
 
-            // Đổ thông tin info
+            originalEditCampName = data.name;
+            document.getElementById('editCampNameError').style.display = 'none';
+            document.getElementById('editCampName').classList.remove('is-invalid', 'is-valid');
+            isEditCampaignNameValid = true;
+
             document.getElementById('editCampId').value = data.id;
             document.getElementById('editCampName').value = data.name;
             document.getElementById('editCampStart').value = data.startDate;
             document.getElementById('editCampEnd').value = data.endDate;
 
-            // Đổ dữ liệu bảng sản phẩm
             const tbody = document.getElementById('editModalTableBody');
             let html = '';
             data.products.forEach(p => {
@@ -571,6 +672,11 @@
     }
 
     async function submitEditCampaign() {
+        if (!isEditCampaignNameValid) {
+            document.getElementById('editCampName').focus();
+            return Swal.fire('Lỗi', 'Tên chiến dịch đã tồn tại. Vui lòng chọn tên khác!', 'error');
+        }
+
         const id = document.getElementById('editCampId').value;
         const name = document.getElementById('editCampName').value.trim();
         const start = document.getElementById('editCampStart').value;
@@ -589,13 +695,21 @@
         if (hasError) return Swal.fire('Lỗi', 'Giá Sale phải > 0 và < Giá gốc!', 'error');
         if (pIds.length === 0) return Swal.fire('Lỗi', 'Vui lòng chọn ít nhất 1 sản phẩm cho chiến dịch!', 'warning');
 
+        // --- Lấy token để gọi POST ---
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
         Swal.showLoading();
         try {
             const res = await fetch('/Admin/UpdateCampaign', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token 
+                },
                 body: JSON.stringify({ Id: parseInt(id), CampaignName: name, StartDate: start, EndDate: end, ProductIds: pIds, SalePrices: pPrices })
             });
+            if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+            
             const data = await res.json();
             if (data.success) {
                 Swal.fire('Thành công', 'Đã cập nhật Chương trình.', 'success').then(() => location.reload());
@@ -609,7 +723,12 @@
     function disableSale(id) {
         Swal.fire({ title: 'Hủy Sale SP này?', text: "SP sẽ quay về giá gốc.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#2563eb', confirmButtonText: 'Đồng ý' })
             .then(async (r) => { if (r.isConfirmed) {
-                const res = await fetch('/Admin/DisableSale', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: id }) });
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const res = await fetch('/Admin/DisableSale', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }, 
+                    body: JSON.stringify({ productId: id }) 
+                });
                 if((await res.json()).success) location.reload();
             }});
     }
@@ -617,7 +736,12 @@
     function deleteCampaign(id) {
         Swal.fire({ title: 'Xóa toàn bộ?', text: "Các SP sẽ mất giá sale. Bạn chắc chứ?", icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Xóa' })
             .then(async (r) => { if (r.isConfirmed) {
-                const res = await fetch('/Admin/DeleteCampaign', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id.toString() }) });
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const res = await fetch('/Admin/DeleteCampaign', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }, 
+                    body: JSON.stringify({ id: id.toString() }) 
+                });
                 if((await res.json()).success) location.reload();
             }});
     }
@@ -636,7 +760,12 @@
         const origPrice = parseInt(document.getElementById('editProdOrigPrice').value.replace(/\./g, '').replace(/,/g, ''));
         if (!salePrice || salePrice <= 0 || salePrice >= origPrice) return Swal.fire('Lỗi', 'Giá không hợp lệ!', 'error');
         
-        const res = await fetch('/Admin/UpdateSalePrice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: parseInt(id), salePrice: salePrice }) });
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const res = await fetch('/Admin/UpdateSalePrice', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }, 
+            body: JSON.stringify({ productId: parseInt(id), salePrice: salePrice }) 
+        });
         if((await res.json()).success) location.reload();
     }
 </script>

@@ -127,6 +127,26 @@ namespace ShopQuanAo.DAO
             await _context.SaveChangesAsync();
         }
 
+        // Phiên bản KHÔNG SaveChanges — dùng trong UpdateProductAsync để tránh EF tracking conflict
+        public Task RemoveProductSizesWithoutSaveAsync(IEnumerable<ProductSize> productSizes)
+        {
+            _context.ProductSizes.RemoveRange(productSizes);
+            return Task.CompletedTask;
+        }
+
+        public async Task AddSizeWithoutSaveAsync(Size size)
+        {
+            _context.Sizes.Add(size);
+            // Cần SaveChanges ngay để có size.Id khi tạo ProductSize
+            await _context.SaveChangesAsync();
+        }
+
+        public void AddProductSizeWithoutSave(ProductSize productSize)
+        {
+            _context.ProductSizes.Add(productSize);
+            // KHÔNG SaveChanges — để gom vào 1 lần duy nhất ở cuối UpdateProductAsync
+        }
+
         public async Task<bool> DeleteProductDependenciesAsync(int productId)
         {
             try
@@ -151,6 +171,17 @@ namespace ShopQuanAo.DAO
                 return false;
             }
         }
+        public async Task<List<Product>> GetAllProduct()
+        {
+            return await _context.Products.ToListAsync();
+        }
+        public async Task<List<Product>> GetAllProductInSale()
+        {
+            return await _context.SaleCampaigns
+        .SelectMany(c => c.Products)
+        .Distinct()
+        .ToListAsync();
+        }
         #endregion
 
         #region Sale & Campaign Management
@@ -162,35 +193,29 @@ namespace ShopQuanAo.DAO
         public async Task CreateCampaignAsync(SaleCampaign campaign, List<int> productIds, List<int> salePrices)
         {
             _context.SaleCampaigns.Add(campaign);
-            await _context.SaveChangesAsync(); // Lưu để lấy ID chiến dịch
-
-            // Áp dụng giá sale và gán chiến dịch cho từng sản phẩm được chọn
+            await _context.SaveChangesAsync();
             for (int i = 0; i < productIds.Count; i++)
             {
                 var product = await _context.Products.FindAsync(productIds[i]);
                 if (product != null)
                 {
                     product.SaleCampaignId = campaign.Id;
-                    product.SalePrice = salePrices[i]; // Giả sử bảng Product của bạn có trường SalePrice
+                    product.SalePrice = salePrices[i];
                     _context.Products.Update(product);
                 }
             }
             await _context.SaveChangesAsync();
         }
-        // Kiểm tra trùng tên chiến dịch
         public async Task<bool> IsCampaignNameExistAsync(string name)
         {
             return await _context.SaleCampaigns.AnyAsync(c => c.CampaignName.ToLower() == name.ToLower());
         }
-
-        // Lấy danh sách cảnh báo các sản phẩm đã có chiến dịch
         public async Task<List<string>> GetProductActiveCampaignWarningsAsync(List<int> productIds)
         {
             var productsInCampaigns = await _context.Products
                 .Where(p => productIds.Contains(p.Id) && p.SaleCampaignId != null)
                 .Select(p => new {
                     p.ProductName,
-                    // Subquery lấy tên chiến dịch mà sản phẩm đang tham gia
                     CampaignName = _context.SaleCampaigns.FirstOrDefault(c => c.Id == p.SaleCampaignId).CampaignName
                 }).ToListAsync();
 
@@ -201,7 +226,7 @@ namespace ShopQuanAo.DAO
         public async Task<SaleCampaign?> GetCampaignByIdAsync(int id)
         {
             return await _context.SaleCampaigns
-                .Include(c => c.Products) // Lấy kèm các sản phẩm đang thuộc chiến dịch này
+                .Include(c => c.Products)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
@@ -213,7 +238,6 @@ namespace ShopQuanAo.DAO
 
         public async Task DeleteCampaignAsync(SaleCampaign campaign)
         {
-            // Đưa giá sale của các sản phẩm trong chiến dịch này về 0 và gỡ ID chiến dịch
             if (campaign.Products != null && campaign.Products.Any())
             {
                 foreach (var product in campaign.Products)
@@ -223,8 +247,6 @@ namespace ShopQuanAo.DAO
                     _context.Products.Update(product);
                 }
             }
-
-            // Xóa chiến dịch
             _context.SaleCampaigns.Remove(campaign);
             await _context.SaveChangesAsync();
         }

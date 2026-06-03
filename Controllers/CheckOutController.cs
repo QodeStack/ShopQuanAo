@@ -73,6 +73,7 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
+        
         public async Task<IActionResult> ApplyVoucher([FromBody] ApplyVoucherDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Code))

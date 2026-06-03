@@ -1,6 +1,10 @@
 ﻿using ShopQuanAo.Models.BEAN.DTO;
 using ShopQuanAo.Models.BEAN.Entity;
 using ShopQuanAo.DAO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace ShopQuanAo.BO
 {
@@ -13,18 +17,18 @@ namespace ShopQuanAo.BO
             _productDAO = productDAO;
         }
 
+        #region Phân trang và Tìm kiếm
         // 1. Phân trang và điều phối luồng dữ liệu
         public async Task<ProductPagedDto> GetPagedProductsAsync(
-    string? category,
-    string? search,
-    int page,
-    int pageSize,
-    string? price = null,
-    int? rating = null,
-    bool isSaleOnly = false,
-    string? sort = null) // Thêm tham số sort ở đây
+            string? category,
+            string? search,
+            int page,
+            int pageSize,
+            string? price = null,
+            int? rating = null,
+            bool isSaleOnly = false,
+            string? sort = null)
         {
-            // Bước 1: Truyền thêm tham số 'sort' xuống DAO để xử lý sắp xếp ở mức SQL
             var (total, pagedIds, clampedPage) = await _productDAO.GetPagedProductIdsAsync(
                 category, search, price, rating, isSaleOnly, page, pageSize, sort);
 
@@ -70,37 +74,102 @@ namespace ShopQuanAo.BO
         {
             return await _productDAO.SearchQuickAsync(keyword, categoryId);
         }
+        #endregion
 
+        #region Chi tiết sản phẩm và Đánh giá
         // 3. Lấy thông tin chi tiết
-        public async Task<(Product? product, List<object> sizes)> GetProductDetailAsync(int id)
+        public async Task<ProductDetailDto?> GetProductDetailDisplayAsync(int id)
         {
+            // 1. Gọi DAO lấy sản phẩm chi tiết kèm Size
             var product = await _productDAO.GetProductWithDetailsAsync(id);
+            if (product == null) return null;
 
-            if (product == null) return (null, new List<object>());
-
-            // Tính tổng số lượng
+            // Logic nghiệp vụ: Tính tổng tồn kho
             product.TotalQuantity = product.ProductSizes?.Sum(s => s.Quantity) ?? 0;
 
-            // Chuyển mảng Size thành anonymous object cho Frontend (chuẩn DTO)
+            // Logic nghiệp vụ: Chuẩn hóa định dạng Size cho Frontend
             var sizes = product.ProductSizes?.Select(ps => new {
                 SizeName = ps.Size.SizeName,
                 Quantity = ps.Quantity,
                 ProductId = ps.ProductId
             }).Cast<object>().ToList() ?? new List<object>();
 
-            return (product, sizes);
+            // 2. Gọi DAO lấy các dữ liệu vệ tinh xung quanh
+            var reviews = await _productDAO.GetReviewsByProductIdAsync(id);
+            var coupons = await _productDAO.GetActivePublicVouchersAsync();
+
+            var relatedProducts = await _productDAO.GetRelatedProductsAsync(product.CategoryId, id, 4);
+
+            // Đóng gói vào một DTO duy nhất trả về cho Controller
+            return new ProductDetailDto
+            {
+                Product = product,
+                AvailableSizes = sizes,
+                Reviews = reviews,
+                Coupons = coupons,
+                RelatedProducts = relatedProducts
+            };
         }
+
+        // 4. Lấy danh sách đánh giá cho NHIỀU sản phẩm (Dùng cho Index, Sale)
+        public async Task<Dictionary<int, List<ProductReview>>> GetReviewsForProductsAsync(List<int> productIds)
+        {
+            var allReviews = new Dictionary<int, List<ProductReview>>();
+
+            if (productIds == null || !productIds.Any())
+                return allReviews;
+
+            // Lấy tất cả review từ DAO
+            var reviews = await _productDAO.GetReviewsByProductIdsAsync(productIds);
+
+            // Gom nhóm review theo từng ProductId
+            foreach (var productId in productIds)
+            {
+                allReviews[productId] = reviews.Where(r => r.ProductId == productId).ToList();
+            }
+
+            return allReviews;
+        }
+
+        // 5. Lấy danh sách Voucher
+        public async Task<List<Voucher>> GetActiveVouchersAsync()
+        {
+            return await _productDAO.GetActivePublicVouchersAsync();
+        }
+
+        // 6. Hàm xử lý lưu review
+        public async Task CreateProductReviewAsync(int productId, int rating, string comment, string userId, string userName)
+        {
+            var review = new ProductReview
+            {
+                ProductId = productId,
+                Rating = rating,
+                Comment = comment,
+                UserId = userId,
+                FullName = userName,
+                CreatedAt = DateTime.Now
+            };
+
+            // Đẩy xuống DAO để lưu vào Database
+            await _productDAO.AddReviewAsync(review);
+        }
+        #endregion
+
+        #region Hỗ trợ AI & Tiện ích
         public async Task<List<Product>> GetCandidatesForAIAsync(string keyword, string color = "", double maxPrice = 0)
         {
             return await _productDAO.GetCandidatesForAIAsync(keyword, color, maxPrice);
         }
+
         public async Task<Dictionary<int, string>> GetAvailableCategoriesAsync()
         {
             return await _productDAO.GetAvailableCategoriesAsync();
         }
+
         public async Task<List<string>> GetAvailableSizesAsync()
         {
             return await _productDAO.GetAvailableSizesAsync();
         }
+        #endregion
     }
 }

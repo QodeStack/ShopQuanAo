@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using MailKit.Net.Smtp;
+﻿using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
+using ShopQuanAo.DAO;
 using ShopQuanAo.Models.BEAN.DTO;
 using ShopQuanAo.Models.BEAN.Entity;
-using ShopQuanAo.DAO;
-using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Metrics;
 
 namespace ShopQuanAo.BO
 {
@@ -204,6 +205,7 @@ namespace ShopQuanAo.BO
 
             try
             {
+                // Cập nhật thông tin sản phẩm
                 product.ProductName = dto.ProductName;
                 product.Price = dto.Price;
                 product.BrandName = dto.BrandName ?? "MenShop";
@@ -211,8 +213,11 @@ namespace ShopQuanAo.BO
                 product.Description = dto.Description;
                 if (!string.IsNullOrEmpty(dto.Image)) product.Image = dto.Image;
 
-                await _adminDAO.RemoveProductSizesAsync(product.ProductSizes);
+                // Xóa tất cả ProductSizes cũ mà KHÔNG gọi SaveChanges ngay
+                // để tránh EF Core tracking conflict khi thêm sizes mới
+                await _adminDAO.RemoveProductSizesWithoutSaveAsync(product.ProductSizes);
 
+                // Thêm sizes mới vào context mà KHÔNG SaveChanges từng cái
                 if (dto.Sizes != null)
                 {
                     foreach (var s in dto.Sizes)
@@ -221,13 +226,14 @@ namespace ShopQuanAo.BO
                         if (size == null)
                         {
                             size = new Size { SizeName = s.SizeName.ToUpper() };
-                            await _adminDAO.AddSizeAsync(size);
+                            await _adminDAO.AddSizeWithoutSaveAsync(size);
                         }
 
-                        await _adminDAO.AddProductSizeAsync(new ProductSize { ProductId = product.Id, SizeId = size.Id, Quantity = s.Quantity });
+                        _adminDAO.AddProductSizeWithoutSave(new ProductSize { ProductId = product.Id, SizeId = size.Id, Quantity = s.Quantity });
                     }
                 }
 
+                // Chỉ SaveChanges 1 lần duy nhất cho toàn bộ transaction
                 await _adminDAO.SaveChangesAsync();
                 return (true, "Thành công");
             }
@@ -241,6 +247,12 @@ namespace ShopQuanAo.BO
         {
             return await _adminDAO.DeleteProductDependenciesAsync(id);
         }
+        public async Task<List<Product>> GetAllProduct()
+        {
+            return await _adminDAO.GetAllProduct();
+
+        }
+
         #endregion
 
         #region Category Management
@@ -319,7 +331,7 @@ namespace ShopQuanAo.BO
 
             try
             {
-                product.SalePrice = 0; // Giá sale về 0 tức là tắt
+                product.SalePrice = 0;
                 await _adminDAO.SaveChangesAsync();
                 return (true, "Đã tắt khuyến mãi.");
             }
@@ -347,14 +359,13 @@ namespace ShopQuanAo.BO
         }
         public async Task<(bool Success, string Message, List<string>? Warnings)> ValidateCampaignAsync(string name, List<int> productIds)
         {
-            // 1. Check trùng tên chiến dịch (nếu có nhập tên)
+
             if (!string.IsNullOrWhiteSpace(name))
             {
                 bool isExist = await _adminDAO.IsCampaignNameExistAsync(name);
                 if (isExist) return (false, "Tên chiến dịch này đã tồn tại trong hệ thống!", null);
             }
 
-            // 2. Check sản phẩm đã nằm trong chiến dịch khác
             var warnings = await _adminDAO.GetProductActiveCampaignWarningsAsync(productIds);
 
             return (true, "", warnings);
@@ -366,7 +377,6 @@ namespace ShopQuanAo.BO
 
             if (end <= start) return (false, "Thời gian kết thúc phải lớn hơn thời gian bắt đầu.");
 
-            // Kiểm tra trùng tên (nếu người dùng đổi sang tên mới)
             if (!campaign.CampaignName.Equals(name, StringComparison.OrdinalIgnoreCase))
             {
                 bool isExist = await _adminDAO.IsCampaignNameExistAsync(name);
@@ -377,7 +387,6 @@ namespace ShopQuanAo.BO
             campaign.StartDate = start;
             campaign.EndDate = end;
 
-            // BƯỚC 1: Xóa toàn bộ sản phẩm cũ khỏi chiến dịch hiện tại
             if (campaign.Products != null)
             {
                 foreach (var p in campaign.Products)
@@ -386,8 +395,6 @@ namespace ShopQuanAo.BO
                     p.SalePrice = 0;
                 }
             }
-
-            // BƯỚC 2: Cập nhật danh sách sản phẩm mới vào chiến dịch
             if (productIds != null && productIds.Any())
             {
                 for (int i = 0; i < productIds.Count; i++)
@@ -415,14 +422,11 @@ namespace ShopQuanAo.BO
         }
         public async Task<object?> GetCampaignForEditDataAsync(int id)
         {
-            // 1. Gọi DAO lấy thông tin chiến dịch
+
             var campaign = await _adminDAO.GetCampaignByIdAsync(id);
             if (campaign == null) return null;
 
-            // 2. Gọi DAO lấy danh sách sản phẩm phù hợp
             var products = await _adminDAO.GetProductsForCampaignEditAsync(id);
-
-            // 3. Xử lý logic và map dữ liệu
             var productsForEdit = products.Select(p => new {
                 id = p.Id,
                 productName = p.ProductName,
@@ -430,8 +434,6 @@ namespace ShopQuanAo.BO
                 salePrice = p.SaleCampaignId == id ? p.SalePrice : 0,
                 inCampaign = p.SaleCampaignId == id
             }).ToList();
-
-            // Trả về object chứa đầy đủ các thuộc tính mà Frontend yêu cầu
             return new
             {
                 success = true,
@@ -441,6 +443,11 @@ namespace ShopQuanAo.BO
                 endDate = campaign.EndDate.ToString("yyyy-MM-ddTHH:mm"),
                 products = productsForEdit
             };
+        }
+        public async Task<bool> CheckCampaignNameExistAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            return await _adminDAO.IsCampaignNameExistAsync(name);
         }
         #endregion
 
@@ -462,7 +469,6 @@ namespace ShopQuanAo.BO
 
             voucher.Code = voucher.Code.Trim().ToUpper();
 
-            // KHI TẠO MỚI: Check xem mã đã tồn tại chưa
             bool isExist = await _adminDAO.IsVoucherCodeExistAsync(voucher.Code);
             if (isExist)
                 return (false, "Mã Voucher này đã tồn tại trong hệ thống. Vui lòng chọn mã khác!");
@@ -481,7 +487,6 @@ namespace ShopQuanAo.BO
 
             updatedVoucher.Code = updatedVoucher.Code.Trim().ToUpper();
 
-            // KHI SỬA: Kiểm tra nếu đổi mã sang một mã khác đã tồn tại
             if (!voucher.Code.Equals(updatedVoucher.Code, StringComparison.OrdinalIgnoreCase))
             {
                 bool isExist = await _adminDAO.IsVoucherCodeExistAsync(updatedVoucher.Code);

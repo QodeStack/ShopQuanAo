@@ -14,14 +14,12 @@ namespace ShopQuanAo.DAO
             _context = context;
         }
 
+        #region Xử lý danh sách và Phân trang sản phẩm
         // Lấy tổng số lượng và danh sách ID sản phẩm đã được phân trang
-        public async Task<(int Total, List<int> PagedIds, int ClampedPage)> GetPagedProductIdsAsync(
-    string? category, string? search, string? price, int? rating, bool isSaleOnly,
-    int page, int pageSize, string? sort)
+        public async Task<(int Total, List<int> PagedIds, int ClampedPage)> GetPagedProductIdsAsync(string? category, string? search, string? price, int? rating, bool isSaleOnly, int page, int pageSize, string? sort)
         {
             var query = _context.Products.Include(p => p.Category).AsQueryable();
 
-            // 1. Lọc theo Category
             if (!string.IsNullOrWhiteSpace(category))
             {
                 if (int.TryParse(category, out int catId))
@@ -29,12 +27,9 @@ namespace ShopQuanAo.DAO
                 else
                     query = query.Where(p => p.Category.CategoryName.Contains(category));
             }
-
-            // 2. Lọc theo Search keyword
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(p => p.ProductName.Contains(search) || p.BrandName.Contains(search));
 
-            // 3. Lọc theo Price
             query = price switch
             {
                 "under500" => query.Where(p => (isSaleOnly ? p.SalePrice : p.Price) < 500000),
@@ -59,7 +54,7 @@ namespace ShopQuanAo.DAO
                     CreatedAt = g.Max(p => p.Id)
                 });
 
-            // 6. Thực hiện Sort (Quan trọng để chạy được trên giao diện)
+            // 6. Thực hiện Sort
             groupedQuery = sort switch
             {
                 "price_asc" => groupedQuery.OrderBy(x => x.MaxPrice),
@@ -92,7 +87,7 @@ namespace ShopQuanAo.DAO
                 .ToListAsync();
         }
 
-        // Tìm kiếm nhanh trả thẳng về DTO để tối ưu GroupBy trong EF Core
+        // Tìm kiếm nhanh trả thẳng về DTO
         public async Task<List<ProductSearchResDto>> SearchQuickAsync(string? keyword, int? categoryId)
         {
             var query = _context.Products.AsQueryable();
@@ -109,7 +104,9 @@ namespace ShopQuanAo.DAO
                     Image = g.First().Image
                 }).ToListAsync();
         }
+        #endregion
 
+        #region Chi tiết sản phẩm và Thành phần liên quan
         public async Task<Product?> GetProductWithDetailsAsync(int id)
         {
             return await _context.Products
@@ -118,6 +115,55 @@ namespace ShopQuanAo.DAO
                 .ThenInclude(ps => ps.Size)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
+
+        // 1. Lấy danh sách đánh giá của 1 sản phẩm (Dùng cho trang Chi tiết)
+        public async Task<List<ProductReview>> GetReviewsByProductIdAsync(int productId)
+        {
+            return await _context.ProductReviews
+                .Where(r => r.ProductId == productId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        // 2. Lấy danh sách đánh giá của NHIỀU sản phẩm (Dùng cho trang Index, Sale)
+        public async Task<List<ProductReview>> GetReviewsByProductIdsAsync(List<int> productIds)
+        {
+            if (productIds == null || !productIds.Any())
+                return new List<ProductReview>();
+
+            return await _context.ProductReviews
+                .Where(r => productIds.Contains(r.ProductId))
+                .ToListAsync();
+        }
+
+        // 3. Lấy danh sách Voucher công khai, còn hạn
+        public async Task<List<Voucher>> GetActivePublicVouchersAsync()
+        {
+            return await _context.Vouchers
+                .Where(v => v.IsActive == true && v.Quantity > 0 && v.IsPublic == true)
+                .OrderBy(v => v.MinOrderAmount)
+                .ToListAsync();
+        }
+
+        // 4. Lấy sản phẩm liên quan cùng danh mục (loại trừ sản phẩm đang xem)
+        public async Task<List<Product>> GetRelatedProductsAsync(int categoryId, int excludeProductId, int take = 4)
+        {
+            return await _context.Products
+                .Where(p => p.CategoryId == categoryId && p.Id != excludeProductId)
+                .OrderByDescending(p => p.Id)
+                .Take(take)
+                .ToListAsync();
+        }
+
+        // 5. Lưu đánh giá mới vào DB
+        public async Task AddReviewAsync(ProductReview review)
+        {
+            _context.ProductReviews.Add(review);
+            await _context.SaveChangesAsync();
+        }
+        #endregion
+
+        #region Hỗ trợ AI & Tiện ích khác
         public async Task<List<Product>> GetCandidatesForAIAsync(string keyword, string color = "", double maxPrice = 0)
         {
             if (string.IsNullOrWhiteSpace(keyword)) return new List<Product>();
@@ -142,13 +188,13 @@ namespace ShopQuanAo.DAO
 
             return await query.Take(15).ToListAsync();
         }
-       
+
         public async Task<Dictionary<int, string>> GetAvailableCategoriesAsync()
         {
             return await _context.Categories
                 .ToDictionaryAsync(c => c.Id, c => c.CategoryName);
         }
-        // LẤY DANH SÁCH CÁC SIZE CHỮ ĐANG CÓ TRONG KHO
+
         public async Task<List<string>> GetAvailableSizesAsync()
         {
             return await _context.ProductSizes
@@ -156,5 +202,6 @@ namespace ShopQuanAo.DAO
                 .Distinct()
                 .ToListAsync();
         }
+        #endregion
     }
 }

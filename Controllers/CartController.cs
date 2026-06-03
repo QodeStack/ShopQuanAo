@@ -7,7 +7,6 @@ using ShopQuanAo.Models.BEAN.Entity;
 
 namespace ShopQuanAo.Controllers
 {
-    [Authorize]
     public class CartController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -19,6 +18,7 @@ namespace ShopQuanAo.Controllers
             _cartService = cartService;
         }
 
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var cart = await _cartService.GetCartAsync(_userManager.GetUserId(User));
@@ -29,11 +29,27 @@ namespace ShopQuanAo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart(int productId, int quantity, string size)
         {
+            // Chưa đăng nhập → trả JSON để JS redirect về Login kèm returnUrl
+            if (!User.Identity!.IsAuthenticated)
+            {
+                var returnUrl = Request.Headers["Referer"].ToString();
+                if (string.IsNullOrEmpty(returnUrl))
+                    returnUrl = "/Product";
+
+                return Json(new
+                {
+                    success = false,
+                    requireLogin = true,
+                    redirectUrl = $"/Account/Login?returnUrl={Uri.EscapeDataString(returnUrl)}"
+                });
+            }
+
             var result = await _cartService.AddToCartAsync(_userManager.GetUserId(User), new AddToCartDto { ProductId = productId, Quantity = quantity, Size = size });
-            if (!result.Success) return BadRequest(result.Message);
+            if (!result.Success) return Json(new { success = false, message = result.Message });
             return Json(new { success = true, cartCount = result.CartCount });
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateQuantity(int cartDetailId, int quantity)
@@ -43,6 +59,7 @@ namespace ShopQuanAo.Controllers
             return Json(new { success = true, data = result.Data });
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveItem(int cartDetailId)
@@ -51,6 +68,7 @@ namespace ShopQuanAo.Controllers
             return Json(new { success = true, data });
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ClearCart()

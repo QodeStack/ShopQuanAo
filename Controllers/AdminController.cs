@@ -54,7 +54,7 @@ namespace ShopQuanAo.Controllers
 
         public IActionResult Orders() => View();
         public IActionResult Revenue() => View();
-        public IActionResult Categories() => View(); // Đưa luôn View Categories lên khu vực này cho đồng bộ
+        public IActionResult Categories() => View();
         #endregion
 
         #region Các hàm lấy dữ liệu thống kê (API Endpoints)
@@ -121,6 +121,7 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -151,7 +152,7 @@ namespace ShopQuanAo.Controllers
                 return Json(new { success = false, message = "Lỗi hệ thống: " + ex.Message });
             }
         }
-        #endregion
+        #endregion 
 
         #region QUẢN LÝ DANH MỤC (Categories)
         [HttpGet]
@@ -197,6 +198,7 @@ namespace ShopQuanAo.Controllers
 
         #region QUẢN LÝ LIÊN HỆ (Contacts)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ReplyContact([FromBody] ContactsReplyDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.AdminReply))
@@ -260,15 +262,9 @@ namespace ShopQuanAo.Controllers
         #endregion
 
         #region KHU VỰC QUẢN LÝ KHUYẾN MÃI (Sales)
-        ////[HttpGet]
-        //public async Task<IActionResult> Sales([FromServices] ProductService productService, string search, int page = 1)
-        //{
-        //    int pageSize = 10;
-        //    var pagedData = await productService.GetPagedProductsAsync(null, search, page, pageSize, null, null, isSaleOnly: true);
-        //    return View(pagedData.Products);
-        //}
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateSalePrice([FromBody] SaleRequestDto request)
         {
             if (request == null || request.ProductId <= 0 || request.SalePrice < 0)
@@ -279,6 +275,7 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DisableSale([FromBody] SaleRequestDto request)
         {
             if (request == null || request.ProductId <= 0)
@@ -299,41 +296,33 @@ namespace ShopQuanAo.Controllers
         }
         public async Task<IActionResult> Sales()
         {
-            // Lấy TẤT CẢ sản phẩm đưa ra View. View sẽ tự lọc cái nào hiện ở bảng nào.
             ViewBag.AllProducts = await _context.Products.ToListAsync();
 
-            var campaigns = await _context.SaleCampaigns
-                                          .Include(c => c.Products)
-                                          .ToListAsync();
+            var campaigns = await _context.SaleCampaigns.Include( c => c.Products ).ToListAsync();
 
             return View(campaigns);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ValidateCampaign([FromBody] CampaignDTO dto)
         {
             if (dto == null || dto.ProductIds == null || !dto.ProductIds.Any())
             {
                 return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
             }
-
-            // Gọi hàm ValidateCampaignAsync từ AdminService.cs để kiểm tra trùng tên và xung đột sản phẩm
             var validationResult = await _service.ValidateCampaignAsync(dto.CampaignName, dto.ProductIds);
 
-            // Nếu Success = false (tức là trùng tên chiến dịch), báo lỗi đỏ và chặn lưu
             if (!validationResult.Success)
             {
                 return Json(new { success = false, message = validationResult.Message });
             }
 
-            // Trả về danh sách cảnh báo (nếu có sản phẩm đang nằm ở chiến dịch khác)
-            // Giao diện (Frontend) sẽ tự động bắt cảnh báo này và hỏi người dùng có muốn ghi đè không
             return Json(new { success = true, warnings = validationResult.Warnings });
         }
         [HttpGet]
         public async Task<IActionResult> GetCampaignForEdit(int id)
         {
-            // Gọi Service để lấy toàn bộ dữ liệu đã được xử lý
             var result = await _service.GetCampaignForEditDataAsync(id);
 
             if (result == null)
@@ -341,11 +330,11 @@ namespace ShopQuanAo.Controllers
                 return Json(new { success = false, message = "Không tìm thấy" });
             }
 
-            // Trả thẳng object ra JSON cho Frontend
             return Json(result);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCampaign([FromBody] CampaignDTO request)
         {
             var result = await _service.CreateSaleCampaignAsync(
@@ -357,10 +346,9 @@ namespace ShopQuanAo.Controllers
 
             return Json(new { success = result.Success, message = result.Message });
         }
-        // Đặt class này ở file DTO hoặc ở không gian namespace tùy ý
-
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateCampaign([FromBody] UpdateCampaignDto dto)
         {
             if (dto == null || dto.Id <= 0)
@@ -371,6 +359,7 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCampaign([FromBody] DeleteDto dto)
         {
             if (dto == null || string.IsNullOrEmpty(dto.Id))
@@ -400,6 +389,7 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditVoucher([FromBody] Voucher voucher)
         {
             var res = await _service.EditVoucherAsync(voucher);
@@ -407,6 +397,7 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVoucher([FromBody] Voucher data)
         {
             var success = await _service.ToggleVoucherStatusAsync(data.Id);
@@ -414,6 +405,7 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVoucher([FromBody] Voucher data)
         {
             var success = await _service.DeleteVoucherAsync(data.Id);

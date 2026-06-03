@@ -14,8 +14,6 @@ namespace ShopQuanAo.Models.BEAN.Entity
         public DateTime EndDate { get; set; }
 
         public bool IsActive { get; set; } = true;
-
-        // Navigation property
         public ICollection<Product> Products { get; set; }
     }
 }

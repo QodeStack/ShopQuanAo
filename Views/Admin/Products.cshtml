@@ -3,10 +3,42 @@
     ViewData["Title"] = "Quản lý Sản phẩm";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
-
 }
 
 <link href="~/css/Admin/Admin_Products.css" asp-append-version="true" rel="stylesheet" />
+
+<style>
+    /* CSS cho Toast Notification đảm bảo thông báo luôn hiển thị mượt mà */
+    .admin-toast {
+        position: fixed;
+        bottom: -50px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+        .admin-toast.success {
+            background-color: #4CAF50;
+        }
+
+        .admin-toast.error {
+            background-color: #F44336;
+        }
+
+        .admin-toast.show {
+            opacity: 1;
+            visibility: visible;
+            bottom: 30px;
+        }
+</style>
 
 <div class="admin-wrap">
     <div class="admin-body">
@@ -17,7 +49,6 @@
                     <span class="sidebar-icon">📊</span> Dashboard
                 </a>
                 
-                @* Đoạn thay đổi ở đây *@
                 <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
                     <span class="sidebar-icon">💰</span> Doanh thu
                 </a>
@@ -244,11 +275,6 @@
 
 <div class="admin-toast" id="adminToast"></div>
 
-<script>
-    // Toàn bộ logic JS cũ (loadProducts, filterProducts, submitProductForm, ...)
-    // giữ nguyên 100% để không bị lỗi chức năng.
-</script>
-
 @Html.AntiForgeryToken()
 
 <script>
@@ -264,16 +290,37 @@
         try {
             const res = await fetch('/Admin/GetProducts');
             if (!res.ok) throw new Error();
-            allProducts = await res.json();
+            const rawData = await res.json();
+
+            // CHUẨN HÓA DỮ LIỆU ĐỒNG BỘ: Fix lỗi phân biệt chữ hoa/chữ thường (PascalCase vs camelCase)
+            allProducts = rawData.map(p => {
+                const rawSizes = p.productSizes || p.ProductSizes || p.Sizes || p.sizes || [];
+                const normalizedSizes = rawSizes.map(s => ({
+                    sizeName: s.sizeName || s.SizeName || s.size || s.Size || '',
+                    quantity: s.quantity !== undefined ? s.quantity : (s.Quantity !== undefined ? s.Quantity : 0)
+                }));
+
+                return {
+                    id: p.id || p.Id,
+                    productName: p.productName || p.ProductName || '',
+                    brandName: p.brandName || p.BrandName || '',
+                    price: p.price || p.Price || 0,
+                    image: p.image || p.Image || '',
+                    categoryId: p.categoryId || p.CategoryId || 0,
+                    categoryName: p.categoryName || p.CategoryName || '',
+                    description: p.description || p.Description || '',
+                    productSizes: normalizedSizes
+                };
+            });
         } catch {
-            // Demo data
+            // Demo data (đã fix định dạng Sizes thành Object chuẩn)
             allProducts = [
-                { id:1, productName:'Slim Fit Oxford White', brandName:'MenShop', price:890000, image:'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=200', categoryId:1, categoryName:'Áo sơ mi', sizes:['S','M','L','XL'] },
-                { id:2, productName:'Tapered Wool Trousers', brandName:'MenShop', price:1290000, image:'https://images.unsplash.com/photo-1598522325074-042db73aa4e6?w=200', categoryId:2, categoryName:'Quần tây', sizes:['M','L'] },
-                { id:3, productName:'Unstructured Blazer', brandName:'MenShop', price:2490000, image:'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=200', categoryId:3, categoryName:'Blazer', sizes:['S','M','L','XL'] },
-                { id:4, productName:'Piqué Polo Classic', brandName:'MenShop', price:590000, image:'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200', categoryId:4, categoryName:'Áo polo', sizes:['S','M','L'] },
-                { id:5, productName:'Linen Casual Shirt', brandName:'MenShop', price:750000, image:'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=200', categoryId:1, categoryName:'Áo sơ mi', sizes:['M','L','XL'] },
-                { id:6, productName:'Chinos Dark Navy', brandName:'MenShop', price:980000, image:'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=200', categoryId:2, categoryName:'Quần tây', sizes:['28','30','32','34'] },
+                { id:1, productName:'Slim Fit Oxford White', brandName:'MenShop', price:890000, image:'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=200', categoryId:1, categoryName:'Áo sơ mi', productSizes:[{sizeName:'S', quantity:10},{sizeName:'M', quantity:5}] },
+                { id:2, productName:'Tapered Wool Trousers', brandName:'MenShop', price:1290000, image:'https://images.unsplash.com/photo-1598522325074-042db73aa4e6?w=200', categoryId:2, categoryName:'Quần tây', productSizes:[{sizeName:'M', quantity:10},{sizeName:'L', quantity:8}] },
+                { id:3, productName:'Unstructured Blazer', brandName:'MenShop', price:2490000, image:'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=200', categoryId:3, categoryName:'Blazer', productSizes:[{sizeName:'S', quantity:4},{sizeName:'M', quantity:6}] },
+                { id:4, productName:'Piqué Polo Classic', brandName:'MenShop', price:590000, image:'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200', categoryId:4, categoryName:'Áo polo', productSizes:[{sizeName:'S', quantity:20},{sizeName:'M', quantity:15}] },
+                { id:5, productName:'Linen Casual Shirt', brandName:'MenShop', price:750000, image:'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=200', categoryId:1, categoryName:'Áo sơ mi', productSizes:[{sizeName:'M', quantity:10},{sizeName:'L', quantity:12}] },
+                { id:6, productName:'Chinos Dark Navy', brandName:'MenShop', price:980000, image:'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=200', categoryId:2, categoryName:'Quần tây', productSizes:[{sizeName:'28', quantity:5},{sizeName:'30', quantity:10}] },
             ];
         }
         filterProducts();
@@ -321,7 +368,7 @@
         count.textContent = filteredProducts.length + ' sản phẩm';
 
         if (page.length === 0) {
-            body.innerHTML = `<tr><td colspan="6" 
+            body.innerHTML = `<tr><td colspan="6"
             style="text-align:center;padding:3rem;color:var(--gray-500);font-family:var(--mono);font-size:0.75rem;">Không tìm thấy sản phẩm</td></tr>`;
         } else {
             body.innerHTML = page.map(p => `
@@ -360,8 +407,8 @@
     </td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn-icon" onclick="openEditModal(${JSON.stringify(p).replace(/"/g,'&quot;')})" title="Chỉnh sửa">✎</button>
-                        <button class="btn-icon delete" onclick="openDeleteModal(${p.id},'${p.productName.replace(/'/g,"\\'")}') " title="Xóa">✕</button>
+                        <button class="btn-icon" onclick="openEditModal('${p.id}')" title="Chỉnh sửa">✎</button>
+                        <button class="btn-icon delete" onclick="openDeleteModal('${p.id}')" title="Xóa">✕</button>
                     </div>
                 </td>
             </tr>`).join('');
@@ -388,8 +435,8 @@
                     <div class="grid-card-brand">${p.brandName} · ${p.categoryName||''}</div>
                     <div class="grid-card-price">${(p.price).toLocaleString('vi-VN')}₫</div>
                     <div class="grid-card-actions">
-                        <button class="grid-btn" onclick="openEditModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">✎ Sửa</button>
-                        <button class="grid-btn del" onclick="openDeleteModal(${p.id},'${p.productName.replace(/'/g,"\\'")}')">✕</button>
+                        <button class="grid-btn" onclick="openEditModal('${p.id}')">✎ Sửa</button>
+                        <button class="grid-btn del" onclick="openDeleteModal('${p.id}')">✕</button>
                     </div>
                 </div>
             </div>`).join('');
@@ -422,44 +469,73 @@
         document.getElementById('modalImage').value = '';
         document.getElementById('modalDescription').value = '';
         document.getElementById('imagePreview').style.display = 'none';
-        // show only size buttons; inputs appear when user clicks a size
+        
         renderSizeArea();
         document.getElementById('productModal').classList.add('show');
     }
 
-    function openEditModal(p) {
-        if (typeof p === 'string') p = JSON.parse(p);
-        document.getElementById('modalTitle').textContent = 'CHỈNH SỬA SẢN PHẨM';
-        document.getElementById('modalProductId').value = p.id;
-        document.getElementById('modalName').value = p.productName;
-        document.getElementById('modalBrand').value = p.brandName;
-        document.getElementById('modalPrice').value = p.price;
-        document.getElementById('modalImage').value = p.image || '';
-        document.getElementById('modalDescription').value = p.description || '';
-        document.getElementById('modalCategory').value = p.categoryId;
-        previewImage(p.image);
-        renderSizeArea();
-        // product.productSizes is array of { id, sizeName, quantity }
-        if (p.productSizes && p.productSizes.length) {
-            // for each existing size, make the button active and render its qty input
-            p.productSizes.forEach(ps => {
-                const name = ps.sizeName || ps.size || '';
-                if (!name) return;
-                // create input row
-                const wrap = document.getElementById('selectedSizes');
-                const row = document.createElement('div'); row.className = 'size-row'; row.dataset.size = name;
-                row.innerHTML = `<div class="size-name">${name}</div><input class="size-qty" type="number" min="0" value="${ps.quantity}"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove(); refreshSizeButtonsState();">Xóa</button>`;
-                wrap.appendChild(row);
-                // mark corresponding button active
-                document.querySelectorAll('#sizeButtons .size-btn').forEach(b => { if (b.textContent === name) b.classList.add('active'); });
-            });
+    function openEditModal(id) {
+        try {
+            const safeProducts = allProducts || [];
+            const p = safeProducts.find(x => x.id == id);
+            
+            if (!p) {
+                alert("Lỗi: Không tìm thấy thông tin sản phẩm trong bộ nhớ!");
+                return;
+            }
+
+            document.getElementById('modalTitle').textContent = 'CHỈNH SỬA SẢN PHẨM';
+            document.getElementById('modalProductId').value = p.id || '';
+            document.getElementById('modalName').value = p.productName || '';
+            document.getElementById('modalBrand').value = p.brandName || '';
+            document.getElementById('modalPrice').value = p.price || 0;
+            document.getElementById('modalImage').value = p.image || '';
+            document.getElementById('modalDescription').value = p.description || '';
+            
+            if (p.categoryId) {
+                document.getElementById('modalCategory').value = p.categoryId;
+            }
+            
+            previewImage(p.image);
+            
+            renderSizeArea();
+            
+            // Render size sau khi đã được chuẩn hóa ở hàm loadProducts
+            if (p.productSizes && Array.isArray(p.productSizes) && p.productSizes.length > 0) {
+                p.productSizes.forEach(ps => {
+                    const name = ps.sizeName;
+                    const qty = ps.quantity;
+                    
+                    if (!name) return;
+                    
+                    const wrap = document.getElementById('selectedSizes');
+                    const row = document.createElement('div');
+                    row.className = 'size-row';
+                    row.dataset.size = name;
+                    
+                    row.innerHTML = `<div class="size-name">${name}</div><input class="size-qty" type="number" min="0" value="${qty}"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove(); refreshSizeButtonsState();">Xóa</button>`;
+                    wrap.appendChild(row);
+                    
+                    document.querySelectorAll('#sizeButtons .size-btn').forEach(b => {
+                        if (b.textContent === name) b.classList.add('active');
+                    });
+                });
+            }
+            
+            document.getElementById('productModal').classList.add('show');
+        } catch (err) {
+            alert("Lỗi khi mở form sửa: " + err.message);
+            console.error("Chi tiết lỗi:", err);
         }
-        document.getElementById('productModal').classList.add('show');
     }
 
-    function openDeleteModal(id, name) {
-        deleteTargetId = id;
-        document.getElementById('deleteProductName').textContent = name;
+    function openDeleteModal(id) {
+        const safeProducts = allProducts || [];
+        const p = safeProducts.find(x => x.id == id);
+        if (!p) return;
+        
+        deleteTargetId = p.id;
+        document.getElementById('deleteProductName').textContent = p.productName || 'Sản phẩm này';
         document.getElementById('deleteModal').classList.add('show');
     }
 
@@ -467,12 +543,11 @@
 
     function previewImage(url) {
         const img = document.getElementById('imagePreview');
-        if (url && url.startsWith('http')) {
+        if (url && (url.startsWith('http') || url.startsWith('/'))) {
             img.src = url; img.style.display = 'block';
         } else { img.style.display = 'none'; }
     }
 
-    // --- Size selector helpers ---
     function renderSizeArea() {
         const area = document.getElementById('sizeArea');
         area.innerHTML = `
@@ -490,19 +565,6 @@
         });
     }
 
-    function renderSelectedSizes(items) {
-        const wrap = document.getElementById('selectedSizes');
-        wrap.innerHTML = '';
-        (items || []).forEach(it => {
-            const row = document.createElement('div');
-            row.className = 'size-row';
-            row.dataset.size = it.sizeName || it.size || '';
-            row.innerHTML = `<div class="size-name">${row.dataset.size}</div><input class="size-qty" type="number" min="0" value="${it.quantity ?? 0}"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove()">Xóa</button>`;
-            wrap.appendChild(row);
-        });
-        refreshSizeButtonsState();
-    }
-
     function toggleSizeSelection(sizeName) {
         const wrap = document.getElementById('selectedSizes');
         const exists = Array.from(wrap.querySelectorAll('.size-row')).some(r => r.dataset.size === sizeName);
@@ -512,7 +574,7 @@
             const row = document.createElement('div');
             row.className = 'size-row';
             row.dataset.size = sizeName;
-            row.innerHTML = `<div class="size-name">${sizeName}</div><input class="size-qty" type="number" min="0" value="0"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove()">Xóa</button>`;
+            row.innerHTML = `<div class="size-name">${sizeName}</div><input class="size-qty" type="number" min="0" value="0"> <button type="button" class="size-remove-btn btn-cancel" onclick="this.closest('.size-row').remove(); refreshSizeButtonsState();">Xóa</button>`;
             wrap.appendChild(row);
         }
         refreshSizeButtonsState();
@@ -523,11 +585,10 @@
         document.querySelectorAll('#sizeButtons .size-btn').forEach(b => b.classList.toggle('active', selected.includes(b.textContent)));
     }
 
-       async function submitProductForm(e) {
+    async function submitProductForm(e) {
         e.preventDefault();
         const id = document.getElementById('modalProductId').value;
     
-        // Thu thập dữ liệu từ Form
         const body = {
             Id: id ? parseInt(id) : 0,
             ProductName: document.getElementById('modalName').value,
@@ -536,29 +597,28 @@
             Image: document.getElementById('modalImage').value,
             CategoryId: parseInt(document.getElementById('modalCategory').value),
             Description: document.getElementById('modalDescription').value,
-            Sizes: [] // Mảng chứa size
+            Sizes: []
         };
 
-        // Lấy thông tin size từ giao diện
         document.querySelectorAll('#selectedSizes .size-row').forEach(r => {
             const sName = (r.dataset.size || "").trim();
             const sQty = parseInt(r.querySelector('.size-qty')?.value || '0');
-            if (sName && sQty > 0) {
+            // FIX: Đổi từ sQty > 0 thành sQty >= 0 để cho phép user set tồn kho = 0 (hết hàng)
+            if (sName && sQty >= 0) {
                 body.Sizes.push({ SizeName: sName, Quantity: sQty });
             }
         });
 
-        // Xác định URL là Thêm hay Sửa
         const url = id ? '/Admin/EditProduct' : '/Admin/CreateProduct';
     
         try {
-            // Lấy token bảo mật để Server không chặn
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
                     'RequestVerificationToken': token
                 },
                 body: JSON.stringify(body)
@@ -568,7 +628,7 @@
             if (d.success) {
                 showToast(id ? '✓ Cập nhật thành công' : '✓ Thêm thành công', 'success');
                 closeModal('productModal');
-                loadProducts(); // Load lại danh sách sản phẩm
+                loadProducts();
             } else {
                 showToast('✕ ' + d.message, 'error');
             }
@@ -576,19 +636,17 @@
             showToast('✕ Lỗi kết nối Server', 'error');
         }
     }
-        async function confirmDelete() {
+    
+    async function confirmDelete() {
         try {
-            // Lấy Token bảo mật (quan trọng)
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
         
-            // Gửi yêu cầu xóa đến Server
             const res = await fetch('/Admin/DeleteProduct', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': token
                 },
-                // Gửi Object chứa ID đúng như AdminController mong đợi
                 body: JSON.stringify({ id: deleteTargetId.toString() })
             });
 
@@ -596,8 +654,8 @@
         
             if (d.success) {
                 showToast('✓ Đã xóa sản phẩm', 'success');
-                closeModal('deleteModal'); // Đóng bảng xác nhận
-                loadProducts(); // Load lại danh sách sản phẩm ngay lập tức
+                closeModal('deleteModal');
+                loadProducts();
             } else {
                 showToast('✕ Lỗi: ' + (d.message || 'Không thể xóa'), 'error');
             }
@@ -608,17 +666,18 @@
 
     function showToast(msg, type) {
         const t = document.getElementById('adminToast');
-        t.textContent = msg; t.className = `admin-toast ${type} show`;
+        t.textContent = msg;
+        t.className = `admin-toast ${type} show`;
         setTimeout(() => t.className = 'admin-toast', 3000);
     }
-        async function uploadImage(input) {
-        if (!input.files || !input.files[0]) return;
+    
+    async function uploadImage(input) {
+        if (!input || !input.files || input.files.length === 0) return;
 
         const file = input.files[0];
         const formData = new FormData();
         formData.append('file', file);
 
-        // Hiển thị trạng thái đang tải (tùy chọn)
         const btn = input.previousElementSibling;
         const originalText = btn.textContent;
         btn.textContent = "⏳ Đang tải...";
@@ -637,7 +696,6 @@
             const data = await res.json();
 
             if (data.success) {
-                // Gán URL trả về từ server vào ô input text
                 document.getElementById('modalImage').value = data.url;
                 previewImage(data.url);
                 showToast('✓ Tải ảnh lên thành công', 'success');
@@ -649,7 +707,7 @@
         } finally {
             btn.textContent = originalText;
             btn.disabled = false;
-            input.value = ""; // Reset input file để có thể chọn lại cùng 1 file nếu muốn
+            input.value = "";
         }
     }
 
@@ -659,4 +717,3 @@
 
     loadProducts();
 </script>
-@Html.AntiForgeryToken()

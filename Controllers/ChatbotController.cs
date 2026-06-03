@@ -39,7 +39,10 @@ namespace ShopQuanAo.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new { answer = "Bot đang bận xử lý, bạn hãy thử lại sau vài giây nhé! (" + ex.Message + ")" });
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    answer = "Bot đang bận xử lý hoặc gặp sự cố, bạn hãy thử lại sau vài giây nhé!"
+                });
             }
         }
     }
