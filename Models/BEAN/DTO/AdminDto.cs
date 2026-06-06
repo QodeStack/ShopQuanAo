@@ -3,9 +3,10 @@
     #region Users
     public class CreateUserDto
     {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-        public string? Role { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = "User";
+        public bool EmailConfirmed { get; set; } = false; // thêm dòng này
     }
 
     public class EditUserDto
@@ -36,7 +37,10 @@
         public List<SizeDto>? Sizes { get; set; }
         public string? Description { get; set; }
     }
-
+    public class VerifyOtpDto { 
+        public string Email { get; set; } 
+        public string Otp { get; set; }
+    }
     public class SizeDto
     {
         public string SizeName { get; set; } = "";

@@ -73,7 +73,7 @@ namespace ShopQuanAo.Controllers
 
         #region QUẢN LÝ SẢN PHẨM (Products)
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductWithSizesDto dto)
         {
             if (dto == null) return Json(new { success = false, message = "Dữ liệu không hợp lệ" });
@@ -82,12 +82,13 @@ namespace ShopQuanAo.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> EditProduct([FromBody] UpdateProductDto dto)
         {
             try
             {
-                if (dto == null) return Json(new { success = false, message = "Dữ liệu trống" });
+                if (dto == null || dto.Id <= 0)
+                    return Json(new { success = false, message = "ID sản phẩm không hợp lệ" });
                 var res = await _service.UpdateProductAsync(dto);
                 return Json(new { success = res.Success, message = res.Message });
             }
@@ -298,11 +299,38 @@ namespace ShopQuanAo.Controllers
         {
             ViewBag.AllProducts = await _context.Products.ToListAsync();
 
-            var campaigns = await _context.SaleCampaigns.Include( c => c.Products ).ToListAsync();
+            var campaigns = await _context.SaleCampaigns.Include(c => c.Products).ToListAsync();
 
             return View(campaigns);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
+        {
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+                return Json(new { success = false, message = "Email và mật khẩu không được để trống." });
 
+            var res = await _service.CreateUserAsync(dto);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditUser([FromBody] EditUserDto dto)
+        {
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Id))
+                return Json(new { success = false, message = "ID người dùng không hợp lệ." });
+
+            var res = await _service.EditUserAsync(dto);
+            return Json(new { success = res.Success, message = res.Message });
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
+        {
+            var res = await _service.VerifyOtpAsync(dto.Email, dto.Otp);
+            return Json(new { success = res.Success, message = res.Message });
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ValidateCampaign([FromBody] CampaignDTO dto)

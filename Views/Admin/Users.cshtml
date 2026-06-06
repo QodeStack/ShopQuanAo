@@ -3,11 +3,9 @@
     ViewData["Title"] = "Quản lý Người dùng";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
-
 }
 
-@* <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"> *@
-<link href="~/css/Admin/Admin_Users.css" asp-append-version="true" rel="stylesheet"/>
+<link href="~/css/Admin/Admin_Users.css" asp-append-version="true" rel="stylesheet" />
 
 @Html.AntiForgeryToken()
 
@@ -16,47 +14,42 @@
         <aside class="admin-sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-label">Tổng quan</div>
-                <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@Url.Action("Index", "Admin")">
+                <a class="sidebar-link @(currentAction == "Index" ? "active" : "")" href="@(Url.Action("Index", "Admin"))">
                     <span class="sidebar-icon">📊</span> Dashboard
                 </a>
-                
-                @* Đoạn thay đổi ở đây *@
-                <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@Url.Action("Revenue", "Admin")">
+                <a class="sidebar-link @(currentAction == "Revenue" ? "active" : "")" href="@(Url.Action("Revenue", "Admin"))">
                     <span class="sidebar-icon">💰</span> Doanh thu
                 </a>
-                <a class="sidebar-link @(currentAction == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")">
+                <a class="sidebar-link @(currentAction == "Orders" ? "active" : "")" href="@(Url.Action("Orders", "Admin"))">
                     <span class="sidebar-icon">📦</span> Đơn hàng
                 </a>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-label">Quản lý</div>
-                <a class="sidebar-link @(currentAction == "Users" ? "active" : "")" href="@Url.Action("Users", "Admin")">
+                <a class="sidebar-link @(currentAction == "Users" ? "active" : "")" href="@(Url.Action("Users", "Admin"))">
                     <span class="sidebar-icon">👥</span> Người dùng
                 </a>
-                <a class="sidebar-link @(currentAction == "Products" ? "active" : "")" href="@Url.Action("Products", "Admin")">
+                <a class="sidebar-link @(currentAction == "Products" ? "active" : "")" href="@(Url.Action("Products", "Admin"))">
                     <span class="sidebar-icon">👕</span> Sản phẩm
                 </a>
-                <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@Url.Action("Categories", "Admin")">
+                <a class="sidebar-link @(currentAction == "Categories" ? "active" : "")" href="@(Url.Action("Categories", "Admin"))">
                     <span class="sidebar-icon">📁</span> Danh mục
                 </a>
-                
-                <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@Url.Action("Sales", "Admin")">
+                <a class="sidebar-link @(currentAction == "Sales" ? "active" : "")" href="@(Url.Action("Sales", "Admin"))">
                     <span class="sidebar-icon">★</span> Khuyến mãi (Sale)
                 </a>
-                
-                <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@Url.Action("Vouchers", "Admin")">
+                <a class="sidebar-link @(currentAction == "Vouchers" ? "active" : "")" href="@(Url.Action("Vouchers", "Admin"))">
                     <span class="sidebar-icon">🎫</span> Mã giảm giá
                 </a>
-
-                <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@Url.Action("Contacts", "Admin")">
+                <a class="sidebar-link @(currentAction == "Contacts" ? "active" : "")" href="@(Url.Action("Contacts", "Admin"))">
                     <span class="sidebar-icon">📩</span> Phản hồi
                 </a>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-label">Hệ thống</div>
-                <a class="sidebar-link" href="@Url.Action("Index", "Home")">
+                <a class="sidebar-link" href="@(Url.Action("Index", "Home"))">
                     <span class="sidebar-icon">🏠</span> Về cửa hàng
                 </a>
                 <a class="sidebar-link" href="/Identity/Account/Manage">
@@ -119,26 +112,39 @@
     </div>
 </div>
 
+<!-- ===================== MODAL TẠO / SỬA USER ===================== -->
 <div class="modal-overlay" id="userModal">
     <div class="modal-box">
         <div class="modal-title" id="modalTitle">TẠO NGƯỜI DÙNG MỚI</div>
         <form id="userForm" onsubmit="submitUserForm(event)">
             <input type="hidden" id="modalUserId" value="">
+
             <div class="form-group">
                 <label class="form-label">Email *</label>
                 <input class="form-control-admin" type="email" id="modalEmail" placeholder="user@example.com" required>
             </div>
+
             <div class="form-group" id="passwordGroup">
                 <label class="form-label">Mật khẩu *</label>
                 <input class="form-control-admin" type="password" id="modalPassword" placeholder="Tối thiểu 6 ký tự">
             </div>
+
             <div class="form-group">
                 <label class="form-label">Vai trò</label>
-                <select class="form-control-admin" id="modalRole">
+                <select class="form-control-admin" id="modalRole" onchange="onRoleChange(this.value)">
                     <option value="User">User</option>
                     <option value="Admin">Admin</option>
                 </select>
             </div>
+
+            <!-- Checkbox xác nhận email — chỉ hiện khi tạo mới -->
+            <div class="form-group" id="confirmGroup">
+                <label class="form-label" style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:normal;">
+                    <input type="checkbox" id="modalEmailConfirmed" style="width:15px;height:15px;accent-color:var(--accent,#c8ff00);cursor:pointer;">
+                    <span>Xác nhận email ngay <span style="color:var(--gray-500);font-size:0.75rem;">(không gửi OTP)</span></span>
+                </label>
+            </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal('userModal')">Huỷ</button>
                 <button type="submit" class="btn-submit-admin">Lưu</button>
@@ -147,6 +153,31 @@
     </div>
 </div>
 
+<!-- ===================== MODAL NHẬP OTP ===================== -->
+<div class="modal-overlay" id="otpModal">
+    <div class="modal-box" style="width:400px">
+        <div class="modal-title">XÁC MINH OTP</div>
+        <p style="color:var(--gray-400);font-size:0.82rem;margin-bottom:0.3rem;">
+            Mã OTP đã được gửi đến:
+        </p>
+        <p id="otpTargetEmail" style="font-family:var(--mono);color:#c8ff00;font-size:0.85rem;margin-bottom:1.2rem;"></p>
+        <div class="form-group">
+            <label class="form-label">Nhập mã OTP *</label>
+            <input class="form-control-admin" type="text" id="otpInput"
+                   placeholder="Nhập 6 số..."
+                   maxlength="6"
+                   style="letter-spacing:0.3em;font-size:1.2rem;text-align:center;"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+        <p id="otpError" style="color:#ff3b3b;font-size:0.78rem;min-height:1.2em;margin-bottom:0.5rem;"></p>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeModal('otpModal')">Đóng</button>
+            <button type="button" class="btn-submit-admin" onclick="submitOtp()">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL XÁC NHẬN XÓA ===================== -->
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box" style="width:380px">
         <div class="modal-title">XÁC NHẬN XÓA</div>
@@ -168,13 +199,14 @@
     let currentPage = 1;
     const pageSize = 10;
     let deleteTargetId = '';
-    const avatarColors = ['#c8ff00','#3b82ff','#ff3b3b','#ffb400','#8b5cf6','#06b6d4'];
+    let pendingOtpEmail = ''; // email đang chờ xác minh OTP
+    const avatarColors = ['#c8ff00', '#3b82ff', '#ff3b3b', '#ffb400', '#8b5cf6', '#06b6d4'];
 
-    // Lấy Token Antiforgery chuẩn từ ASP.NET Core
     function getRequestToken() {
         return document.querySelector('input[name="__RequestVerificationToken"]').value;
     }
 
+    // =================== LOAD & FILTER ===================
     async function loadUsers() {
         try {
             const res = await fetch('/Admin/GetUsers');
@@ -203,6 +235,7 @@
         renderTable();
     }
 
+    // =================== RENDER TABLE ===================
     function renderTable() {
         const start = (currentPage - 1) * pageSize;
         const page = filteredUsers.slice(start, start + pageSize);
@@ -236,7 +269,7 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn-icon" onclick="openEditModal('${u.id}','${u.email}','${u.roles[0]}')" title="Chỉnh sửa">✎</button>
+                            <button class="btn-icon" onclick="openEditModal('${u.id}','${u.email}','${u.roles[0] || 'User'}')" title="Chỉnh sửa">✎</button>
                             <button class="btn-icon delete" onclick="openDeleteModal('${u.id}','${u.email}')" title="Xóa">✕</button>
                         </div>
                     </td>
@@ -246,7 +279,6 @@
         renderPagination();
     }
 
-    // Các hàm Pagination giữ nguyên của bạn
     function renderPagination() {
         const total = Math.ceil(filteredUsers.length / pageSize);
         const info = document.getElementById('pageInfo');
@@ -264,14 +296,35 @@
 
     function goPage(p) { currentPage = p; renderTable(); }
 
-    // --- MODAL LOGIC ---
+    // =================== ROLE CHANGE — tự động tick xác nhận khi chọn Admin ===================
+    function onRoleChange(role) {
+        const cb = document.getElementById('modalEmailConfirmed');
+        const cbLabel = document.getElementById('confirmGroup');
+        if (role === 'Admin') {
+            cb.checked = true;
+            // Đổi label để thông báo rõ lý do
+            cbLabel.querySelector('span > span').textContent = '(Admin luôn được xác nhận)';
+            cb.disabled = true;
+        } else {
+            cb.checked = false;
+            cbLabel.querySelector('span > span').textContent = '(không gửi OTP)';
+            cb.disabled = false;
+        }
+    }
+
+    // =================== MODAL LOGIC ===================
     function openCreateModal() {
         document.getElementById('modalTitle').textContent = 'TẠO NGƯỜI DÙNG MỚI';
         document.getElementById('modalUserId').value = '';
         document.getElementById('modalEmail').value = '';
+        document.getElementById('modalEmail').disabled = false;
         document.getElementById('modalPassword').value = '';
         document.getElementById('modalRole').value = 'User';
+        document.getElementById('modalEmailConfirmed').checked = false;
+        document.getElementById('modalEmailConfirmed').disabled = false;
+        document.getElementById('confirmGroup').querySelector('span > span').textContent = '(không gửi OTP)';
         document.getElementById('passwordGroup').style.display = 'block';
+        document.getElementById('confirmGroup').style.display = 'block';
         document.getElementById('userModal').classList.add('show');
     }
 
@@ -279,9 +332,10 @@
         document.getElementById('modalTitle').textContent = 'CHỈNH SỬA VAI TRÒ';
         document.getElementById('modalUserId').value = id;
         document.getElementById('modalEmail').value = email;
-        document.getElementById('modalEmail').disabled = true; // Không cho sửa email khi edit
+        document.getElementById('modalEmail').disabled = true;
         document.getElementById('modalRole').value = role || 'User';
         document.getElementById('passwordGroup').style.display = 'none';
+        document.getElementById('confirmGroup').style.display = 'none';
         document.getElementById('userModal').classList.add('show');
     }
 
@@ -293,19 +347,33 @@
 
     function closeModal(id) {
         document.getElementById(id).classList.remove('show');
-        document.getElementById('modalEmail').disabled = false;
+        if (id === 'userModal') {
+            document.getElementById('modalEmail').disabled = false;
+        }
+        if (id === 'otpModal') {
+            document.getElementById('otpInput').value = '';
+            document.getElementById('otpError').textContent = '';
+        }
     }
 
-    // --- API SUBMIT ---
+    // =================== SUBMIT TẠO / SỬA USER ===================
     async function submitUserForm(e) {
         e.preventDefault();
         const id = document.getElementById('modalUserId').value;
         const email = document.getElementById('modalEmail').value;
         const pass = document.getElementById('modalPassword').value;
         const role = document.getElementById('modalRole').value;
+        const emailConfirmed = document.getElementById('modalEmailConfirmed').checked;
+
+        if (!id && pass.length < 6) {
+            showToast('✕ Mật khẩu tối thiểu 6 ký tự', 'error');
+            return;
+        }
 
         const url = id ? '/Admin/EditUser' : '/Admin/CreateUser';
-        const body = id ? { id, role } : { email, password: pass, role };
+        const body = id
+            ? { id, role }
+            : { email, password: pass, role, emailConfirmed };
 
         try {
             const res = await fetch(url, {
@@ -318,15 +386,59 @@
             });
             const d = await res.json();
             if (d.success) {
-                showToast(id ? '✓ Cập nhật thành công' : '✓ Đã gửi mã OTP tới khách', 'success');
                 closeModal('userModal');
-                loadUsers();
+                if (!id && !emailConfirmed) {
+                    // Tạo user thường → mở popup nhập OTP
+                    pendingOtpEmail = email;
+                    document.getElementById('otpTargetEmail').textContent = email;
+                    document.getElementById('otpInput').value = '';
+                    document.getElementById('otpError').textContent = '';
+                    document.getElementById('otpModal').classList.add('show');
+                } else {
+                    showToast(id ? '✓ Cập nhật vai trò thành công' : '✓ Tạo tài khoản thành công!', 'success');
+                    loadUsers();
+                }
             } else {
                 showToast('✕ ' + (d.message || 'Lỗi xử lý'), 'error');
             }
-        } catch { showToast('✕ Lỗi kết nối server', 'error'); }
+        } catch {
+            showToast('✕ Lỗi kết nối server', 'error');
+        }
     }
 
+    // =================== SUBMIT OTP ===================
+    async function submitOtp() {
+        const otp = document.getElementById('otpInput').value.trim();
+        const errorEl = document.getElementById('otpError');
+
+        if (otp.length !== 6) {
+            errorEl.textContent = '✕ Vui lòng nhập đúng 6 chữ số.';
+            return;
+        }
+
+        try {
+            const res = await fetch('/Admin/VerifyOtp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getRequestToken()
+                },
+                body: JSON.stringify({ email: pendingOtpEmail, otp })
+            });
+            const d = await res.json();
+            if (d.success) {
+                closeModal('otpModal');
+                showToast('✓ Xác minh thành công! Tài khoản đã kích hoạt.', 'success');
+                loadUsers();
+            } else {
+                errorEl.textContent = '✕ ' + (d.message || 'Mã OTP không đúng hoặc đã hết hạn.');
+            }
+        } catch {
+            errorEl.textContent = '✕ Lỗi kết nối server.';
+        }
+    }
+
+    // =================== XÓA USER ===================
     async function confirmDelete() {
         try {
             const res = await fetch('/Admin/DeleteUser', {
@@ -345,7 +457,9 @@
             } else {
                 showToast('✕ ' + (d.message || 'Lỗi khi xóa'), 'error');
             }
-        } catch { showToast('✕ Lỗi kết nối server', 'error'); }
+        } catch {
+            showToast('✕ Lỗi kết nối server', 'error');
+        }
     }
 
     function showToast(msg, type) {
@@ -355,6 +469,5 @@
         setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // Load dữ liệu lần đầu
     loadUsers();
 </script>

@@ -132,18 +132,35 @@ namespace ShopQuanAo.BO
             {
                 UserName = dto.Email,
                 Email = dto.Email,
-                EmailConfirmed = false,
-                OTPCode = GenerateOTP(),
-                OTPExpiry = DateTime.Now.AddMinutes(5)
+                EmailConfirmed = dto.EmailConfirmed, // thay vì hardcode false
+                OTPCode = dto.EmailConfirmed ? null : GenerateOTP(),
+                OTPExpiry = dto.EmailConfirmed ? null : DateTime.Now.AddMinutes(5)
             };
+
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded) return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
 
-            await SendEmailAsync(user.Email, "Mã xác thực MenShop", $"Mã OTP của bạn là: <b>{user.OTPCode}</b>");
-            if (!string.IsNullOrEmpty(dto.Role)) await _userManager.AddToRoleAsync(user, dto.Role);
-            return (true, "Đã gửi mã OTP vào email!");
-        }
+            if (!dto.EmailConfirmed)
+                await SendEmailAsync(user.Email, "Mã xác thực MenShop", $"Mã OTP của bạn là: <b>{user.OTPCode}</b>");
 
+            if (!string.IsNullOrEmpty(dto.Role))
+                await _userManager.AddToRoleAsync(user, dto.Role);
+
+            return (true, dto.EmailConfirmed ? "Tạo tài khoản thành công!" : "Đã gửi mã OTP tới email!");
+        }
+        public async Task<(bool Success, string Message)> VerifyOtpAsync(string email, string otp)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return (false, "Không tìm thấy tài khoản.");
+            if (user.OTPCode != otp) return (false, "Mã OTP không đúng.");
+            if (user.OTPExpiry < DateTime.Now) return (false, "Mã OTP đã hết hạn.");
+
+            user.EmailConfirmed = true;
+            user.OTPCode = null;
+            user.OTPExpiry = null;
+            await _userManager.UpdateAsync(user);
+            return (true, "Xác minh thành công!");
+        }
         public async Task<bool> DeleteUserAsync(string id, string currentUserId)
         {
             if (id == currentUserId) return false;
@@ -577,6 +594,24 @@ namespace ShopQuanAo.BO
         public async Task<bool> DeleteContactAsync(int id)
         {
             return await _adminDAO.DeleteContactAsync(id);
+        }
+        public async Task<(bool Success, string Message)> EditUserAsync(EditUserDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(dto.Id);
+            if (user == null) return (false, "Không tìm thấy người dùng.");
+
+            // Lấy role hiện tại
+            var currentRoles = await _userManager.GetRolesAsync(user);
+
+            // Xóa hết role cũ
+            if (currentRoles.Any())
+                await _userManager.RemoveFromRolesAsync(user, currentRoles);
+
+            // Gán role mới
+            if (!string.IsNullOrWhiteSpace(dto.Role))
+                await _userManager.AddToRoleAsync(user, dto.Role);
+
+            return (true, "Cập nhật vai trò thành công.");
         }
 
         public async Task SendReplyContactEmailAsync(string toEmail, string fullName, string replyMessage)

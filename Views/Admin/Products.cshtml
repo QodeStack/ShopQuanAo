@@ -24,6 +24,39 @@
         z-index: 10000;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
+    /* Sửa modal bị che bởi navbar */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 99999; /* cao hơn navbar */
+        display: flex;
+        align-items: flex-start; /* căn lên trên thay vì giữa */
+        justify-content: center;
+        overflow-y: auto; /* cho phép scroll nếu nội dung dài */
+        padding: 20px 0; /* tạo khoảng cách với mép trên/dưới */
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+        .modal-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+    .modal-box {
+        position: relative;
+        width: 100%;
+        max-width: 680px;
+        max-height: calc(100vh - 40px); /* không vượt quá màn hình */
+        overflow-y: auto; /* scroll bên trong modal */
+        margin: auto;
+        border-radius: 8px;
+    }
 
         .admin-toast.success {
             background-color: #4CAF50;
@@ -225,7 +258,7 @@
             <div class="form-group full-width">
                 <label class="form-label">Hình ảnh sản phẩm <span>*</span></label>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input class="form-control-admin" type="text" id="modalImage" placeholder="https://..." oninput="previewImage(this.value)" style="flex: 1;">
+                    <input class="form-control-admin" type="text" id="modalImage" placeholder="https://..." oninput="previewProductImage(this.value)" style="flex: 1;">
         
                     <button type="button" class="btn-secondary" onclick="document.getElementById('fileInput').click()" style="white-space: nowrap;">
                         📁 Tải ảnh lên
@@ -496,7 +529,7 @@
                 document.getElementById('modalCategory').value = p.categoryId;
             }
             
-            previewImage(p.image);
+            previewProductImage(p.image);
             
             renderSizeArea();
             
@@ -541,9 +574,9 @@
 
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-    function previewImage(url) {
+    function previewProductImage(url) {
         const img = document.getElementById('imagePreview');
-        if (url && (url.startsWith('http') || url.startsWith('/'))) {
+        if (url && typeof url === 'string' && (url.startsWith('http') || url.startsWith('/'))) {
             img.src = url; img.style.display = 'block';
         } else { img.style.display = 'none'; }
     }
@@ -587,10 +620,11 @@
 
     async function submitProductForm(e) {
         e.preventDefault();
-        const id = document.getElementById('modalProductId').value;
+        const idRaw = document.getElementById('modalProductId').value.trim();
+        const id = parseInt(idRaw) || 0;
     
         const body = {
-            Id: id ? parseInt(id) : 0,
+            Id: id,
             ProductName: document.getElementById('modalName').value,
             BrandName: document.getElementById('modalBrand').value,
             Price: parseFloat(document.getElementById('modalPrice').value),
@@ -603,37 +637,65 @@
         document.querySelectorAll('#selectedSizes .size-row').forEach(r => {
             const sName = (r.dataset.size || "").trim();
             const sQty = parseInt(r.querySelector('.size-qty')?.value || '0');
-            // FIX: Đổi từ sQty > 0 thành sQty >= 0 để cho phép user set tồn kho = 0 (hết hàng)
             if (sName && sQty >= 0) {
                 body.Sizes.push({ SizeName: sName, Quantity: sQty });
             }
         });
+            if (id === 0) {
+        const sizeRows = document.querySelectorAll('#selectedSizes .size-row');
+        if (sizeRows.length === 0) {
+            document.getElementById('sizeError').textContent = '⚠ Vui lòng chọn ít nhất 1 size trước khi lưu.';
+            document.getElementById('sizeArea').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
 
-        const url = id ? '/Admin/EditProduct' : '/Admin/CreateProduct';
+        // Khi thêm mới: tất cả size phải có số lượng >= 1
+        const hasZero = Array.from(sizeRows).some(r => {
+            const qty = parseInt(r.querySelector('.size-qty')?.value || '0');
+            return qty < 1;
+        });
+        if (hasZero) {
+            document.getElementById('sizeError').textContent = '⚠ Khi thêm mới, số lượng mỗi size phải ít nhất là 1.';
+            document.getElementById('sizeArea').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+    }
+    
+
+        // Xóa thông báo lỗi nếu đã chọn size
+        document.getElementById('sizeError').textContent = '';
+        const url = id > 0 ? '/Admin/EditProduct' : '/Admin/CreateProduct';
     
         try {
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            const formData = new FormData();
+            formData.append('__RequestVerificationToken', token);
 
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
                     'RequestVerificationToken': token
                 },
                 body: JSON.stringify(body)
             });
 
+            if (!res.ok) {
+                showToast('✕ Lỗi server: ' + res.status, 'error');
+                return;
+            }
+
             const d = await res.json();
             if (d.success) {
-                showToast(id ? '✓ Cập nhật thành công' : '✓ Thêm thành công', 'success');
+                showToast(id > 0 ? '✓ Cập nhật thành công' : '✓ Thêm thành công', 'success');
                 closeModal('productModal');
                 loadProducts();
             } else {
                 showToast('✕ ' + d.message, 'error');
             }
         } catch (err) {
-            showToast('✕ Lỗi kết nối Server', 'error');
+            showToast('✕ Lỗi kết nối Server: ' + err.message, 'error');
         }
     }
     
@@ -697,7 +759,7 @@
 
             if (data.success) {
                 document.getElementById('modalImage').value = data.url;
-                previewImage(data.url);
+                previewProductImage(data.url);
                 showToast('✓ Tải ảnh lên thành công', 'success');
             } else {
                 showToast('✕ ' + data.message, 'error');
