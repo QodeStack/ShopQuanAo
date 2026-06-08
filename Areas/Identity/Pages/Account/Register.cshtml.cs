@@ -124,11 +124,12 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 
 					try
 					{
-						await SendEmailOTP(Input.Email, otpCode);
-						EmailPending = Input.Email;
-						ViewData["ShowOTP"] = true;
-						return Page();
-					}
+                        await SendEmailOTP(Input.Email, otpCode);
+                        EmailPending = Input.Email;
+                        ReturnUrl = returnUrl;          // ← THÊM DÒNG NÀY
+                        ViewData["ShowOTP"] = true;
+                        return Page();
+                    }
 					catch (Exception ex)
 					{
 						ModelState.AddModelError(string.Empty, "Lỗi gửi mail: " + ex.Message);
@@ -167,8 +168,8 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 				if (result.Succeeded)
 				{
 					TempData["StatusMessage"] = "Chúc mừng! Bạn đã đăng ký thành công tài khoản MenShop. Hãy đăng nhập ngay.";
-					return RedirectToPage("Login");
-				}
+                    return RedirectToPage("Login", new { returnUrl = returnUrl });
+                }
 			}
 
 			ModelState.AddModelError(string.Empty, "Mã OTP không chính xác hoặc đã hết hạn.");

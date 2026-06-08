@@ -325,13 +325,14 @@
         updateButtons();
     }
 
-    document.querySelectorAll('.size-btn').forEach(btn => {
+      document.querySelectorAll('.size-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             maxStock = parseInt(btn.dataset.stock);
             document.getElementById('selectedSize').value = btn.dataset.size;
             document.getElementById('sizeDisplay').textContent = btn.dataset.size + " (Còn " + maxStock + " sp)";
+            document.getElementById('buyQty').value = 1; // ← THÊM DÒNG NÀY
             updateButtons();
         });
     });

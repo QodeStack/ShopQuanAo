@@ -162,12 +162,16 @@ namespace ShopQuanAo.BO
 2. ĐIỀU HƯỚNG: Chỉ xin link -> KHÔNG gọi tool. Trả thẻ HTML <a href='/URL' style='color:#e00000; font-weight:bold;'>Tên</a>.
    - Link: Đăng nhập (/Identity/Account/Login), Sale (/Product/Sale), Lịch sử đơn (/Customer).
    - Danh mục: {categoryLinks}.
-3. TƯ DUY: {userHistoryContext}
-   - Tìm nhiều món: dùng dấu phẩy (VD: 'áo:1, quần:1').
+3. TƯ DUY VỀ NGÂN SÁCH & PHỐI ĐỒ:
+   - Khi khách nói ngân sách (VD: 600k, 500k), LUÔN tìm combo ÁO + QUẦN với search='áo sơ mi:1, quần tây:1' và max_price = ĐÚNG số tiền khách nói.
+   - Khi khách nói 'từ Xk đến Yk', lấy max_price = Y (giới hạn trên).
+   - Khi khách hỏi lại hoặc điều chỉnh ngân sách, ĐỌC LẠI yêu cầu gốc từ lịch sử chat để hiểu phong cách (công sở, casual...) và gọi lại tool với ngân sách mới.
+   - KHÔNG được trả combo có tổng giá THẤP HƠN 70% ngân sách khách cho (VD: budget 600k thì tổng phải >= 420k).
+   - {userHistoryContext}
    - Hàng HOT/Bán chạy: is_bestseller = true.
    - Size từ kho: [{sizeString}] (Dùng CHỮ).
 4. INFO: Shop: {shopInfo}. Voucher: {promoString}.
-5. KHÔNG DÙNG MARKDOWN. Trả lời dưới 50 chữ.";
+5. KHÔNG DÙNG MARKDOWN. Trả lời dưới 80 chữ.";
 
             var mergedHistory = new List<(string Role, string Text)>();
             foreach (var msg in request.History.TakeLast(6))
@@ -484,6 +488,27 @@ namespace ShopQuanAo.BO
             }
 
             topProducts = topProducts.GroupBy(p => p.Id).Select(g => g.First()).Take(MAX_TOTAL_PRODUCTS).ToList();
+            // Nếu tổng combo < 70% budget thì sort lại lấy sản phẩm đắt hơn
+            if (maxPrice > 0 && topProducts.Any())
+            {
+                double comboTotal = topProducts.Sum(p => p.SalePrice > 0 ? p.SalePrice : p.Price);
+                if (comboTotal < maxPrice * 0.7)
+                {
+                    // Lấy lại sản phẩm đắt hơn nhưng vẫn <= maxPrice
+                    topProducts.Clear();
+                    foreach (var kwItem in keywords)
+                    {
+                        string itemName = kwItem.Contains(":") ? kwItem.Split(':')[0].Trim() : kwItem;
+                        var candidates = await _productService.GetCandidatesForAIAsync(itemName, color, 0);
+                        var better = candidates
+                            .Where(p => (p.SalePrice > 0 ? p.SalePrice : p.Price) <= maxPrice)
+                            .OrderByDescending(p => p.SalePrice > 0 ? p.SalePrice : p.Price)
+                            .Take(1)
+                            .ToList();
+                        topProducts.AddRange(better);
+                    }
+                }
+            }
             var sb = new StringBuilder();
 
             if (!string.IsNullOrEmpty(size))
