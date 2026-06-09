@@ -77,13 +77,13 @@ namespace ShopQuanAo.BO
                 .ToList();
 
             var dailyData = paidOrders
-                .GroupBy(od => od.Order.CreateTime.Date)
-                .Select(g => new {
-                    date = g.Key.ToString("dd/MM"),
-                    revenue = g.Sum(x => x.Quantity * x.UnitPrice)
-                })
-                .OrderBy(x => x.date)
-                .ToList();
+    .GroupBy(od => od.Order.CreateTime.Date)
+    .OrderBy(g => g.Key)   // ← sort theo Date trước
+    .Select(g => new {
+        date = g.Key.ToString("dd/MM"),
+        revenue = g.Sum(x => x.Quantity * x.UnitPrice)
+    })
+    .ToList();
 
             return new
             {

@@ -44,24 +44,26 @@ namespace ShopQuanAo.DAO
 
             // 5. GroupBy để lấy thông tin tổng hợp cho Sắp xếp
             var groupedQuery = query
-                .GroupBy(p => p.ProductName)
-                .Select(g => new
-                {
-                    Id = g.Max(p => p.Id),
-                    TotalStock = g.SelectMany(p => p.ProductSizes).Sum(ps => ps.Quantity),
-                    MaxPrice = g.Max(p => p.Price),
-                    AvgRating = g.SelectMany(p => p.ProductReviews).Any() ? g.SelectMany(p => p.ProductReviews).Average(r => r.Rating) : 0,
-                    CreatedAt = g.Max(p => p.Id)
-                });
+    .GroupBy(p => p.ProductName)
+    .Select(g => new
+    {
+        Id = g.Max(p => p.Id),
+        TotalStock = g.SelectMany(p => p.ProductSizes).Sum(ps => ps.Quantity),
+        MaxPrice = g.Max(p => p.Price),
+        // Giá hiện tại: dùng SalePrice nếu có, không thì dùng Price
+        CurrentPrice = g.Max(p => p.SalePrice > 0 && p.SalePrice < p.Price ? p.SalePrice : p.Price),
+        AvgRating = g.SelectMany(p => p.ProductReviews).Any() ? g.SelectMany(p => p.ProductReviews).Average(r => r.Rating) : 0,
+        CreatedAt = g.Max(p => p.Id)
+    });
 
             // 6. Thực hiện Sort
             groupedQuery = sort switch
             {
-                "price_asc" => groupedQuery.OrderBy(x => x.MaxPrice),
-                "price_desc" => groupedQuery.OrderByDescending(x => x.MaxPrice),
+                "price_asc" => groupedQuery.OrderBy(x => x.CurrentPrice),
+                "price_desc" => groupedQuery.OrderByDescending(x => x.CurrentPrice),
                 "rating" => groupedQuery.OrderByDescending(x => x.AvgRating),
                 "newest" => groupedQuery.OrderByDescending(x => x.CreatedAt),
-                _ => groupedQuery.OrderByDescending(x => x.TotalStock) // Mặc định xếp theo tồn kho/phổ biến
+                _ => groupedQuery.OrderByDescending(x => x.TotalStock)
             };
 
             int total = await groupedQuery.CountAsync();

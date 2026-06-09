@@ -141,7 +141,7 @@ namespace ShopQuanAo.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitReview(int ProductId, int Rating, string Comment)
+        public async Task<IActionResult> SubmitReview(int ProductId, int OrderId, int Rating, string Comment)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -152,7 +152,7 @@ namespace ShopQuanAo.Controllers
             var userName = User?.Identity?.Name ?? "Khách hàng";
 
             // Controller chuyển tiếp dữ liệu xuống Service xử lý
-            await _productService.CreateProductReviewAsync(ProductId, Rating, Comment, userId, userName);
+            await _productService.CreateProductReviewAsync(ProductId, OrderId, Rating, Comment, userId, userName);
 
             return RedirectToAction("ProductDetail", new { id = ProductId });
         }

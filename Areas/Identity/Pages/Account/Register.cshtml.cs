@@ -104,13 +104,28 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 			ModelState.Remove("OtpInput");
 			ModelState.Remove("EmailPending");
 
-			if (ModelState.IsValid)
-			{
-				var user = CreateUser();
-				await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-				await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+            if (ModelState.IsValid)
+            {
+                // Nếu email đã tồn tại nhưng chưa xác thực → xóa để cho đăng ký lại
+                var existingUser = await _userManager.FindByEmailAsync(Input.Email);
+                if (existingUser != null)
+                {
+                    if (!existingUser.EmailConfirmed)
+                    {
+                        await _userManager.DeleteAsync(existingUser);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Email này đã được đăng ký.");
+                        return Page();
+                    }
+                }
 
-				var result = await _userManager.CreateAsync(user, Input.Password);
+                var user = CreateUser();
+                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+                var result = await _userManager.CreateAsync(user, Input.Password);
 
 				if (result.Succeeded)
 				{

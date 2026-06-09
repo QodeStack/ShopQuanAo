@@ -229,8 +229,15 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        scales: {
-                            y: { grid: { borderDash: [5, 5] }, ticks: { font: { family: 'DM Sans' } } },
+        scales: {
+        y: {
+        beginAtZero: true,
+        grid: { borderDash: [5, 5] },
+        ticks: {
+        font: { family: 'DM Sans' },
+        callback: value => new Intl.NumberFormat('vi-VN').format(value) + '₫'
+        }
+        },
                             x: { grid: { display: false }, ticks: { font: { family: 'DM Sans' } } }
                         },
                         plugins: { legend: { display: false } }

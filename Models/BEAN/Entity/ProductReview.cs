@@ -15,8 +15,9 @@ namespace ShopQuanAo.Models.BEAN.Entity
 		[ForeignKey("ProductId")]
 		public virtual Product? Product { get; set; }
 
-		// Đổi thành Nullable (?) để không bị lỗi Validate khi gửi Form
-		public string? UserId { get; set; }
+        // Đổi thành Nullable (?) để không bị lỗi Validate khi gửi Form
+        public int OrderId { get; set; }
+        public string? UserId { get; set; }
 
 		[StringLength(100)]
 		public string? FullName { get; set; }

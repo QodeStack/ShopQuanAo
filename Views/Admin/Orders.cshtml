@@ -77,9 +77,9 @@
                     <div class="pipe-label">Tất cả</div>
                     <div class="pipe-bar all"></div>
                 </div>
-                <div class="pipe-card" data-filter="Chờ xử lý" onclick="filterOrders('Chờ xử lý')">
+                <div class="pipe-card" data-filter="Chờ xác nhận" onclick="filterOrders('Chờ xác nhận')">
                     <div class="pipe-count" id="pipePending">—</div>
-                    <div class="pipe-label">Chờ xử lý</div>
+                    <div class="pipe-label">Chờ xác nhận</div>
                     <div class="pipe-bar pending"></div>
                 </div>
                 <div class="pipe-card" data-filter="Đang xử lý" onclick="filterOrders('Đang xử lý')">
@@ -87,14 +87,14 @@
                     <div class="pipe-label">Đang xử lý</div>
                     <div class="pipe-bar processing"></div>
                 </div>
-                <div class="pipe-card" data-filter="Đang vận chuyển" onclick="filterOrders('Đang vận chuyển')">
+                <div class="pipe-card" data-filter="Đang giao hàng" onclick="filterOrders('Đang giao hàng')">
                     <div class="pipe-count" id="pipeShipping">—</div>
-                    <div class="pipe-label">Đang vận chuyển</div>
+                    <div class="pipe-label">Đang giao hàng</div>
                     <div class="pipe-bar shipping"></div>
                 </div>
-                <div class="pipe-card" data-filter="Đã giao" onclick="filterOrders('Đã giao')">
+                <div class="pipe-card" data-filter="Đã hoàn thành" onclick="filterOrders('Đã hoàn thành')">
                     <div class="pipe-count" id="pipeDelivered">—</div>
-                    <div class="pipe-label">Đã giao</div>
+                    <div class="pipe-label">Đã hoàn thành</div>
                     <div class="pipe-bar delivered"></div>
                 </div>
                 <div class="pipe-card" data-filter="Đã hủy" onclick="filterOrders('Đã hủy')">
@@ -295,18 +295,17 @@
             applyFilters();
         }
 
-        function updatePipelineStats() {
-            const counts = { 'Chờ xử lý':0, 'Đang xử lý':0, 'Đang vận chuyển':0, 'Đã giao':0, 'Đã hủy':0 };
-            allOrders.forEach(o => { if (counts[o.statusName] !== undefined) counts[o.statusName]++; });
+            function updatePipelineStats() {
+        const counts = { 'Chờ xác nhận':0, 'Đang xử lý':0, 'Đang giao hàng':0, 'Đã hoàn thành':0, 'Đã hủy':0 };
+        allOrders.forEach(o => { if (counts[o.statusName] !== undefined) counts[o.statusName]++; });
 
-            document.getElementById('pipeAll').textContent = allOrders.length;
-            document.getElementById('pipePending').textContent = counts['Chờ xử lý'];
-            document.getElementById('pipeProcessing').textContent = counts['Đang xử lý'];
-            document.getElementById('pipeShipping').textContent = counts['Đang vận chuyển'];
-            document.getElementById('pipeDelivered').textContent = counts['Đã giao'];
-            document.getElementById('pipeCancelled').textContent = counts['Đã hủy'];
-        }
-
+        document.getElementById('pipeAll').textContent = allOrders.length;
+        document.getElementById('pipePending').textContent = counts['Chờ xác nhận'];
+        document.getElementById('pipeProcessing').textContent = counts['Đang xử lý'];
+        document.getElementById('pipeShipping').textContent = counts['Đang giao hàng'];
+        document.getElementById('pipeDelivered').textContent = counts['Đã hoàn thành'];
+        document.getElementById('pipeCancelled').textContent = counts['Đã hủy'];
+    }
         function filterOrders(status) {
             currentFilter = status;
             document.querySelectorAll('.pipe-card').forEach(c => {

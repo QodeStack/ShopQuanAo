@@ -43,7 +43,7 @@ namespace ShopQuanAo.Controllers
             // Lấy danh sách ID các sản phẩm mà người dùng này đã đánh giá
             var reviewedProductIds = await _context.ProductReviews
     .Where(r => r.UserId == userId)
-    .Select(r => r.ProductId)
+    .Select(r => r.OrderId + "_" + r.ProductId)
     .ToListAsync();
 
             var vm = new CustomerOrderViewModel

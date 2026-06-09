@@ -191,11 +191,11 @@
                             }
                             else if (statusName == "Đã hoàn thành")
                             {
-                                var reviewedIds = ViewBag.ReviewedProductIds as List<int> ?? new List<int>();
+                                var reviewedIds = ViewBag.ReviewedProductIds as List<string> ?? new List<string>();
 
                                 @foreach (var detail in order.OrderDetails)
                                 {
-                                    bool isReviewed = reviewedIds.Contains(detail.ProductId);
+                                    bool isReviewed = reviewedIds.Contains(order.Id + "_" + detail.ProductId);
 
                                     if (isReviewed)
                                     {
@@ -206,7 +206,7 @@
                                     else
                                     {
                                         <button class="btn-order-cancel" style="border-color: #ffb400; color: #ffb400;"
-                                                onclick="openReviewModal('@detail.ProductId', '@detail.Product?.ProductName', '@detail.Product?.Image')">
+                                                onclick="openReviewModal('@detail.ProductId', '@detail.Product?.ProductName', '@detail.Product?.Image', '@order.Id')">
                                             ĐÁNH GIÁ @(order.OrderDetails.Count > 1 ? detail.Product?.ProductName : "")
                                         </button>
                                     }
@@ -263,7 +263,7 @@
                 </div>
                 <div class="modal-body text-center">
                     <input type="hidden" name="ProductId" id="modalProductId" />
-                    
+                    <input type="hidden" name="OrderId" id="modalOrderId" />
                     <img id="modalProductImg" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" />
                     <p id="modalProductName" class="fw-bold"></p>
 
@@ -287,8 +287,9 @@
     </div>
 </div>
 <script>
-    function openReviewModal(productId, productName, productImg) {
-        document.getElementById('modalProductId').value = productId;
+    function openReviewModal(productId, productName, productImg, orderId) {
+    document.getElementById('modalProductId').value = productId;
+    document.getElementById('modalOrderId').value = orderId;
         document.getElementById('modalProductName').innerText = productName;
         document.getElementById('modalProductImg').src = productImg;
         

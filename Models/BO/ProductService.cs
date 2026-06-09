@@ -138,11 +138,12 @@ namespace ShopQuanAo.BO
         }
 
         // 6. Hàm xử lý lưu review
-        public async Task CreateProductReviewAsync(int productId, int rating, string comment, string userId, string userName)
+        public async Task CreateProductReviewAsync(int productId, int orderId, int rating, string comment, string userId, string userName)
         {
             var review = new ProductReview
             {
                 ProductId = productId,
+                OrderId = orderId,
                 Rating = rating,
                 Comment = comment,
                 UserId = userId,
