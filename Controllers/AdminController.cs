@@ -432,7 +432,29 @@ namespace ShopQuanAo.Controllers
             var success = await _service.ToggleVoucherStatusAsync(data.Id);
             return Json(new { success = success });
         }
+        [HttpGet]
+        public async Task<IActionResult> GetRevenueChart()
+        {
+            var today = DateTime.Today;
+            var months = new List<string>();
+            var values = new List<double>();
 
+            for (int i = 5; i >= 0; i--)
+            {
+                var target = today.AddMonths(-i);
+                var revenue = await _context.Orders
+                    .Where(o => o.IsPaid
+                        && o.CreateTime.Year == target.Year
+                        && o.CreateTime.Month == target.Month)
+                    .SelectMany(o => o.OrderDetails)
+                    .SumAsync(d => (double?)(d.UnitPrice * d.Quantity)) ?? 0;
+
+                months.Add("T" + target.Month);
+                values.Add(revenue);
+            }
+
+            return Json(new { months, values });
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVoucher([FromBody] Voucher data)

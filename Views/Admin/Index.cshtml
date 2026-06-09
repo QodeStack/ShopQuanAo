@@ -54,9 +54,7 @@
 
             <div class="sidebar-section">
                 <div class="sidebar-label">Hệ thống</div>
-                <a class="sidebar-link" href="@Url.Action("Index", "Home")">
-                    <span class="sidebar-icon">🏠</span> Về cửa hàng
-                </a>
+               
                 <a class="sidebar-link" href="/Identity/Account/Manage">
                     <span class="sidebar-icon">⚙️</span> Tài khoản
                 </a>
@@ -95,27 +93,20 @@
                 </div>
             </div>
 
-            <div class="charts-row">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">Biểu đồ doanh thu 6 tháng gần nhất</div>
-                        <div style="font-size:12px; color:var(--text-muted)">Đơn vị: Triệu VND</div>
-                    </div>
-                    <div class="chart-bars" id="revenueChart"></div>
+        <div class="charts-row">
+            <div class="panel" style="flex:1">
+                <div class="panel-header">
+                    <div class="panel-title">Doanh thu 6 tháng gần nhất</div>
+                    <div style="font-size:12px;color:var(--text-muted)">Đơn vị: Triệu VND</div>
                 </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">Tỷ trọng hệ thống</div>
-                    </div>
-                    <div style="text-align:center; padding: 20px 0;">
-                        <div style="width: 120px; height: 120px; border-radius: 50%; border: 12px solid #000; border-top-color: #eee; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-                            <strong style="font-size: 18px;">LIVE</strong>
-                        </div>
-                        <div style="font-size: 13px; color: var(--text-muted);">Dữ liệu thời gian thực</div>
-                    </div>
+                <div class="chart-bars" id="revenueChart">
+                    <div style="text-align:center;padding:40px;color:var(--text-muted)">Đang tải...</div>
                 </div>
             </div>
+        </div>
+
+            
+         
 
             <div class="panel">
                 <div class="panel-header">
@@ -171,38 +162,57 @@
 
 <script>
     document.getElementById('currentDate').textContent =
-        new Date().toLocaleDateString('vi-VN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+        new Date().toLocaleDateString('vi-VN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
 
     async function loadStats() {
         try {
             const res = await fetch('/Admin/GetStats');
             if (!res.ok) throw new Error();
             const d = await res.json();
-            const revenueM = (d.revenue / 1000000).toFixed(1);
-            
-            document.getElementById('statRevenue').textContent  = revenueM + 'M₫';
+            const revM = (d.revenue / 1_000_000).toFixed(1);
+
+            document.getElementById('statRevenue').textContent  = revM + 'M₫';
             document.getElementById('statOrders').textContent   = d.orders;
             document.getElementById('statUsers').textContent    = d.users;
             document.getElementById('statProducts').textContent = d.products;
-        } catch (err) {
-            document.getElementById('statRevenue').textContent  = '0.0M₫';
-            document.getElementById('statOrders').textContent   = '0';
+
+            
+        } catch {
+            document.getElementById('statRevenue').textContent     = '0.0M₫';
+            document.getElementById('statOrders').textContent      = '0';
+            
         }
     }
-    loadStats();
 
-    const months = ['T11','T12','T1','T2','T3','T4'];
-    const values = [42, 58, 35, 71, 63, 89];
-    const max = Math.max(...values);
-    const chart = document.getElementById('revenueChart');
-    
-    chart.innerHTML = months.map((m,i) => {
-        const h = Math.round((values[i] / max) * 150);
-        const isCurrent = i === months.length - 1;
-        return `
-        <div class="chart-bar-wrap">
-            <div class="chart-bar ${isCurrent ? 'main' : ''}" style="height:${h}px"></div>
-            <div class="chart-label">${m}</div>
-        </div>`;
-    }).join('');
+    async function loadRevenueChart() {
+        const chart = document.getElementById('revenueChart');
+        try {
+            const res = await fetch('/Admin/GetRevenueChart');
+            if (!res.ok) throw new Error();
+            const d = await res.json(); // { months: [...], values: [...] }
+
+            const max = Math.max(...d.values, 1);
+            chart.innerHTML = d.months.map((m, i) => {
+                const h    = Math.max(6, Math.round((d.values[i] / max) * 150));
+                const lbl  = (d.values[i] / 1_000_000).toFixed(1) + 'M';
+                const last = (i === d.months.length - 1);
+                return `
+                <div class="chart-bar-wrap">
+                    <div style="font-size:10px;text-align:center;
+                                color:var(--text-muted);margin-bottom:4px">${lbl}</div>
+                    <div class="chart-bar ${last ? 'main' : ''}"
+                         style="height:${h}px;border-radius:4px 4px 0 0"></div>
+                    <div class="chart-label">${m}</div>
+                </div>`;
+            }).join('');
+        } catch {
+            chart.innerHTML =
+                '<div style="text-align:center;padding:40px;color:var(--text-muted)">Không tải được dữ liệu</div>';
+        }
+    }
+
+    loadStats();
+    loadRevenueChart();
 </script>
