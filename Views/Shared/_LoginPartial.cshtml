@@ -6,13 +6,18 @@
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
+        var currentUser = await UserManager.GetUserAsync(User);
+        var isAdmin = currentUser != null && await UserManager.IsInRoleAsync(currentUser, "Admin");
+
+        if (!isAdmin)
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
+                    <i class="bi bi-cart"></i> GIỎ HÀNG
+                </a>
+            </li>
+        }
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
-                <i class="bi bi-cart"></i> GIỎ HÀNG
-            </a>
-        </li>
-        <li class="nav-item">
-            @* SỬA: Sử dụng UserManager<ApplicationUser> để lấy UserName thay vì User.Identity.Name *@
             <a class="nav-link text-dark fw-bold" asp-area="Identity" asp-page="/Account/Manage/Index" title="Quản lý tài khoản">
                 CHÀO, @(UserManager.GetUserName(User)?.ToUpper() ?? "THÀNH VIÊN")!
             </a>

@@ -1,8 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
 @{
     ViewData["Title"] = "Quản lý Người dùng";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+    var currentUserId = UserManager.GetUserId(User);
 }
 
 <link href="~/css/Admin/Admin_Users.css" asp-append-version="true" rel="stylesheet" />
@@ -64,7 +66,7 @@
                     <div class="page-eyebrow">Quản lý</div>
                     <div class="page-title">Người dùng</div>
                 </div>
-                <button class="btn-primary-admin" onclick="openCreateModal()">＋ Thêm người dùng</button>
+                <button class="btn-primary-admin" onclick="openCreateModal()">＋ Thêm người dùng(Admin)</button>
             </div>
 
             <div class="toolbar">
@@ -131,51 +133,25 @@
 
             <div class="form-group">
                 <label class="form-label">Vai trò</label>
-                <select class="form-control-admin" id="modalRole" onchange="onRoleChange(this.value)">
-                    <option value="User">User</option>
+                <select class="form-control-admin" id="modalRole">
                     <option value="Admin">Admin</option>
+                    <option value="User">User</option>
                 </select>
             </div>
 
             <!-- Checkbox xác nhận email — chỉ hiện khi tạo mới -->
-            <div class="form-group" id="confirmGroup">
-                <label class="form-label" style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:normal;">
-                    <input type="checkbox" id="modalEmailConfirmed" style="width:15px;height:15px;accent-color:var(--accent,#c8ff00);cursor:pointer;">
-                    <span>Xác nhận email ngay <span style="color:var(--gray-500);font-size:0.75rem;">(không gửi OTP)</span></span>
-                </label>
-            </div>
+            
 
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal('userModal')">Huỷ</button>
-                <button type="submit" class="btn-submit-admin">Lưu</button>
+                <button type="submit" class="btn-submit-admin" style="background:#000;color:#fff;">Lưu</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- ===================== MODAL NHẬP OTP ===================== -->
-<div class="modal-overlay" id="otpModal">
-    <div class="modal-box" style="width:400px">
-        <div class="modal-title">XÁC MINH OTP</div>
-        <p style="color:var(--gray-400);font-size:0.82rem;margin-bottom:0.3rem;">
-            Mã OTP đã được gửi đến:
-        </p>
-        <p id="otpTargetEmail" style="font-family:var(--mono);color:#c8ff00;font-size:0.85rem;margin-bottom:1.2rem;"></p>
-        <div class="form-group">
-            <label class="form-label">Nhập mã OTP *</label>
-            <input class="form-control-admin" type="text" id="otpInput"
-                   placeholder="Nhập 6 số..."
-                   maxlength="6"
-                   style="letter-spacing:0.3em;font-size:1.2rem;text-align:center;"
-                   oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-        </div>
-        <p id="otpError" style="color:#ff3b3b;font-size:0.78rem;min-height:1.2em;margin-bottom:0.5rem;"></p>
-        <div class="modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeModal('otpModal')">Đóng</button>
-            <button type="button" class="btn-submit-admin" onclick="submitOtp()">Xác nhận</button>
-        </div>
-    </div>
-</div>
+
 
 <!-- ===================== MODAL XÁC NHẬN XÓA ===================== -->
 <div class="modal-overlay" id="deleteModal">
@@ -194,12 +170,13 @@
 <div class="admin-toast" id="adminToast"></div>
 
 <script>
+    const currentAdminId = '@currentUserId';
     let allUsers = [];
     let filteredUsers = [];
     let currentPage = 1;
     const pageSize = 10;
     let deleteTargetId = '';
-    let pendingOtpEmail = ''; // email đang chờ xác minh OTP
+    
     const avatarColors = ['#c8ff00', '#3b82ff', '#ff3b3b', '#ffb400', '#8b5cf6', '#06b6d4'];
 
     function getRequestToken() {
@@ -269,8 +246,11 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn-icon" onclick="openEditModal('${u.id}','${u.email}','${u.roles[0] || 'User'}')" title="Chỉnh sửa">✎</button>
-                            <button class="btn-icon delete" onclick="openDeleteModal('${u.id}','${u.email}')" title="Xóa">✕</button>
+                            <button class="btn-icon" onclick="openEditModal('${u.id}','${u.email}','${(u.roles && u.roles.length > 0) ? u.roles[0] : 'User'}')" title="Chỉnh sửa">✎</button>
+                            <button class="btn-icon delete"
+    onclick="${u.id === currentAdminId ? '' : `openDeleteModal('${u.id}','${u.email}')`}"
+    title="${u.id === currentAdminId ? 'Không thể xóa tài khoản của chính bạn' : 'Xóa'}"
+    ${u.id === currentAdminId ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''}>✕</button>
                         </div>
                     </td>
                 </tr>`;
@@ -297,20 +277,7 @@
     function goPage(p) { currentPage = p; renderTable(); }
 
     // =================== ROLE CHANGE — tự động tick xác nhận khi chọn Admin ===================
-    function onRoleChange(role) {
-        const cb = document.getElementById('modalEmailConfirmed');
-        const cbLabel = document.getElementById('confirmGroup');
-        if (role === 'Admin') {
-            cb.checked = true;
-            // Đổi label để thông báo rõ lý do
-            cbLabel.querySelector('span > span').textContent = '(Admin luôn được xác nhận)';
-            cb.disabled = true;
-        } else {
-            cb.checked = false;
-            cbLabel.querySelector('span > span').textContent = '(không gửi OTP)';
-            cb.disabled = false;
-        }
-    }
+
 
     // =================== MODAL LOGIC ===================
     function openCreateModal() {
@@ -319,23 +286,21 @@
         document.getElementById('modalEmail').value = '';
         document.getElementById('modalEmail').disabled = false;
         document.getElementById('modalPassword').value = '';
-        document.getElementById('modalRole').value = 'User';
-        document.getElementById('modalEmailConfirmed').checked = false;
-        document.getElementById('modalEmailConfirmed').disabled = false;
-        document.getElementById('confirmGroup').querySelector('span > span').textContent = '(không gửi OTP)';
-        document.getElementById('passwordGroup').style.display = 'block';
-        document.getElementById('confirmGroup').style.display = 'block';
+                document.getElementById('modalRole').value = 'Admin';
+    document.getElementById('modalRole').disabled = true;
+    document.getElementById('passwordGroup').style.display = 'block';
         document.getElementById('userModal').classList.add('show');
     }
 
     function openEditModal(id, email, role) {
+        
         document.getElementById('modalTitle').textContent = 'CHỈNH SỬA VAI TRÒ';
         document.getElementById('modalUserId').value = id;
         document.getElementById('modalEmail').value = email;
         document.getElementById('modalEmail').disabled = true;
         document.getElementById('modalRole').value = role || 'User';
         document.getElementById('passwordGroup').style.display = 'none';
-        document.getElementById('confirmGroup').style.display = 'none';
+       document.getElementById('modalRole').disabled = false;
         document.getElementById('userModal').classList.add('show');
     }
 
@@ -363,7 +328,7 @@
         const email = document.getElementById('modalEmail').value;
         const pass = document.getElementById('modalPassword').value;
         const role = document.getElementById('modalRole').value;
-        const emailConfirmed = document.getElementById('modalEmailConfirmed').checked;
+        
 
         if (!id && pass.length < 6) {
             showToast('✕ Mật khẩu tối thiểu 6 ký tự', 'error');
@@ -372,8 +337,8 @@
 
         const url = id ? '/Admin/EditUser' : '/Admin/CreateUser';
         const body = id
-            ? { id, role }
-            : { email, password: pass, role, emailConfirmed };
+    ? { id, role }
+    : { email, password: pass, role: 'Admin', emailConfirmed: true };
 
         try {
             const res = await fetch(url, {
@@ -387,17 +352,8 @@
             const d = await res.json();
             if (d.success) {
                 closeModal('userModal');
-                if (!id && !emailConfirmed) {
-                    // Tạo user thường → mở popup nhập OTP
-                    pendingOtpEmail = email;
-                    document.getElementById('otpTargetEmail').textContent = email;
-                    document.getElementById('otpInput').value = '';
-                    document.getElementById('otpError').textContent = '';
-                    document.getElementById('otpModal').classList.add('show');
-                } else {
-                    showToast(id ? '✓ Cập nhật vai trò thành công' : '✓ Tạo tài khoản thành công!', 'success');
-                    loadUsers();
-                }
+    showToast(id ? '✓ Cập nhật vai trò thành công' : '✓ Tạo tài khoản Admin thành công!', 'success');
+    loadUsers();
             } else {
                 showToast('✕ ' + (d.message || 'Lỗi xử lý'), 'error');
             }
@@ -407,36 +363,7 @@
     }
 
     // =================== SUBMIT OTP ===================
-    async function submitOtp() {
-        const otp = document.getElementById('otpInput').value.trim();
-        const errorEl = document.getElementById('otpError');
-
-        if (otp.length !== 6) {
-            errorEl.textContent = '✕ Vui lòng nhập đúng 6 chữ số.';
-            return;
-        }
-
-        try {
-            const res = await fetch('/Admin/VerifyOtp', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': getRequestToken()
-                },
-                body: JSON.stringify({ email: pendingOtpEmail, otp })
-            });
-            const d = await res.json();
-            if (d.success) {
-                closeModal('otpModal');
-                showToast('✓ Xác minh thành công! Tài khoản đã kích hoạt.', 'success');
-                loadUsers();
-            } else {
-                errorEl.textContent = '✕ ' + (d.message || 'Mã OTP không đúng hoặc đã hết hạn.');
-            }
-        } catch {
-            errorEl.textContent = '✕ Lỗi kết nối server.';
-        }
-    }
+    
 
     // =================== XÓA USER ===================
     async function confirmDelete() {

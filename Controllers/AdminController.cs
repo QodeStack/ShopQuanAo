@@ -257,6 +257,8 @@ namespace ShopQuanAo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser([FromBody] DeleteDto dto)
         {
+            if (dto.Id == _userManager.GetUserId(User))
+                return Json(new { success = false, message = "Không thể xóa tài khoản của chính bạn!" });
             var success = await _service.DeleteUserAsync(dto.Id, _userManager.GetUserId(User));
             return Json(new { success, message = success ? "Xóa thành công" : "Lỗi không thể xóa người dùng này!" });
         }
@@ -310,6 +312,8 @@ namespace ShopQuanAo.Controllers
             if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
                 return Json(new { success = false, message = "Email và mật khẩu không được để trống." });
 
+            dto.Role = "Admin";
+            dto.EmailConfirmed = true;
             var res = await _service.CreateUserAsync(dto);
             return Json(new { success = res.Success, message = res.Message });
         }
@@ -321,16 +325,13 @@ namespace ShopQuanAo.Controllers
             if (dto == null || string.IsNullOrWhiteSpace(dto.Id))
                 return Json(new { success = false, message = "ID người dùng không hợp lệ." });
 
+            if (dto.Id == _userManager.GetUserId(User) && dto.Role != "Admin")
+                return Json(new { success = false, message = "Không thể hạ cấp tài khoản của chính bạn!" });
+
             var res = await _service.EditUserAsync(dto);
             return Json(new { success = res.Success, message = res.Message });
         }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
-        {
-            var res = await _service.VerifyOtpAsync(dto.Email, dto.Otp);
-            return Json(new { success = res.Success, message = res.Message });
-        }
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ValidateCampaign([FromBody] CampaignDTO dto)

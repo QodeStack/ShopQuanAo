@@ -57,6 +57,7 @@ namespace ShopQuanAo.Controllers
                 var cart = await _checkoutService.GetCartForCheckoutAsync(_userManager.GetUserId(User), dto.SelectedIds);
                 ViewBag.Cart = cart;
                 ViewBag.TotalAmount = cart?.CartDetails?.Sum(cd => cd.UnitPrice * cd.Quantity) ?? 0;
+                ViewBag.Vouchers = await _checkoutService.GetActiveVouchersAsync();
 
                 return View("Index", dto);
             }

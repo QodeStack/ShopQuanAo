@@ -16,35 +16,43 @@
     <header class="sticky-top bg-white shadow-sm">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">MenShop</a>
+               @if (User.IsInRole("Admin"))
+{
+    <a class="navbar-brand fw-bold" asp-controller="Admin" asp-action="Index">MenShop</a>
+}
+else
+{
+    <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">MenShop</a>
+}
                 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarMenu">
-                    <ul class="navbar-nav mx-auto">
-                        <li class="nav-item dropdown-mega">
-                            <a class="nav-link" asp-controller="Product" asp-action="Index">
-                                SẢN PHẨM
-                            </a>
-                        </li>
-                        <li class="nav-item"><a class="nav-link text-danger fw-bold" asp-controller="Home" asp-action="Sale">SALE</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="AboutUs">Về Chúng Tôi</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">Liên Hệ </a></li>
-                        
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold text-primary" asp-controller="Admin" asp-action="Index">Quản Lý</a>
-                            </li>
-                        }
-                    </ul>
-                    
-                    <div class="d-flex align-items-center">
-                        <partial name="_LoginPartial" />
-                    </div>
-                </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="d-flex align-items-center ms-auto">
+        <partial name="_LoginPartial" />
+    </div>
+    }
+    else
+    {
+        <ul class="navbar-nav mx-auto">
+            <li class="nav-item dropdown-mega">
+                <a class="nav-link" asp-controller="Product" asp-action="Index">
+                    SẢN PHẨM
+                </a>
+            </li>
+            <li class="nav-item"><a class="nav-link text-danger fw-bold" asp-controller="Home" asp-action="Sale">SALE</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="AboutUs">Về Chúng Tôi</a></li>
+            <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">Liên Hệ </a></li>
+        </ul>
+        <div class="d-flex align-items-center">
+            <partial name="_LoginPartial" />
+        </div>
+    }
+</div>
             </div>
         </nav>
     </header>
@@ -124,9 +132,12 @@
         </div>
     </footer>
 
+    @if (!User.IsInRole("Admin"))
+{
     <div id="chat-toggle-btn" onclick="toggleChat()">
         💬 Chat với AI
     </div>
+}
 
     <div id="chat-window" class="chat-hidden">
         <div class="chat-header">

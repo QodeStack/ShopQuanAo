@@ -87,9 +87,14 @@ namespace ShopQuanAo.Areas.Identity.Pages.Account
 
 				if (result.Succeeded)
 				{
-					_logger.LogInformation("User logged in.");
-					return LocalRedirect(returnUrl);
-				}
+                    _logger.LogInformation("User logged in.");
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (await _userManager.IsInRoleAsync(user, "Admin"))
+                    {
+                        return RedirectToAction("Index", "Admin", new { area = "" });
+                    }
+                    return LocalRedirect(returnUrl);
+                }
 
 				// Trường hợp tài khoản chưa được xác nhận (chưa nhập OTP)
 				if (result.IsNotAllowed)

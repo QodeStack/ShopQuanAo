@@ -19,6 +19,15 @@ namespace ShopQuanAo.Controllers
             _homeService = homeService;
             _context = context;  // ← THÊM
         }
+        public override void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+        {
+            if (User.IsInRole("Admin"))
+            {
+                context.Result = RedirectToAction("Index", "Admin");
+                return;
+            }
+            base.OnActionExecuting(context);
+        }
         // Các trang tĩnh
         public async Task<IActionResult> Index()
         {

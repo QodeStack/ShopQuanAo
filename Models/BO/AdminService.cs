@@ -611,6 +611,9 @@ namespace ShopQuanAo.BO
             if (!string.IsNullOrWhiteSpace(dto.Role))
                 await _userManager.AddToRoleAsync(user, dto.Role);
 
+            // Buộc invalidate cookie session cũ của user đó
+            await _userManager.UpdateSecurityStampAsync(user);
+
             return (true, "Cập nhật vai trò thành công.");
         }
 

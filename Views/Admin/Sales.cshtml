@@ -189,8 +189,8 @@
                                 {
                                     var status = DateTime.Now >= camp.StartDate && DateTime.Now <= camp.EndDate ? "Đang chạy" : (DateTime.Now < camp.StartDate ? "Sắp diễn ra" : "Đã kết thúc");
                                     var statusClass = status == "Đang chạy" ? "bg-success" : (status == "Sắp diễn ra" ? "bg-warning text-dark" : "bg-secondary");
-                                    <tr>
-                                        <td class="fw-bold text-dark">@camp.CampaignName</td>
+                                    <tr class="campaign-row">
+    <td class="fw-bold text-dark campaign-name">@camp.CampaignName</td>
                                         <td>@camp.StartDate.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>@camp.EndDate.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td><span class="badge @statusClass badge-pill-custom">@status</span></td>
@@ -431,16 +431,25 @@
 
     // --- Các hàm UI Filter dùng chung ---
     function filterMainTable() {
-        let input = document.getElementById("searchSaleMain").value.toLowerCase();
-        let rows = document.querySelectorAll(".main-sale-row");
-        let hasData = false;
-        rows.forEach(row => {
-            let name = row.querySelector(".product-name").textContent.toLowerCase();
-            if (name.includes(input)) { row.style.display = ""; hasData = true; } else { row.style.display = "none"; }
-        });
-        const noDataRow = document.getElementById("noDataMain");
-        if(noDataRow) noDataRow.style.display = hasData || rows.length === 0 ? "none" : "";
-    }
+    const input = document.getElementById("searchSaleMain").value.toLowerCase();
+
+    // Filter bảng sản phẩm đang sale
+    let hasProduct = false;
+    document.querySelectorAll(".main-sale-row").forEach(row => {
+        const name = row.querySelector(".product-name").textContent.toLowerCase();
+        const show = name.includes(input);
+        row.style.display = show ? "" : "none";
+        if (show) hasProduct = true;
+    });
+    const noDataRow = document.getElementById("noDataMain");
+    if (noDataRow) noDataRow.style.display = hasProduct || !input ? "none" : "";
+
+    // Filter bảng chiến dịch sale
+    document.querySelectorAll(".campaign-row").forEach(row => {
+        const name = row.querySelector(".campaign-name").textContent.toLowerCase();
+        row.style.display = name.includes(input) ? "" : "none";
+    });
+}
     
     function filterModalTable(inputId, rowClass, nameClass) {
         let input = document.getElementById(inputId).value.toLowerCase();

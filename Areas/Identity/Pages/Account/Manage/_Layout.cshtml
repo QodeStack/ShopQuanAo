@@ -69,35 +69,25 @@
 
             <div class="acc-sep"></div>
 
-            @* --- NHÓM: MUA SẮM --- *@
-            <div class="acc-nav-group">
-                <div class="acc-nav-head">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
-                        <path d="M3 6h18"></path>
-                        <path d="M16 10a4 4 0 0 1-8 0"></path>
-                    </svg>
-                    Mua Sắm Của Tôi
+            @if (!await LayoutUserManager.IsInRoleAsync(currentUser, "Admin"))
+            {
+                @* --- NHÓM: MUA SẮM --- *@
+                <div class="acc-nav-group">
+                    <div class="acc-nav-head">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                            <path d="M3 6h18"></path>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
+                        Mua Sắm Của Tôi
+                    </div>
+                    <div class="acc-nav-links">
+                        <a asp-controller="Customer" asp-action="Index">Đơn Mua</a>
+                    </div>
                 </div>
-                <div class="acc-nav-links">
-                    <a asp-controller="Customer" asp-action="Index">Đơn Mua</a>
-                </div>
-            </div>
+            }
 
-            @* --- NHÓM: HỖ TRỢ (MỚI) --- *@
-            <div class="acc-nav-group">
-                <div class="acc-nav-head">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    Hỗ Trợ Khách Hàng
-                </div>
-                <div class="acc-nav-links">
-                    @* Nếu đang ở trang phản hồi thì làm đậm chữ *@
-                    <a asp-controller="Home" asp-action="MyContactHistory"
-                       class="@(isMyContactPage ? "fw-bold text-primary" : "")">Phản hồi của tôi</a>
-                </div>
-            </div>
+            
 
             <div class="acc-sep"></div>
 
