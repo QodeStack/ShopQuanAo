@@ -61,9 +61,9 @@
                 </div>
                 <div class="acc-nav-links">
                     <a asp-area="Identity" asp-page="/Account/Manage/Index" class="@ManageNavPages.IndexNavClass(ViewContext)">Hồ Sơ</a>
-                    <a asp-area="Identity" asp-page="/Account/Manage/Email" class="@ManageNavPages.EmailNavClass(ViewContext)">Email</a>
+                    @* <a asp-area="Identity" asp-page="/Account/Manage/Email" class="@ManageNavPages.EmailNavClass(ViewContext)">Email</a> *@
                     <a asp-area="Identity" asp-page="/Account/Manage/ChangePassword" class="@ManageNavPages.ChangePasswordNavClass(ViewContext)">Đổi Mật Khẩu</a>
-                    <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication" class="@ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">Xác Thực 2 Lớp</a>
+                    @* <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication" class="@ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">Xác Thực 2 Lớp</a> *@
                 </div>
             </div>
 
@@ -92,7 +92,7 @@
             <div class="acc-sep"></div>
 
             @* --- NHÓM: DỮ LIỆU --- *@
-            <div class="acc-nav-group">
+            @* <div class="acc-nav-group">
                 <div class="acc-nav-head">
                     <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="#444" stroke-width="1.5">
                         <rect x="2" y="3" width="16" height="14" rx="1" />
@@ -103,18 +103,18 @@
                 <div class="acc-nav-links">
                     <a asp-area="Identity" asp-page="/Account/Manage/PersonalData" class="@ManageNavPages.PersonalDataNavClass(ViewContext)">Dữ Liệu Cá Nhân</a>
                 </div>
-            </div>
+            </div> *@
         </aside>
 
         @* --- PHẦN NỘI DUNG CHÍNH --- *@
         <main class="acc-main">
             <div class="acc-tabs">
                 <a class="acc-tab @TabClass("Index")" asp-area="Identity" asp-page="/Account/Manage/Index">Tất Cả</a>
-                <a class="acc-tab @TabClass("Email")" asp-area="Identity" asp-page="/Account/Manage/Email">Email</a>
+                @* <a class="acc-tab @TabClass("Email")" asp-area="Identity" asp-page="/Account/Manage/Email">Email</a> *@
                 <a class="acc-tab @TabClass("ChangePassword")" asp-area="Identity" asp-page="/Account/Manage/ChangePassword">Mật Khẩu</a>
                 @* Tab Phản hồi sẽ sáng khi khách vào trang MyContactHistory *@
-                <a class="acc-tab @TabClass("MyContactHistory")" asp-controller="Home" asp-action="MyContactHistory">Phản hồi</a>
-                <a class="acc-tab @TabClass("PersonalData")" asp-area="Identity" asp-page="/Account/Manage/PersonalData">Dữ Liệu</a>
+                @* <a class="acc-tab @TabClass("MyContactHistory")" asp-controller="Home" asp-action="MyContactHistory">Phản hồi</a> *@
+                @* <a class="acc-tab @TabClass("PersonalData")" asp-area="Identity" asp-page="/Account/Manage/PersonalData">Dữ Liệu</a> *@
             </div>
 
             <div class="acc-body">

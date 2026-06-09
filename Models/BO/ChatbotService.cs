@@ -23,10 +23,9 @@ namespace ShopQuanAo.BO
 
         private const int RATE_LIMIT_SECONDS = 4;
         private const int MAX_TOTAL_PRODUCTS = 8;
-        private const int CACHE_DURATION_MINUTES = 10;
+        private static readonly int CACHE_DURATION_MINUTES = 10;
         private const int HTTP_TIMEOUT_SECONDS = 15;
         private const int MAX_API_RETRIES = 3;
-
         private const string FUNC_SEARCH = "tim_kiem_san_pham";
         private const string FUNC_CART = "kiem_tra_gio_hang";
 
